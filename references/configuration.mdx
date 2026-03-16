@@ -1,0 +1,154 @@
+---
+title: "Configuration Reference"
+description: "Complete guide to all Servflow configuration options and environment variables"
+---
+
+Servflow is configured using a TOML file. All configuration values can be overridden using environment variables.
+
+## Server Configuration
+
+The `[server]` section configures the main API server.
+
+```docs/references/configuration.mdx#L11-L15
+[server]
+port = "8080"
+config_folder = "./configs"
+engine_config_file = "./integrations.yaml"
+env = "production"
+```
+
+| Field | Environment Variable | Default | Description |
+|-------|---------------------|---------|-------------|
+| `port` | `SERVFLOW_SERVER_PORT` | `8080` | Port for the API server |
+| `config_folder` | `SERVFLOW_SERVER_CONFIG_FOLDER` | — | **Required.** Directory containing API configuration files |
+| `engine_config_file` | `SERVFLOW_SERVER_ENGINE_CONFIG_FILE` | — | Path to engine integrations YAML file |
+| `env` | `SERVFLOW_SERVER_ENV` | `production` | Environment mode (`production` or `development`) |
+
+## Dashboard Configuration
+
+The `[dashboard]` section configures the web dashboard interface.
+
+```docs/references/configuration.mdx#L29-L33
+[dashboard]
+port = "3000"
+configs_folder = "./configs"
+master_key = "your-secure-master-key"
+```
+
+| Field | Environment Variable | Default | Description |
+|-------|---------------------|---------|-------------|
+| `port` | `SERVFLOW_DASHBOARD_PORT` | `3000` | Port for the dashboard server |
+| `configs_folder` | `SERVFLOW_DASHBOARD_CONFIGS_FOLDER` | Same as `server.config_folder` | Directory for dashboard config storage |
+| `master_key` | `SERVFLOW_DASHBOARD_MASTER_KEY` | — | Master encryption key for secrets (required for secrets management) |
+
+<Warning>
+Keep your `master_key` secure and never commit it to version control. Use environment variables in production.
+</Warning>
+
+## SQLite Configuration
+
+The `[sqlite]` section configures persistent storage.
+
+```docs/references/configuration.mdx#L49-L51
+[sqlite]
+path = "./data/servflow.db"
+```
+
+| Field | Environment Variable | Default | Description |
+|-------|---------------------|---------|-------------|
+| `path` | `SERVFLOW_SQLITE_PATH` | `./database.db` | Path to SQLite database file |
+
+<Note>
+If the `path` is empty or the `[sqlite]` section is omitted, Servflow falls back to file-based storage with reduced functionality.
+</Note>
+
+## Authentication Configuration
+
+The `[authentication]` section configures JWT-based authentication for the dashboard.
+
+```docs/references/configuration.mdx#L65-L69
+[authentication]
+jwk_url = "https://your-tenant.auth0.com/.well-known/jwks.json"
+domain = "your-domain.com"
+redirect_url = "https://your-app.com"
+```
+
+| Field | Environment Variable | Default | Description |
+|-------|---------------------|---------|-------------|
+| `jwk_url` | `SERVFLOW_AUTH_JWK_URL` | — | URL to JSON Web Key Set for JWT validation |
+| `domain` | `SERVFLOW_AUTH_DOMAIN` | — | Your authentication domain |
+| `redirect_url` | `SERVFLOW_AUTH_REDIRECT_URL` | `https://app.servflow.io` | Redirect URL after authentication |
+
+<Tip>
+Authentication is optional for local development. When `jwk_url` and `domain` are not set, the dashboard runs without authentication.
+</Tip>
+
+## Tracing Configuration
+
+The `[tracing]` section configures OpenTelemetry distributed tracing.
+
+```docs/references/configuration.mdx#L87-L92
+[tracing]
+enabled = false
+service_name = "servflow-pro"
+org_id = ""
+collector_endpoint = ""
+```
+
+| Field | Environment Variable | Default | Description |
+|-------|---------------------|---------|-------------|
+| `enabled` | `SERVFLOW_TRACING_ENABLED` | `false` | Enable OpenTelemetry tracing |
+| `service_name` | `SERVFLOW_TRACING_SERVICE_NAME` | — | Service name for trace identification |
+| `org_id` | `SERVFLOW_TRACING_ORG_ID` | — | Organization ID for multi-tenant collectors |
+| `collector_endpoint` | `SERVFLOW_TRACING_COLLECTOR_ENDPOINT` | — | OTLP collector endpoint URL |
+
+## Complete Example
+
+Here's a complete configuration file with all options:
+
+```docs/references/configuration.mdx#L106-L133
+[server]
+port = "8080"
+config_folder = "./configs"
+engine_config_file = "./integrations.yaml"
+env = "production"
+
+[dashboard]
+port = "3000"
+configs_folder = "./configs"
+master_key = "your-secure-master-key"
+
+[sqlite]
+path = "./data/servflow.db"
+
+[authentication]
+jwk_url = "https://your-tenant.auth0.com/.well-known/jwks.json"
+domain = "your-domain.com"
+redirect_url = "https://your-app.com"
+
+[tracing]
+enabled = false
+service_name = "servflow-pro"
+org_id = ""
+collector_endpoint = ""
+```
+
+## Environment Variable Overrides
+
+Environment variables take precedence over values in the TOML file. This is useful for:
+
+- **Production deployments** — Keep secrets out of configuration files
+- **Container environments** — Configure via Docker/Kubernetes environment variables
+- **CI/CD pipelines** — Override settings per environment
+
+Example using environment variables with Docker:
+
+```docs/references/configuration.mdx#L146-L153
+docker run -d \
+  --name servflow-pro \
+  -e SERVFLOW_SERVER_PORT=9000 \
+  -e SERVFLOW_DASHBOARD_MASTER_KEY=my-secret-key \
+  -e SERVFLOW_SQLITE_PATH=/data/servflow.db \
+  -v $(pwd)/config.toml:/app/config.toml \
+  servflow/servflow-pro start --config /app/config.toml --dashboard
+```
