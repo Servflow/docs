@@ -1,0 +1,97 @@
+---
+title: "Installation"
+description: "Get Servflow up and running on your infrastructure"
+---
+
+## Prerequisites
+
+- **Docker** (recommended) or
+- **Go 1.21+** for building from source
+
+## Using Docker (Recommended)
+
+Pull and run the official Servflow Pro image:
+
+```docs/installation.mdx#L14-L21
+docker run -d \
+  --name servflow-pro \
+  -p 8080:8080 \
+  -p 3000:3000 \
+  -v $(pwd)/config.toml:/app/config.toml \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/configs:/app/configs \
+  servflow/servflow-pro start --config /app/config.toml --dashboard
+```
+
+## Using Binary
+
+<Note>
+**TODO**: Binary downloads will be available soon. Check back for direct download links for Linux, macOS, and Windows.
+</Note>
+
+Once downloaded, run:
+
+```docs/installation.mdx#L31-L32
+./servflow-pro start --config config.toml --dashboard
+```
+
+## Configuration
+
+Servflow uses a TOML configuration file. Create a `config.toml` with the following minimal setup using SQLite for storage:
+
+```docs/installation.mdx#L38-L50
+[server]
+port = "8080"
+config_folder = "./configs"
+env = "production"
+
+[dashboard]
+port = "3000"
+configs_folder = "./configs"
+master_key = "your-secure-master-key"
+
+[sqlite]
+path = "./data/servflow.db"
+```
+
+<Tip>
+All configuration values can be overridden using environment variables. See the [Configuration Reference](/references/configuration) for the full list.
+</Tip>
+
+## Running Without SQLite
+
+Servflow can run without SQLite by omitting the `[sqlite]` section or leaving the path empty. In this mode, Servflow uses file-based storage.
+
+<Warning>
+Running without SQLite disables certain features:
+- **Secrets Management** — Encrypted storage for API keys and credentials
+- **OAuth Integrations** — OAuth provider configurations and token storage
+- **Metrics Storage** — Usage and performance metrics persistence
+</Warning>
+
+## Command Line Options
+
+| Flag | Description |
+|------|-------------|
+| `--config, -c` | Path to TOML configuration file (required) |
+| `--dashboard` | Start the web dashboard interface |
+| `--import-configs` | Import API configs from config folder to SQLite (requires `--dashboard`) |
+
+## Next Steps
+
+<Columns cols={2}>
+  <Card
+    title="Configuration Reference"
+    icon="gear"
+    href="/references/configuration"
+  >
+    Explore all configuration options and environment variables.
+  </Card>
+  <Card
+    title="Secrets Management"
+    icon="key"
+    href="/references/secrets"
+  >
+    Learn how to manage secrets securely.
+  </Card>
+</Columns>
