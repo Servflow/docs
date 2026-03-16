@@ -1,80 +1,177 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+description: "Create your first Hello World API with ServFlow in under 5 minutes"
 ---
 
-## Get started in three steps
+## What You'll Build
 
-Get your documentation site running locally and make your first customization.
+In this tutorial, you'll create a simple API endpoint that returns "hello world" when called. This introduces you to ServFlow's core workflow: defining how incoming HTTP requests are processed and responded to.
 
-### Step 1: Set up your local environment
+**ServFlow** is a visual API builder that lets you create, test, and deploy APIs without writing code. You define *configurations* that specify how requests flow through your system—from entry point to response.
+
+<Info>
+**Time to complete:** ~5 minutes
+
+**What you'll learn:**
+- How to create an API configuration
+- How to use the visual workflow editor
+- How to add a response to your API
+- How to test your API with curl
+</Info>
+
+## Prerequisites
+
+You'll need ServFlow Pro running with the dashboard enabled. If you haven't installed ServFlow yet, see the [Installation Guide](/installation).
+
+Start ServFlow with the dashboard:
+
+```docs/quickstart.mdx#L26-L27
+servflow-pro start --config config.toml --dashboard
+```
+
+This starts two servers:
+- **Dashboard UI** on port `3000` — where you'll build your API visually
+- **API Server** on port `8080` — where your APIs are served
+
+## Step 1: Open the Dashboard
+
+Open your browser and navigate to:
+
+```docs/quickstart.mdx#L37-L38
+http://localhost:3000
+```
+
+You'll see the ServFlow builder interface. On the left is the **Files Available** panel, which lists all your API configurations.
+
+<Frame>
+  <img src="/images/getting-started/step-1.png" alt="ServFlow Dashboard with Files Available panel" />
+</Frame>
+
+## Step 2: Create a New API Configuration
+
+Click the **+** button in the **Files Available** panel header.
+
+<Frame>
+  <img src="/images/getting-started/step-2.png" alt="Create New API Configuration dialog" />
+</Frame>
+
+In the dialog that appears:
+
+1. Enter `hello-world` as the configuration name
+2. Click **Create**
+
+<Note>
+Configuration names can only contain letters, numbers, hyphens (-), and underscores (_).
+</Note>
+
+## Step 3: Explore the Workflow Editor
+
+After creating the configuration, the visual workflow editor opens with an **Http Request Entry** node already in place.
+
+<Frame>
+  <img src="/images/getting-started/step-3.png" alt="Workflow editor with HTTP Request Entry node" />
+</Frame>
+
+This entry node defines how your API receives requests:
+- **Method**: GET (the HTTP method this endpoint accepts)
+- **ListenPath**: /hello-world (the URL path, based on your configuration name)
+
+The entry node is the starting point of every API workflow. From here, you'll add nodes that process the request and return a response.
+
+## Step 4: Add a Response Node
+
+Click the **+** button below the Http Request Entry node.
+
+<Frame>
+  <img src="/images/getting-started/step-4.png" alt="Node type selection dialog" />
+</Frame>
+
+A dialog appears with three node types:
+
+| Node Type | Purpose |
+|-----------|---------|
+| **Actions** | Perform operations like HTTP calls, data transformations, or integrations |
+| **Branch** | Add conditional logic to route requests based on criteria |
+| **Responses** | Return a response to the client |
+
+Select **Responses** to add a response node.
+
+## Step 5: Configure the Response
+
+Click on the **New Response** node to open its configuration panel on the left.
+
+<Frame>
+  <img src="/images/getting-started/step-5.png" alt="Response configuration panel" />
+</Frame>
+
+Configure the response:
+
+1. Set **Response Code** to `200`
+2. Under **Response Structure**, set the **Type** to `Value`
+3. Enter `hello world` in the **Value** field
+4. Click the **Save** button in the panel
+
+## Step 6: Save Your Configuration
+
+Click the purple **Save** button in the top-left corner of the screen to save your API configuration.
+
+Your workflow is now complete—an HTTP GET request to `/hello-world` will return your configured response.
+
+## Step 7: Test Your API
+
+Open a terminal and test your API using curl:
+
+```docs/quickstart.mdx#L113-L114
+curl http://localhost:8080/hello-world
+```
+
+You should see the response:
+
+```docs/quickstart.mdx#L119-L120
+hello world
+```
+
+<Check>
+**Congratulations!** You've created your first API with ServFlow.
+</Check>
+
+## Troubleshooting
 
 <AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
+  <Accordion title="Connection refused error">
+    Make sure ServFlow Pro is running. Check that you started it with:
+    ```docs/quickstart.mdx#L130-L131
+    servflow-pro start --config config.toml --dashboard
+    ```
   </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
+  <Accordion title="404 Not Found">
+    Verify the ListenPath in your Http Request Entry node matches the path in your curl command. If your configuration is named `hello-world`, the path should be `/hello-world`.
+  </Accordion>
+  <Accordion title="Changes not reflected">
+    Make sure you clicked **Save** after configuring your response. Unsaved changes won't be deployed to the API server.
   </Accordion>
 </AccordionGroup>
 
-### Step 2: Deploy your changes
+## Next Steps
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
+Now that you've built your first API, explore these features to build more powerful workflows:
 
 <CardGroup cols={2}>
 
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
+<Card title="Add Actions" icon="bolt" href="/essentials/actions">
+  Make HTTP calls to external services, transform data, and chain operations together.
 </Card>
 
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
+<Card title="Use Branching" icon="code-branch" href="/essentials/branching">
+  Add conditional logic to handle different request scenarios.
 </Card>
 
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
+<Card title="Manage Secrets" icon="key" href="/references/secrets">
+  Securely store and use API keys and credentials in your workflows.
 </Card>
 
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
+<Card title="Configuration Reference" icon="book" href="/references/configuration">
+  Explore all available configuration options for fine-tuning your setup.
 </Card>
 
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
