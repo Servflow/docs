@@ -3,22 +3,22 @@ title: "Introduction"
 description: "A visual backend engine for developing and rapidly prototyping scalable backends"
 ---
 
-## What is Servflow?
+## What is ServFlow?
 
-Servflow is a **visual backend engine** designed for developing and rapidly prototyping scalable backend services. Whether you're building a new API from scratch or connecting to existing infrastructure, Servflow provides an intuitive interface to design, test, and deploy your backend logic without sacrificing performance or flexibility.
+ServFlow is a **visual backend engine** designed for developing and rapidly prototyping scalable backend services. Whether you're building a new API from scratch or connecting to existing infrastructure, ServFlow provides an intuitive interface to design, test, and deploy your backend logic without sacrificing performance or flexibility.
 
 <Card
-  title="Get Started"
+  title="Get Started in 5 Minutes"
   icon="rocket"
   href="/quickstart"
   horizontal
 >
-  Follow our quickstart guide to build your first API in minutes.
+  Follow our quickstart guide to build your first API.
 </Card>
 
-## Why Servflow?
+## Why ServFlow?
 
-<Columns cols={2}>
+<CardGroup cols={2}>
   <Card
     title="Visual Development"
     icon="wand-magic-sparkles"
@@ -35,7 +35,7 @@ Servflow is a **visual backend engine** designed for developing and rapidly prot
     title="Built with Go"
     icon="bolt"
   >
-    Written in Go for minimal overhead and maximum efficiency. Servflow scales effortlessly to handle high-throughput workloads.
+    Written in Go for minimal overhead and maximum efficiency. ServFlow scales effortlessly to handle high-throughput workloads.
   </Card>
   <Card
     title="Rapid Prototyping"
@@ -43,30 +43,41 @@ Servflow is a **visual backend engine** designed for developing and rapidly prot
   >
     Go from idea to working API in minutes. Iterate quickly and validate your backend architecture before committing to production.
   </Card>
-</Columns>
+</CardGroup>
+
+## How It Works
+
+ServFlow uses a workflow-based approach to API development:
+
+1. **Define Entry Points** — Create HTTP endpoints that listen for incoming requests
+2. **Add Actions** — Chain together actions like HTTP calls, database queries, transformations, and integrations
+3. **Configure Responses** — Define what data to return based on your workflow logic
+4. **Deploy** — Run your APIs locally or deploy to your infrastructure
+
+All of this is configured visually through the ServFlow dashboard or via YAML configuration files.
 
 ## Deployment Options
 
-Servflow gives you the flexibility to deploy your backend wherever it makes sense for your team.
+ServFlow gives you the flexibility to deploy your backend wherever it makes sense for your team.
 
-<Columns cols={2}>
+<CardGroup cols={2}>
   <Card
     title="Self-Hosted"
     icon="server"
   >
-    Run Servflow on your own infrastructure for complete control over your data and environment. Perfect for teams with specific compliance or security requirements.
+    Run ServFlow on your own infrastructure for complete control over your data and environment. Perfect for teams with specific compliance or security requirements.
   </Card>
   <Card
     title="Cloud"
     icon="cloud"
   >
-    Use Servflow Cloud for easier deployment and managed infrastructure. Get started faster without worrying about server maintenance or scaling.
+    Use ServFlow Cloud for easier deployment and managed infrastructure. Get started faster without worrying about server maintenance or scaling.
   </Card>
-</Columns>
+</CardGroup>
 
 ## Performance at Scale
 
-Servflow is engineered for performance:
+ServFlow is engineered for performance:
 
 - **Minimal Overhead** — Go's efficient runtime ensures your APIs respond quickly with low resource consumption
 - **High Throughput** — Handle thousands of concurrent requests without breaking a sweat
@@ -74,13 +85,20 @@ Servflow is engineered for performance:
 
 ## Next Steps
 
-<Columns cols={2}>
+<CardGroup cols={2}>
+  <Card
+    title="Installation"
+    icon="download"
+    href="/installation"
+  >
+    Install ServFlow using Docker or the binary.
+  </Card>
   <Card
     title="Quickstart"
     icon="play"
     href="/quickstart"
   >
-    Build and deploy your first API with Servflow.
+    Build and deploy your first API with ServFlow.
   </Card>
   <Card
     title="Local Development"
@@ -90,31 +108,10 @@ Servflow is engineered for performance:
     Set up your local development environment.
   </Card>
   <Card
-    title="Installation"
-    icon="download"
-    href="/installation"
-  >
-    Install Servflow using Docker or binary.
-  </Card>
-</Columns>
-
-## References
-
-Detailed documentation for configuration and features.
-
-<Columns cols={2}>
-  <Card
     title="Configuration Reference"
     icon="gear"
     href="/references/configuration"
   >
-    Complete guide to all configuration options and environment variables.
+    Explore all configuration options.
   </Card>
-  <Card
-    title="Secrets Management"
-    icon="key"
-    href="/references/secrets"
-  >
-    Learn how to manage secrets using SQLite storage or environment variables.
-  </Card>
-</Columns>
+</CardGroup>

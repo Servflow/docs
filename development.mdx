@@ -1,94 +1,242 @@
 ---
-title: 'Development'
-description: 'Preview changes locally to update your docs'
+title: "Setting Up Your Local Environment"
+description: "Download and configure ServFlow Pro for local development"
 ---
 
-<Info>
-  **Prerequisites**:
-  - Node.js version 19 or higher
-  - A docs repository with a `docs.json` file
-</Info>
+ServFlow Pro is a visual backend engine for building and running APIs. This guide walks you through setting up ServFlow Pro on your local machine for development. By the end, you'll have a fully functional local environment ready to build and test APIs.
 
-Follow these steps to install and run Mintlify on your operating system.
+## Prerequisites
 
-<Steps>
-<Step title="Install the Mintlify CLI">
+- **Docker** (recommended) or a downloaded ServFlow Pro binary
+- A terminal or command-line interface
 
-```bash
-npm i -g mint
-```
-</Step>
+## Download Options
 
-<Step title="Preview locally">
+### Using Docker (Recommended)
 
-Navigate to your docs directory where your `docs.json` file is located, and run the following command:
+Pull the official ServFlow Pro Docker image:
 
 ```bash
-mint dev
+docker pull servflow/servflow-pro
 ```
 
-A local preview of your documentation will be available at `http://localhost:3000`.
+### Using the Binary
 
-</Step>
-</Steps>
+<Note>
+Binary downloads will be available soon. Check back for direct download links for Linux, macOS, and Windows.
+</Note>
 
-## Custom ports
+## Configuration Setup
 
-By default, Mintlify uses port 3000. You can customize the port Mintlify runs on by using the `--port` flag. For example, to run Mintlify on port 3333, use this command:
+ServFlow Pro uses a TOML configuration file. Create a `config.toml` file in your working directory:
+
+```toml
+[server]
+port = "8080"
+config_folder = "./configs"
+env = "development"
+
+[dashboard]
+port = "3000"
+configs_folder = "./configs"
+master_key = "your-local-dev-master-key"
+```
+
+Next, create the configs directory where your API configurations will be stored:
 
 ```bash
-mint dev --port 3333
+mkdir configs
 ```
 
-If you attempt to run Mintlify on a port that's already in use, it will use the next available port:
+<Tip>
+The `config_folder` is the only required configuration. ServFlow will use sensible defaults for everything else.
+</Tip>
 
-```md
-Port 3000 is already in use. Trying 3001 instead.
+## Port Configuration
+
+ServFlow Pro runs two servers:
+
+| Server | Default Port | Purpose |
+|--------|--------------|---------|
+| API Server | `8080` | Handles incoming API requests |
+| Dashboard | `3000` | Web UI for building and managing APIs |
+
+### Customizing Ports
+
+You can change ports in your `config.toml`:
+
+```toml
+[server]
+port = "9000"
+
+[dashboard]
+port = "4000"
 ```
 
-## Mintlify versions
-
-Please note that each CLI release is associated with a specific version of Mintlify. If your local preview does not align with the production version, please update the CLI:
+Or use environment variables:
 
 ```bash
-npm mint update
+export SERVFLOW_SERVER_PORT=9000
+export SERVFLOW_DASHBOARD_PORT=4000
 ```
 
-## Validating links
+<Note>
+Environment variables take precedence over values in the TOML file.
+</Note>
 
-The CLI can assist with validating links in your documentation. To identify any broken links, use the following command:
+## Master Key for Secrets
+
+The `master_key` is used to encrypt secrets stored in the dashboard, such as API keys and credentials.
+
+```toml
+[dashboard]
+master_key = "your-secure-master-key"
+```
+
+Or set it via environment variable:
 
 ```bash
-mint broken-links
+export SERVFLOW_DASHBOARD_MASTER_KEY=your-secure-master-key
 ```
 
-## Deployment
+<Warning>
+**Security Best Practices:**
+- Use a strong, unique key (at least 32 characters recommended)
+- Never commit your master key to version control
+- Use environment variables in production environments
+- If you change the master key, previously encrypted secrets cannot be decrypted
+</Warning>
 
-If the deployment is successful, you should see the following:
+If no master key is set, secrets management will be disabled in the dashboard.
 
-<Frame>
-  <img src="/images/checks-passed.png" alt="Screenshot of a deployment confirmation message that says All checks have passed." style={{ borderRadius: '0.5rem' }} />
-</Frame>
+## Optional: SQLite Storage
 
-## Code formatting
+SQLite provides persistent storage for additional features. When configured, it enables:
 
-We suggest using extensions on your IDE to recognize and format MDX. If you're a VSCode user, consider the [MDX VSCode extension](https://marketplace.visualstudio.com/items?itemName=unifiedjs.vscode-mdx) for syntax highlighting, and [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) for code formatting.
+- **Secrets Management** — Encrypted storage for API keys and credentials
+- **OAuth Integrations** — OAuth provider configurations and token storage
+- **Metrics Storage** — Usage and performance metrics persistence
 
-## Troubleshooting
+To enable SQLite, add the following to your `config.toml`:
 
-<AccordionGroup>
-  <Accordion title='Error: Could not load the "sharp" module using the darwin-arm64 runtime'>
+```toml
+[sqlite]
+path = "./data/servflow.db"
+```
 
-    This may be due to an outdated version of node. Try the following:
-    1. Remove the currently-installed version of the CLI: `npm remove -g mint`
-    2. Upgrade to Node v19 or higher.
-    3. Reinstall the CLI: `npm i -g mint`
-  </Accordion>
+Make sure to create the data directory:
 
-  <Accordion title="Issue: Encountering an unknown error">
-  
-    Solution: Go to the root of your device and delete the `~/.mintlify` folder. Then run `mint dev` again.
-  </Accordion>
-</AccordionGroup>
+```bash
+mkdir data
+```
 
-Curious about what changed in the latest CLI version? Check out the [CLI changelog](https://www.npmjs.com/package/mintlify?activeTab=versions).
+<Note>
+If SQLite is not configured, ServFlow falls back to file-based storage. This is fine for basic local development but limits available features.
+</Note>
+
+## Optional: Tracing with OpenTelemetry
+
+ServFlow Pro supports distributed tracing via OpenTelemetry, which helps you debug and monitor API workflows.
+
+### Setting Up a Local Collector
+
+You can run Jaeger locally as a tracing collector:
+
+```bash
+docker run -d --name jaeger \
+  -p 16686:16686 \
+  -p 4318:4318 \
+  jaegertracing/all-in-one:latest
+```
+
+This starts Jaeger with:
+- **Port 16686** — Jaeger UI for viewing traces
+- **Port 4318** — OTLP HTTP collector endpoint
+
+### Configuring Tracing
+
+Add the tracing configuration to your `config.toml`:
+
+```toml
+[tracing]
+enabled = true
+service_name = "servflow-local"
+collector_endpoint = "http://localhost:4318"
+```
+
+Or use environment variables:
+
+```bash
+export SERVFLOW_TRACING_ENABLED=true
+export SERVFLOW_TRACING_SERVICE_NAME=servflow-local
+export SERVFLOW_TRACING_COLLECTOR_ENDPOINT=http://localhost:4318
+```
+
+Once configured, you can view traces at `http://localhost:16686`.
+
+## Running ServFlow Pro
+
+### With Docker
+
+```bash
+docker run -d \
+  --name servflow-pro \
+  -p 8080:8080 \
+  -p 3000:3000 \
+  -v $(pwd)/config.toml:/app/config.toml \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/configs:/app/configs \
+  servflow/servflow-pro start --config /app/config.toml --dashboard
+```
+
+### With the Binary
+
+```bash
+./servflow-pro start --config config.toml --dashboard
+```
+
+### Command Line Options
+
+| Flag | Description |
+|------|-------------|
+| `--config, -c` | Path to TOML configuration file (required) |
+| `--dashboard` | Start the web dashboard interface |
+| `--import-configs` | Import API configs from config folder to SQLite (requires `--dashboard`) |
+
+## Verifying Your Setup
+
+### Test the API Server
+
+```bash
+curl http://localhost:8080/health
+```
+
+You should receive a response indicating the server is running.
+
+### Access the Dashboard
+
+Open your browser and navigate to:
+
+```
+http://localhost:3000
+```
+
+You should see the ServFlow builder interface ready for creating APIs.
+
+<Check>
+**You're all set!** Your local ServFlow Pro environment is configured and running.
+</Check>
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Create Your First API" icon="rocket" href="/quickstart">
+  Follow the quickstart guide to build a Hello World API in under 5 minutes.
+</Card>
+
+<Card title="Configuration Reference" icon="gear" href="/references/configuration">
+  Explore all configuration options and environment variables.
+</Card>
+
+</CardGroup>

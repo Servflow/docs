@@ -1,18 +1,24 @@
 ---
 title: "Installation"
-description: "Get Servflow up and running on your infrastructure"
+description: "Deploy ServFlow Pro to your infrastructure for production use"
 ---
+
+ServFlow Pro is a visual backend engine for building and running APIs. This guide covers deploying ServFlow to your infrastructure for production or staging environments.
+
+<Tip>
+Looking to set up a local development environment instead? See the [Local Environment Setup](/development) guide.
+</Tip>
 
 ## Prerequisites
 
 - **Docker** (recommended) or
-- **Go 1.21+** for building from source
+- **ServFlow Pro binary** for your platform
 
 ## Using Docker (Recommended)
 
-Pull and run the official Servflow Pro image:
+Pull and run the official ServFlow Pro image:
 
-```docs/installation.mdx#L14-L21
+```bash
 docker run -d \
   --name servflow-pro \
   -p 8080:8080 \
@@ -23,23 +29,28 @@ docker run -d \
   servflow/servflow-pro start --config /app/config.toml --dashboard
 ```
 
-## Using Binary
+This command:
+- Exposes port **8080** for the API server
+- Exposes port **3000** for the dashboard
+- Mounts your configuration file and data directories
+
+## Using the Binary
 
 <Note>
-**TODO**: Binary downloads will be available soon. Check back for direct download links for Linux, macOS, and Windows.
+Binary downloads will be available soon. Check back for direct download links for Linux, macOS, and Windows.
 </Note>
 
 Once downloaded, run:
 
-```docs/installation.mdx#L31-L32
+```bash
 ./servflow-pro start --config config.toml --dashboard
 ```
 
 ## Configuration
 
-Servflow uses a TOML configuration file. Create a `config.toml` with the following minimal setup using SQLite for storage:
+ServFlow uses a TOML configuration file. Create a `config.toml` with the following setup:
 
-```docs/installation.mdx#L38-L50
+```toml
 [server]
 port = "8080"
 config_folder = "./configs"
@@ -54,13 +65,13 @@ master_key = "your-secure-master-key"
 path = "./data/servflow.db"
 ```
 
-<Tip>
-All configuration values can be overridden using environment variables. See the [Configuration Reference](/references/configuration) for the full list.
-</Tip>
+<Warning>
+Never commit your `master_key` to version control. Use environment variables for sensitive values in production.
+</Warning>
 
 ## Running Without SQLite
 
-Servflow can run without SQLite by omitting the `[sqlite]` section or leaving the path empty. In this mode, Servflow uses file-based storage.
+ServFlow can run without SQLite by omitting the `[sqlite]` section or leaving the path empty. In this mode, ServFlow uses file-based storage.
 
 <Warning>
 Running without SQLite disables certain features:
@@ -79,19 +90,22 @@ Running without SQLite disables certain features:
 
 ## Next Steps
 
-<Columns cols={2}>
-  <Card
-    title="Configuration Reference"
-    icon="gear"
-    href="/references/configuration"
-  >
-    Explore all configuration options and environment variables.
-  </Card>
-  <Card
-    title="Secrets Management"
-    icon="key"
-    href="/references/secrets"
-  >
-    Learn how to manage secrets securely.
-  </Card>
-</Columns>
+<CardGroup cols={2}>
+
+<Card title="Quickstart" icon="rocket" href="/quickstart">
+  Build and deploy your first API with ServFlow.
+</Card>
+
+<Card title="Configuration Reference" icon="gear" href="/references/configuration">
+  Explore all configuration options and environment variables.
+</Card>
+
+<Card title="Secrets Management" icon="key" href="/references/secrets">
+  Learn how to manage secrets securely.
+</Card>
+
+<Card title="Local Development" icon="laptop-code" href="/development">
+  Set up a local development environment.
+</Card>
+
+</CardGroup>
