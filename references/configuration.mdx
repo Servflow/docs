@@ -1,15 +1,19 @@
 ---
 title: "Configuration Reference"
-description: "Complete guide to all Servflow configuration options and environment variables"
+description: "Complete guide to all ServFlow configuration options and environment variables"
 ---
 
-Servflow is configured using a TOML file. All configuration values can be overridden using environment variables.
+ServFlow Pro is configured using a TOML file. This reference covers all available configuration options for running ServFlow in development and production environments.
+
+<Tip>
+All configuration values can be overridden using environment variables, making it easy to manage settings across different environments.
+</Tip>
 
 ## Server Configuration
 
-The `[server]` section configures the main API server.
+The `[server]` section configures the main API server that handles incoming requests to your workflows.
 
-```docs/references/configuration.mdx#L11-L15
+```toml
 [server]
 port = "8080"
 config_folder = "./configs"
@@ -24,11 +28,15 @@ env = "production"
 | `engine_config_file` | `SERVFLOW_SERVER_ENGINE_CONFIG_FILE` | — | Path to engine integrations YAML file |
 | `env` | `SERVFLOW_SERVER_ENV` | `production` | Environment mode (`production` or `development`) |
 
+<Note>
+The `config_folder` is the only required configuration. ServFlow will use sensible defaults for all other settings.
+</Note>
+
 ## Dashboard Configuration
 
-The `[dashboard]` section configures the web dashboard interface.
+The `[dashboard]` section configures the web dashboard interface for building and managing APIs visually.
 
-```docs/references/configuration.mdx#L29-L33
+```toml
 [dashboard]
 port = "3000"
 configs_folder = "./configs"
@@ -47,9 +55,9 @@ Keep your `master_key` secure and never commit it to version control. Use enviro
 
 ## SQLite Configuration
 
-The `[sqlite]` section configures persistent storage.
+The `[sqlite]` section configures persistent storage for secrets, OAuth tokens, and metrics.
 
-```docs/references/configuration.mdx#L49-L51
+```toml
 [sqlite]
 path = "./data/servflow.db"
 ```
@@ -59,35 +67,14 @@ path = "./data/servflow.db"
 | `path` | `SERVFLOW_SQLITE_PATH` | `./database.db` | Path to SQLite database file |
 
 <Note>
-If the `path` is empty or the `[sqlite]` section is omitted, Servflow falls back to file-based storage with reduced functionality.
+If the `path` is empty or the `[sqlite]` section is omitted, ServFlow falls back to file-based storage with reduced functionality. See [Secrets Management](/references/secrets) for details on what features require SQLite.
 </Note>
-
-## Authentication Configuration
-
-The `[authentication]` section configures JWT-based authentication for the dashboard.
-
-```docs/references/configuration.mdx#L65-L69
-[authentication]
-jwk_url = "https://your-tenant.auth0.com/.well-known/jwks.json"
-domain = "your-domain.com"
-redirect_url = "https://your-app.com"
-```
-
-| Field | Environment Variable | Default | Description |
-|-------|---------------------|---------|-------------|
-| `jwk_url` | `SERVFLOW_AUTH_JWK_URL` | — | URL to JSON Web Key Set for JWT validation |
-| `domain` | `SERVFLOW_AUTH_DOMAIN` | — | Your authentication domain |
-| `redirect_url` | `SERVFLOW_AUTH_REDIRECT_URL` | `https://app.servflow.io` | Redirect URL after authentication |
-
-<Tip>
-Authentication is optional for local development. When `jwk_url` and `domain` are not set, the dashboard runs without authentication.
-</Tip>
 
 ## Tracing Configuration
 
-The `[tracing]` section configures OpenTelemetry distributed tracing.
+The `[tracing]` section configures OpenTelemetry distributed tracing for debugging and monitoring your API workflows.
 
-```docs/references/configuration.mdx#L87-L92
+```toml
 [tracing]
 enabled = false
 service_name = "servflow-pro"
@@ -102,11 +89,15 @@ collector_endpoint = ""
 | `org_id` | `SERVFLOW_TRACING_ORG_ID` | — | Organization ID for multi-tenant collectors |
 | `collector_endpoint` | `SERVFLOW_TRACING_COLLECTOR_ENDPOINT` | — | OTLP collector endpoint URL |
 
+<Tip>
+For local development, you can use Jaeger as a tracing collector. See the [Local Environment Setup](/development) guide for instructions.
+</Tip>
+
 ## Complete Example
 
-Here's a complete configuration file with all options:
+Here's a complete configuration file with all available options:
 
-```docs/references/configuration.mdx#L106-L133
+```toml
 [server]
 port = "8080"
 config_folder = "./configs"
@@ -120,11 +111,6 @@ master_key = "your-secure-master-key"
 
 [sqlite]
 path = "./data/servflow.db"
-
-[authentication]
-jwk_url = "https://your-tenant.auth0.com/.well-known/jwks.json"
-domain = "your-domain.com"
-redirect_url = "https://your-app.com"
 
 [tracing]
 enabled = false
@@ -143,7 +129,7 @@ Environment variables take precedence over values in the TOML file. This is usef
 
 Example using environment variables with Docker:
 
-```docs/references/configuration.mdx#L146-L153
+```bash
 docker run -d \
   --name servflow-pro \
   -e SERVFLOW_SERVER_PORT=9000 \
@@ -152,3 +138,25 @@ docker run -d \
   -v $(pwd)/config.toml:/app/config.toml \
   servflow/servflow-pro start --config /app/config.toml --dashboard
 ```
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Local Environment Setup" icon="laptop-code" href="/development">
+  Set up ServFlow Pro for local development with detailed configuration examples.
+</Card>
+
+<Card title="Secrets Management" icon="key" href="/references/secrets">
+  Learn how to securely manage API keys and credentials.
+</Card>
+
+<Card title="Installation" icon="download" href="/installation">
+  Deploy ServFlow Pro to your infrastructure.
+</Card>
+
+<Card title="Quickstart" icon="rocket" href="/quickstart">
+  Build your first API with ServFlow.
+</Card>
+
+</CardGroup>
