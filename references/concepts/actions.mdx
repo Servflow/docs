@@ -1,0 +1,215 @@
+---
+title: "Actions"
+description: "Understanding Actions in ServFlow — the building blocks of your API workflows"
+---
+
+Actions are the core building blocks of ServFlow workflows. They perform discrete operations such as fetching data from a database, calling external APIs, running AI agents, or transforming values. Every workflow consists of an entry point, one or more actions, and a response.
+
+You can configure actions in two ways:
+
+- **Dashboard UI** — Visual drag-and-drop interface for building workflows
+- **YAML Configuration** — Code-based configuration files for version control and advanced setups
+
+This page covers both approaches separately so you can focus on your preferred method.
+
+---
+
+## Actions in the Dashboard UI
+
+The ServFlow dashboard provides a visual interface for adding and configuring actions in your workflows.
+
+### Adding an Action Node
+
+To add an action to your workflow:
+
+1. Click the **+** button below an existing node in the workflow canvas
+2. Select **Actions** from the node type options
+3. Browse the list of available actions in the sidebar
+
+### Browsing Available Actions
+
+When you click to add an action, a sidebar panel displays all available action types. Each action shows its name and a brief description of what it does.
+
+<Frame>
+  <img src="/images/concepts/actions-list.png" alt="Available actions list in the ServFlow dashboard sidebar" />
+</Frame>
+
+### Configuring an Action
+
+Selecting an action opens the configuration panel on the left side of the screen. Each action type has specific fields to configure.
+
+<Frame>
+  <img src="/images/concepts/action-config.png" alt="Action configuration panel showing AI Agent settings" />
+</Frame>
+
+The configuration panel displays:
+
+- **Action type** — The selected action (e.g., AI Agent)
+- **Configuration fields** — Type-specific settings such as identifiers, prompts, or connection details
+- **Save Action** — Button to save your configuration
+
+<Tip>
+Use `{{ .Variable }}` syntax in input fields to reference dynamic content from previous actions or request parameters.
+</Tip>
+
+### Connecting Actions
+
+Actions have output handles that let you define the flow:
+
+- **Next** — Where to route on successful completion
+- **Fail** — Where to route when an error occurs
+- **Tools** — Additional outputs for specific action types (e.g., AI Agent tools)
+
+Drag connections from these handles to other actions, conditionals, or response nodes to build your workflow logic.
+
+### Using Action Results
+
+When an action completes, its result is stored and can be referenced by subsequent nodes. Use the `{{ .Variable }}` syntax in any input field to access these values.
+
+For example, if an action with ID `get_user` returns user data, you can access the email field in a later action with `{{ .get_user.email }}`.
+
+---
+
+## Actions in YAML Configuration
+
+For code-based workflows, actions are defined in YAML configuration files. This approach is ideal for version control, complex workflows, and programmatic configuration.
+
+### Action Structure
+
+Every action follows this structure:
+
+```docs/references/concepts/actions.mdx
+actions:
+  action_id:
+    type: action_type
+    config:
+      # type-specific configuration
+    next: action.next_step
+    fail: response.error
+```
+
+The `action_id` is a unique identifier you choose for the action. You'll use this ID to reference the action's results in other parts of your workflow.
+
+### Common Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `type` | string | Yes | The action type identifier (e.g., `fetch`, `http`, `agent`) |
+| `config` | object | No | Type-specific configuration options |
+| `next` | string | No | Step to execute on success |
+| `fail` | string | No | Step to execute on failure |
+
+### Chaining Actions
+
+Use the `next` and `fail` fields to define your workflow's execution path:
+
+- **`next`** — Routes to another step when the action succeeds
+- **`fail`** — Routes to an error handler when the action fails
+
+The routing syntax follows the pattern `type.identifier`:
+
+- `action.other_action` — Route to another action
+- `conditional.check_value` — Route to a conditional branch
+- `response.success` — Route to a response
+
+### Accessing Action Results
+
+Action results are stored under the action's ID and can be accessed using template syntax:
+
+```docs/references/concepts/actions.mdx
+# Access the full result from action 'fetch_user'
+value: "{{ .fetch_user }}"
+
+# Access a nested field
+value: "{{ .fetch_user.email }}"
+
+# Use in expressions
+expression: "{{ gt (len .fetch_user) 0 }}"
+```
+
+Here's an example of chaining actions where the second action uses data from the first:
+
+```docs/references/concepts/actions.mdx
+actions:
+  get_user:
+    type: fetch
+    config:
+      integrationID: my_database
+      table: users
+      filters:
+        - field: id
+          operator: eq
+          value: "{{ param \"user_id\" }}"
+      single: true
+    next: action.send_welcome
+
+  send_welcome:
+    type: email
+    config:
+      recipientEmail: "{{ .get_user.email }}"
+      subject: "Welcome!"
+      content: "Hello {{ .get_user.name }}, welcome to our platform."
+    next: response.success
+```
+
+---
+
+## Available Actions
+
+ServFlow provides a range of actions for different operations:
+
+| Action | Description |
+|--------|-------------|
+| `fetch` | Retrieves data from a database table |
+| `store` | Stores a new record in a database table |
+| `update` | Updates existing records |
+| `delete` | Deletes records from a database table |
+| `mongoquery` | Executes native MongoDB queries |
+| `storevector` | Stores vector embeddings |
+| `fetchvectors` | Queries vectors for similarity search |
+| `http` | Makes HTTP requests to external APIs |
+| `authenticate` | Validates JWT tokens and fetches user data |
+| `jwt` | Encodes or decodes JWT tokens |
+| `hash` | Hashes values using bcrypt |
+| `javascript` | Executes custom JavaScript code |
+| `static` | Returns a static or computed value |
+| `agent` | Interacts with AI models |
+| `parallel` | Executes multiple actions simultaneously |
+| `email` | Sends email messages via SMTP |
+| `command` | Executes shell commands (Pro) |
+| `memory_store` | Stores data in temporary memory (Pro) |
+| `memory_fetch` | Retrieves data from temporary memory (Pro) |
+| `binance/getprice` | Gets cryptocurrency price data (Pro) |
+| `binance/accountbalance` | Queries Binance account balances (Pro) |
+| `binance/spotorder` | Places spot trading orders (Pro) |
+| `binance/futuresorder` | Places futures orders (Pro) |
+| `binance/pricedifference` | Calculates price changes (Pro) |
+| `binance/tradeinfo` | Gets order and position info (Pro) |
+
+<Note>
+Actions marked **(Pro)** require ServFlow Pro.
+</Note>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Quickstart" icon="rocket" href="/quickstart">
+  See actions in practice by building your first API.
+</Card>
+
+<Card title="Configuration Reference" icon="gear" href="/references/configuration">
+  Explore all ServFlow configuration options.
+</Card>
+
+<Card title="Secrets Management" icon="key" href="/references/secrets">
+  Securely store credentials used by your actions.
+</Card>
+
+<Card title="Installation" icon="download" href="/installation">
+  Set up ServFlow in your environment.
+</Card>
+
+</CardGroup>
