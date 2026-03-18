@@ -1,0 +1,450 @@
+---
+title: "Data Operations"
+description: "Actions for reading, writing, updating, and deleting data in databases"
+---
+
+Data operation actions allow you to interact with databases in your workflows. These actions support SQL databases (PostgreSQL, MySQL, SQLite) and MongoDB through configured integrations.
+
+<Note>
+Before using data operations, ensure you have a database integration configured. See [Configuration Reference](/references/configuration) for setup details.
+</Note>
+
+---
+
+## fetch
+
+Retrieves data from a database table using filters.
+
+### Integration ID
+
+The database integration to query against.
+
+| | |
+|---|---|
+| **YAML Key** | `integrationID` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Table
+
+The database table or collection name to query.
+
+| | |
+|---|---|
+| **YAML Key** | `table` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Filters
+
+Query filters to narrow down results. See [Filter Syntax](#filter-syntax) for available operators.
+
+| | |
+|---|---|
+| **YAML Key** | `filters` |
+| **Type** | array |
+| **Required** | No |
+
+### Single
+
+Return a single result object instead of an array.
+
+| | |
+|---|---|
+| **YAML Key** | `single` |
+| **Type** | boolean |
+| **Required** | No |
+| **Default** | `false` |
+
+### Fail If Empty
+
+Treat no results as a failure, routing to the `fail` step.
+
+| | |
+|---|---|
+| **YAML Key** | `failIfEmpty` |
+| **Type** | boolean |
+| **Required** | No |
+| **Default** | `true` |
+
+### Example
+
+```docs/actions/data-operations.mdx
+actions:
+  get_user:
+    type: fetch
+    config:
+      integrationID: my_database
+      table: users
+      filters:
+        - field: email
+          operator: eq
+          value: "{{ param \"email\" }}"
+      single: true
+      failIfEmpty: true
+    next: response.success
+    fail: response.not_found
+```
+
+---
+
+## store
+
+Stores a new record in a database table.
+
+### Integration ID
+
+The database integration to store data in.
+
+| | |
+|---|---|
+| **YAML Key** | `integrationID` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Table
+
+The database table or collection name to insert into.
+
+| | |
+|---|---|
+| **YAML Key** | `table` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Fields
+
+Data fields to store as key-value pairs.
+
+| | |
+|---|---|
+| **YAML Key** | `fields` |
+| **Type** | map |
+| **Required** | Yes |
+
+### Datasource Options
+
+Additional datasource-specific options.
+
+| | |
+|---|---|
+| **YAML Key** | `datasourceOptions` |
+| **Type** | map |
+| **Required** | No |
+
+### Example
+
+```docs/actions/data-operations.mdx
+actions:
+  create_user:
+    type: store
+    config:
+      integrationID: my_database
+      table: users
+      fields:
+        email: "{{ param \"email\" }}"
+        name: "{{ param \"name\" }}"
+        password: "{{ .hash_password }}"
+        created_at: "{{ now }}"
+    next: response.created
+    fail: response.error
+```
+
+<Tip>
+If no `id` field is provided, a UUID will be automatically generated.
+</Tip>
+
+---
+
+## update
+
+Updates existing records in a database table.
+
+### Integration ID
+
+The database integration containing the records.
+
+| | |
+|---|---|
+| **YAML Key** | `integrationID` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Table
+
+The database table or collection name to update.
+
+| | |
+|---|---|
+| **YAML Key** | `table` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Filters
+
+Filters to identify which records to update. See [Filter Syntax](#filter-syntax) for available operators.
+
+| | |
+|---|---|
+| **YAML Key** | `filters` |
+| **Type** | array |
+| **Required** | Yes |
+
+### Fields
+
+Fields to update with their new values.
+
+| | |
+|---|---|
+| **YAML Key** | `fields` |
+| **Type** | map |
+| **Required** | Yes |
+
+### Datasource Options
+
+Additional datasource-specific options.
+
+| | |
+|---|---|
+| **YAML Key** | `datasourceOptions` |
+| **Type** | map |
+| **Required** | No |
+
+### Example
+
+```docs/actions/data-operations.mdx
+actions:
+  update_user:
+    type: update
+    config:
+      integrationID: my_database
+      table: users
+      filters:
+        - field: id
+          operator: eq
+          value: "{{ param \"user_id\" }}"
+      fields:
+        name: "{{ param \"name\" }}"
+        updated_at: "{{ now }}"
+    next: response.success
+    fail: response.error
+```
+
+---
+
+## delete
+
+Deletes records from a database table.
+
+### Integration ID
+
+The database integration containing the records.
+
+| | |
+|---|---|
+| **YAML Key** | `integrationID` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Table
+
+The database table or collection name to delete from.
+
+| | |
+|---|---|
+| **YAML Key** | `table` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Filters
+
+Filters to identify which records to delete. See [Filter Syntax](#filter-syntax) for available operators.
+
+| | |
+|---|---|
+| **YAML Key** | `filters` |
+| **Type** | array |
+| **Required** | Yes |
+
+### Datasource Options
+
+Additional datasource-specific options.
+
+| | |
+|---|---|
+| **YAML Key** | `datasourceOptions` |
+| **Type** | map |
+| **Required** | No |
+
+### Example
+
+```docs/actions/data-operations.mdx
+actions:
+  delete_user:
+    type: delete
+    config:
+      integrationID: my_database
+      table: users
+      filters:
+        - field: id
+          operator: eq
+          value: "{{ param \"user_id\" }}"
+    next: response.success
+    fail: response.error
+```
+
+---
+
+## mongoquery
+
+Executes native MongoDB queries with filter and projection support.
+
+### Integration ID
+
+The MongoDB integration to query against.
+
+| | |
+|---|---|
+| **YAML Key** | `integrationID` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Collection
+
+The MongoDB collection name to query.
+
+| | |
+|---|---|
+| **YAML Key** | `collection` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Filter Query
+
+MongoDB filter query in JSON format.
+
+| | |
+|---|---|
+| **YAML Key** | `filterQuery` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Projection
+
+MongoDB projection query in JSON format to select specific fields.
+
+| | |
+|---|---|
+| **YAML Key** | `projection` |
+| **Type** | string |
+| **Required** | No |
+
+### Fail If Empty
+
+Treat no results as a failure, routing to the `fail` step.
+
+| | |
+|---|---|
+| **YAML Key** | `failIfEmpty` |
+| **Type** | boolean |
+| **Required** | No |
+| **Default** | `true` |
+
+### Example
+
+```docs/actions/data-operations.mdx
+actions:
+  query_users:
+    type: mongoquery
+    config:
+      integrationID: my_mongodb
+      collection: users
+      filterQuery: '{"status": "active", "age": {"$gte": 18}}'
+      projection: '{"name": 1, "email": 1, "_id": 0}'
+      failIfEmpty: false
+    next: response.success
+```
+
+**Dynamic filter example:**
+
+```docs/actions/data-operations.mdx
+actions:
+  search_users:
+    type: mongoquery
+    config:
+      integrationID: my_mongodb
+      collection: users
+      filterQuery: '{"email": "{{ param "email" | stringescape }}"}'
+    next: response.success
+```
+
+<Tip>
+Use the `stringescape` template function when inserting user input into JSON queries to prevent injection attacks.
+</Tip>
+
+---
+
+## Filter Syntax
+
+The `fetch`, `update`, and `delete` actions use a common filter syntax:
+
+```docs/actions/data-operations.mdx
+filters:
+  - field: field_name
+    operator: eq
+    value: "comparison_value"
+```
+
+### Available Operators
+
+| Operator | Description |
+|----------|-------------|
+| `eq` | Equal to |
+| `ne` | Not equal to |
+| `gt` | Greater than |
+| `gte` | Greater than or equal |
+| `lt` | Less than |
+| `lte` | Less than or equal |
+| `in` | Value in array |
+| `nin` | Value not in array |
+
+### Multiple Filters Example
+
+```docs/actions/data-operations.mdx
+filters:
+  - field: status
+    operator: eq
+    value: active
+  - field: age
+    operator: gte
+    value: "18"
+  - field: role
+    operator: in
+    value:
+      - admin
+      - moderator
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Actions Overview" icon="book" href="/actions/overview">
+  Learn about action structure and chaining.
+</Card>
+
+<Card title="Vector Operations" icon="cube" href="/actions/vector-operations">
+  Store and query vector embeddings.
+</Card>
+
+<Card title="Authentication" icon="lock" href="/actions/authentication">
+  Secure your APIs with JWT and authentication.
+</Card>
+
+<Card title="Secrets Management" icon="key" href="/references/secrets">
+  Securely store database credentials.
+</Card>
+
+</CardGroup>

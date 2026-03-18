@@ -1,0 +1,389 @@
+---
+title: "Authentication"
+description: "Secure your APIs with JWT tokens, user authentication, and password hashing"
+---
+
+Authentication actions help you secure your ServFlow APIs. Use them to validate JWT tokens, authenticate users against your database, generate new tokens, and securely hash passwords.
+
+---
+
+## authenticate
+
+Validates a JWT token and authenticates the user against database records. This action combines token verification with user lookup in a single step.
+
+### Integration ID
+
+The database integration to look up user records.
+
+| | |
+|---|---|
+| **YAML Key** | `integrationID` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Token
+
+The JWT token to validate. Typically extracted from the Authorization header.
+
+| | |
+|---|---|
+| **YAML Key** | `token` |
+| **Type** | string |
+| **Required** | Yes |
+
+<Tip>
+Use `{{ header "Authorization" | trimPrefix "Bearer " }}` to extract the token from the Authorization header.
+</Tip>
+
+### JWT Key
+
+The secret key used to verify the JWT signature.
+
+| | |
+|---|---|
+| **YAML Key** | `jwtKey` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Database Field
+
+The field name in the database to match against the token's subject claim.
+
+| | |
+|---|---|
+| **YAML Key** | `databaseField` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Collection
+
+The database collection or table name containing user records.
+
+| | |
+|---|---|
+| **YAML Key** | `collection` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Fail On Auth Error
+
+Whether authentication failures should route to the `fail` step.
+
+| | |
+|---|---|
+| **YAML Key** | `failOnAuthError` |
+| **Type** | boolean |
+| **Required** | No |
+| **Default** | `true` |
+
+### Example
+
+```docs/actions/authentication.mdx
+actions:
+  auth_user:
+    type: authenticate
+    config:
+      integrationID: my_database
+      token: "{{ header \"Authorization\" | trimPrefix \"Bearer \" }}"
+      jwtKey: "{{ secret \"JWT_SECRET\" }}"
+      databaseField: id
+      collection: users
+      failOnAuthError: true
+    next: action.get_user_data
+    fail: response.unauthorized
+```
+
+The authenticated user data is available in subsequent actions via `{{ .auth_user }}`.
+
+---
+
+## jwt
+
+Creates and validates JSON Web Tokens. Use `encode` mode to generate tokens for authentication, or `decode` mode to verify and extract claims from existing tokens.
+
+### Mode
+
+The operation mode: `encode` to create a token, or `decode` to verify and extract claims.
+
+| | |
+|---|---|
+| **YAML Key** | `mode` |
+| **Type** | string |
+| **Required** | Yes |
+
+**Allowed values:** `encode`, `decode`
+
+### Field
+
+For `encode` mode: the subject value to include in the token (typically a user ID).
+For `decode` mode: the JWT token string to verify.
+
+| | |
+|---|---|
+| **YAML Key** | `field` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Key
+
+The secret key for signing (encode) or verifying (decode) the token.
+
+| | |
+|---|---|
+| **YAML Key** | `key` |
+| **Type** | string |
+| **Required** | No |
+
+Required unless using `jwksURL` for verification.
+
+### JWKS URL
+
+URL to fetch a JSON Web Key Set for token verification. Used for validating tokens from OAuth providers.
+
+| | |
+|---|---|
+| **YAML Key** | `jwksURL` |
+| **Type** | string |
+| **Required** | No |
+
+<Tip>
+Use `jwksURL` when verifying tokens from external identity providers like Auth0, Okta, or Google.
+</Tip>
+
+### Claims
+
+Additional claims to include in the token when encoding.
+
+| | |
+|---|---|
+| **YAML Key** | `claims` |
+| **Type** | map |
+| **Required** | No |
+
+Common claims include `role`, `iss` (issuer), `exp` (expiration), and `aud` (audience).
+
+### Fail On Validation Error
+
+Whether token validation failures should route to the `fail` step.
+
+| | |
+|---|---|
+| **YAML Key** | `failOnValidationError` |
+| **Type** | boolean |
+| **Required** | No |
+| **Default** | `true` |
+
+### Encode Example
+
+Generate a JWT token after user login:
+
+```docs/actions/authentication.mdx
+actions:
+  generate_token:
+    type: jwt
+    config:
+      mode: encode
+      field: "{{ .created_user.id }}"
+      key: "{{ secret \"JWT_SECRET\" }}"
+      claims:
+        role: user
+        iss: my_app
+        exp: "{{ now | date_modify \"+24h\" | unixEpoch }}"
+    next: response.success
+```
+
+### Decode Example
+
+Verify a token and extract its claims:
+
+```docs/actions/authentication.mdx
+actions:
+  verify_token:
+    type: jwt
+    config:
+      mode: decode
+      field: "{{ header \"Authorization\" | trimPrefix \"Bearer \" }}"
+      key: "{{ secret \"JWT_SECRET\" }}"
+      failOnValidationError: true
+    next: action.get_user
+    fail: response.unauthorized
+```
+
+The decoded token claims are available via `{{ .verify_token }}`.
+
+### Decode with JWKS Example
+
+Verify tokens from an OAuth provider:
+
+```docs/actions/authentication.mdx
+actions:
+  verify_oauth_token:
+    type: jwt
+    config:
+      mode: decode
+      field: "{{ param \"token\" }}"
+      jwksURL: "https://auth.example.com/.well-known/jwks.json"
+    next: response.valid
+    fail: response.invalid_token
+```
+
+---
+
+## hash
+
+Generates cryptographic hashes for secure password storage. Currently supports bcrypt, which is recommended for password hashing.
+
+### Value
+
+The value to hash, typically a password.
+
+| | |
+|---|---|
+| **YAML Key** | `value` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Algorithm
+
+The hashing algorithm to use.
+
+| | |
+|---|---|
+| **YAML Key** | `algorithm` |
+| **Type** | string |
+| **Required** | Yes |
+
+**Supported algorithms:** `bcrypt`
+
+### Example
+
+Hash a password before storing it:
+
+```docs/actions/authentication.mdx
+actions:
+  hash_password:
+    type: hash
+    config:
+      value: "{{ param \"password\" }}"
+      algorithm: bcrypt
+    next: action.create_user
+
+  create_user:
+    type: store
+    config:
+      integrationID: my_database
+      table: users
+      fields:
+        email: "{{ param \"email\" }}"
+        password: "{{ .hash_password }}"
+        created_at: "{{ now }}"
+    next: response.created
+```
+
+---
+
+## Common Patterns
+
+### User Registration Flow
+
+Complete user registration with password hashing and token generation:
+
+```docs/actions/authentication.mdx
+actions:
+  hash_password:
+    type: hash
+    config:
+      value: "{{ param \"password\" }}"
+      algorithm: bcrypt
+    next: action.create_user
+
+  create_user:
+    type: store
+    config:
+      integrationID: my_database
+      table: users
+      fields:
+        email: "{{ param \"email\" }}"
+        name: "{{ param \"name\" }}"
+        password: "{{ .hash_password }}"
+        created_at: "{{ now }}"
+    next: action.generate_token
+
+  generate_token:
+    type: jwt
+    config:
+      mode: encode
+      field: "{{ .create_user.id }}"
+      key: "{{ secret \"JWT_SECRET\" }}"
+      claims:
+        role: user
+    next: response.success
+
+responses:
+  success:
+    statusCode: 201
+    body:
+      message: "User created successfully"
+      token: "{{ .generate_token }}"
+      user:
+        id: "{{ .create_user.id }}"
+        email: "{{ .create_user.email }}"
+```
+
+### Protected Endpoint
+
+Authenticate requests before processing:
+
+```docs/actions/authentication.mdx
+actions:
+  verify_auth:
+    type: jwt
+    config:
+      mode: decode
+      field: "{{ header \"Authorization\" | trimPrefix \"Bearer \" }}"
+      key: "{{ secret \"JWT_SECRET\" }}"
+    next: action.fetch_user_data
+    fail: response.unauthorized
+
+  fetch_user_data:
+    type: fetch
+    config:
+      integrationID: my_database
+      table: users
+      filters:
+        - field: id
+          operator: eq
+          value: "{{ .verify_auth.sub }}"
+      single: true
+    next: response.success
+
+responses:
+  unauthorized:
+    statusCode: 401
+    body:
+      error: "Invalid or expired token"
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Secrets Management" icon="key" href="/references/secrets">
+  Securely store JWT secrets and API keys.
+</Card>
+
+<Card title="Data Operations" icon="database" href="/actions/data-operations">
+  Store and retrieve user data from databases.
+</Card>
+
+<Card title="HTTP Requests" icon="globe" href="/actions/http-requests">
+  Call external authentication services.
+</Card>
+
+<Card title="Actions Overview" icon="play" href="/actions/overview">
+  Learn the fundamentals of ServFlow actions.
+</Card>
+
+</CardGroup>

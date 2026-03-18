@@ -1,0 +1,803 @@
+---
+title: "Binance Trading"
+description: "Execute cryptocurrency trades and retrieve market data from Binance"
+---
+
+Binance trading actions allow you to interact with the Binance exchange for cryptocurrency trading. These actions support retrieving market data, checking account balances, and placing both spot and futures orders.
+
+<Note>
+Before using Binance actions, ensure you have a Binance integration configured with your API credentials. See [Configuration Reference](/references/configuration) for setup details.
+</Note>
+
+---
+
+## binance/getprice
+
+Retrieves current or 24-hour price data for a trading pair.
+
+### Integration ID
+
+The Binance integration to use.
+
+| | |
+|---|---|
+| **YAML Key** | `integrationID` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Symbol
+
+The trading pair symbol (e.g., `BTCUSDT`, `ETHUSDT`).
+
+| | |
+|---|---|
+| **YAML Key** | `symbol` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Price Type
+
+The type of price data to retrieve.
+
+| | |
+|---|---|
+| **YAML Key** | `price_type` |
+| **Type** | string |
+| **Required** | Yes |
+
+**Allowed values:**
+- `current` — Returns the current price
+- `24hr` — Returns 24-hour price statistics
+
+### Example
+
+```docs/actions/binance.mdx
+actions:
+  get_btc_price:
+    type: binance/getprice
+    config:
+      integrationID: my_binance
+      symbol: BTCUSDT
+      price_type: current
+    next: response.price
+
+  get_24hr_stats:
+    type: binance/getprice
+    config:
+      integrationID: my_binance
+      symbol: ETHUSDT
+      price_type: 24hr
+    next: response.stats
+```
+
+### Response
+
+**Current price response:**
+```docs/actions/binance.mdx
+{
+  "symbol": "BTCUSDT",
+  "price": 45000.50,
+  "type": "current"
+}
+```
+
+**24-hour stats response:**
+```docs/actions/binance.mdx
+{
+  "symbol": "BTCUSDT",
+  "priceChange": "1250.00",
+  "priceChangePercent": "2.85",
+  "highPrice": "46000.00",
+  "lowPrice": "44000.00",
+  "volume": "15000.50"
+}
+```
+
+---
+
+## binance/accountbalance
+
+Retrieves account balance for one or more assets.
+
+### Integration ID
+
+The Binance integration to use.
+
+| | |
+|---|---|
+| **YAML Key** | `integrationID` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Symbol
+
+The asset symbol(s) to query. Use comma-separated values for multiple assets.
+
+| | |
+|---|---|
+| **YAML Key** | `symbol` |
+| **Type** | string |
+| **Required** | Yes |
+
+**Examples:** `BTC`, `ETH`, `BTC,ETH,USDT`
+
+### Futures
+
+Query the futures account instead of the spot account.
+
+| | |
+|---|---|
+| **YAML Key** | `futures` |
+| **Type** | boolean |
+| **Required** | No |
+| **Default** | `false` |
+
+### Example
+
+```docs/actions/binance.mdx
+actions:
+  get_btc_balance:
+    type: binance/accountbalance
+    config:
+      integrationID: my_binance
+      symbol: BTC
+    next: response.balance
+
+  get_multiple_balances:
+    type: binance/accountbalance
+    config:
+      integrationID: my_binance
+      symbol: "BTC,ETH,USDT"
+    next: response.balances
+
+  get_futures_balance:
+    type: binance/accountbalance
+    config:
+      integrationID: my_binance
+      symbol: USDT
+      futures: true
+    next: response.futures_balance
+```
+
+### Response
+
+**Single asset response:**
+```docs/actions/binance.mdx
+{
+  "symbol": "BTC",
+  "balance": "1.25000000",
+  "time": 1699900000
+}
+```
+
+**Multiple assets response:**
+```docs/actions/binance.mdx
+[
+  {"symbol": "BTC", "balance": "1.25000000", "time": 1699900000},
+  {"symbol": "ETH", "balance": "10.50000000", "time": 1699900000},
+  {"symbol": "USDT", "balance": "5000.00000000", "time": 1699900000}
+]
+```
+
+---
+
+## binance/spotorder
+
+Places spot trading orders for cryptocurrency pairs.
+
+### Integration ID
+
+The Binance integration to use.
+
+| | |
+|---|---|
+| **YAML Key** | `integrationID` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Symbol
+
+The trading pair symbol (e.g., `BTCUSDT`).
+
+| | |
+|---|---|
+| **YAML Key** | `symbol` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Side
+
+The order side.
+
+| | |
+|---|---|
+| **YAML Key** | `side` |
+| **Type** | string |
+| **Required** | Yes |
+
+**Allowed values:** `BUY`, `SELL`
+
+### Type
+
+The order type.
+
+| | |
+|---|---|
+| **YAML Key** | `type` |
+| **Type** | string |
+| **Required** | Yes |
+
+**Allowed values:** `MARKET`, `LIMIT`, `STOP_LOSS`, `STOP_LOSS_LIMIT`, `TAKE_PROFIT`, `TAKE_PROFIT_LIMIT`
+
+### Quantity
+
+The amount of the base asset to buy or sell.
+
+| | |
+|---|---|
+| **YAML Key** | `quantity` |
+| **Type** | string |
+| **Required** | No |
+
+Required for most order types. Use either `quantity` or `quote_order_qty`.
+
+### Quote Order Quantity
+
+The amount in quote currency to spend (for market buy orders).
+
+| | |
+|---|---|
+| **YAML Key** | `quote_order_qty` |
+| **Type** | string |
+| **Required** | No |
+
+Use this to specify how much USDT to spend rather than how much BTC to buy.
+
+### Price
+
+The price for limit orders.
+
+| | |
+|---|---|
+| **YAML Key** | `price` |
+| **Type** | string |
+| **Required** | No |
+
+Required for `LIMIT` and limit-based order types.
+
+### Stop Price
+
+The trigger price for stop orders.
+
+| | |
+|---|---|
+| **YAML Key** | `stop_price` |
+| **Type** | string |
+| **Required** | No |
+
+Required for `STOP_LOSS`, `STOP_LOSS_LIMIT`, `TAKE_PROFIT`, and `TAKE_PROFIT_LIMIT` order types.
+
+### Time In Force
+
+How long the order remains active.
+
+| | |
+|---|---|
+| **YAML Key** | `time_in_force` |
+| **Type** | string |
+| **Required** | No |
+
+**Allowed values:**
+- `GTC` — Good 'til canceled
+- `IOC` — Immediate or cancel
+- `FOK` — Fill or kill
+
+### Example
+
+```docs/actions/binance.mdx
+actions:
+  market_buy:
+    type: binance/spotorder
+    config:
+      integrationID: my_binance
+      symbol: BTCUSDT
+      side: BUY
+      type: MARKET
+      quote_order_qty: "100"
+    next: response.order_placed
+    fail: response.order_failed
+
+  limit_sell:
+    type: binance/spotorder
+    config:
+      integrationID: my_binance
+      symbol: BTCUSDT
+      side: SELL
+      type: LIMIT
+      quantity: "0.001"
+      price: "50000"
+      time_in_force: GTC
+    next: response.order_placed
+
+  stop_loss:
+    type: binance/spotorder
+    config:
+      integrationID: my_binance
+      symbol: BTCUSDT
+      side: SELL
+      type: STOP_LOSS
+      quantity: "0.001"
+      stop_price: "40000"
+    next: response.stop_set
+```
+
+### Response
+
+```docs/actions/binance.mdx
+{
+  "orderId": 123456789,
+  "symbol": "BTCUSDT",
+  "side": "BUY",
+  "type": "MARKET",
+  "status": "FILLED"
+}
+```
+
+---
+
+## binance/futuresorder
+
+Places futures trading orders with leverage and position management.
+
+### Integration ID
+
+The Binance integration to use.
+
+| | |
+|---|---|
+| **YAML Key** | `integrationID` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Symbol
+
+The futures trading pair symbol (e.g., `BTCUSDT`).
+
+| | |
+|---|---|
+| **YAML Key** | `symbol` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Side
+
+The order side.
+
+| | |
+|---|---|
+| **YAML Key** | `side` |
+| **Type** | string |
+| **Required** | Yes |
+
+**Allowed values:** `BUY`, `SELL`
+
+### Type
+
+The order type.
+
+| | |
+|---|---|
+| **YAML Key** | `type` |
+| **Type** | string |
+| **Required** | Yes |
+
+**Allowed values:** `MARKET`, `LIMIT`, `STOP`, `STOP_MARKET`, `TAKE_PROFIT`, `TAKE_PROFIT_MARKET`
+
+### Quantity
+
+The contract quantity.
+
+| | |
+|---|---|
+| **YAML Key** | `quantity` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Leverage
+
+The leverage multiplier for the position.
+
+| | |
+|---|---|
+| **YAML Key** | `leverage` |
+| **Type** | integer |
+| **Required** | No |
+
+### Position Side
+
+The position direction for hedge mode.
+
+| | |
+|---|---|
+| **YAML Key** | `position_side` |
+| **Type** | string |
+| **Required** | No |
+
+**Allowed values:** `LONG`, `SHORT`, `BOTH`
+
+### Reduce Only
+
+Only reduce an existing position, don't open a new one.
+
+| | |
+|---|---|
+| **YAML Key** | `reduce_only` |
+| **Type** | boolean |
+| **Required** | No |
+| **Default** | `false` |
+
+### Price
+
+The price for limit orders.
+
+| | |
+|---|---|
+| **YAML Key** | `price` |
+| **Type** | string |
+| **Required** | No |
+
+### Example
+
+```docs/actions/binance.mdx
+actions:
+  open_long:
+    type: binance/futuresorder
+    config:
+      integrationID: my_binance
+      symbol: BTCUSDT
+      side: BUY
+      type: MARKET
+      quantity: "0.01"
+      leverage: 10
+      position_side: LONG
+    next: response.position_opened
+    fail: response.order_failed
+
+  close_position:
+    type: binance/futuresorder
+    config:
+      integrationID: my_binance
+      symbol: BTCUSDT
+      side: SELL
+      type: MARKET
+      quantity: "0.01"
+      position_side: LONG
+      reduce_only: true
+    next: response.position_closed
+
+  limit_short:
+    type: binance/futuresorder
+    config:
+      integrationID: my_binance
+      symbol: ETHUSDT
+      side: SELL
+      type: LIMIT
+      quantity: "0.1"
+      price: "3000"
+      leverage: 5
+      position_side: SHORT
+    next: response.order_placed
+```
+
+### Response
+
+```docs/actions/binance.mdx
+{
+  "orderId": 987654321,
+  "symbol": "BTCUSDT",
+  "side": "BUY",
+  "type": "MARKET",
+  "executedQty": "0.01",
+  "status": "FILLED",
+  "positionSide": "LONG",
+  "reduceOnly": false
+}
+```
+
+---
+
+## binance/pricedifference
+
+Calculates price differences and percentage changes over specified time periods.
+
+### Integration ID
+
+The Binance integration to use.
+
+| | |
+|---|---|
+| **YAML Key** | `integrationID` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Symbol
+
+The trading pair symbol or comma-separated symbols.
+
+| | |
+|---|---|
+| **YAML Key** | `symbol` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Interval
+
+The candlestick interval for historical data.
+
+| | |
+|---|---|
+| **YAML Key** | `interval` |
+| **Type** | string |
+| **Required** | Yes |
+
+**Allowed values:** `1m`, `5m`, `15m`, `30m`, `1h`, `4h`, `1d`, `1w`
+
+### Period
+
+The number of intervals to look back.
+
+| | |
+|---|---|
+| **YAML Key** | `period` |
+| **Type** | integer |
+| **Required** | Yes |
+
+### Example
+
+```docs/actions/binance.mdx
+actions:
+  check_btc_change:
+    type: binance/pricedifference
+    config:
+      integrationID: my_binance
+      symbol: BTCUSDT
+      interval: "1h"
+      period: 24
+    next: conditional.significant_change
+
+  check_multiple:
+    type: binance/pricedifference
+    config:
+      integrationID: my_binance
+      symbol: "BTCUSDT,ETHUSDT,BNBUSDT"
+      interval: "1d"
+      period: 7
+    next: response.price_changes
+
+conditionals:
+  significant_change:
+    expression: "{{ gt .check_btc_change.differencePercent 5 }}"
+    onTrue: action.send_alert
+    onFalse: response.no_alert
+```
+
+### Response
+
+```docs/actions/binance.mdx
+{
+  "symbol": "BTCUSDT",
+  "currentPrice": 45000.50,
+  "previousPrice": 44000.00,
+  "difference": 1000.50,
+  "differencePercent": 2.27,
+  "interval": "1h",
+  "priceHistory": [
+    {
+      "openTime": 1699900000000,
+      "open": "44000.00",
+      "high": "45500.00",
+      "low": "43800.00",
+      "close": "45000.50",
+      "volume": "1234.56",
+      "closeTime": 1699903600000
+    }
+  ]
+}
+```
+
+---
+
+## binance/tradeinfo
+
+Retrieves detailed trading information including open orders and positions.
+
+### Integration ID
+
+The Binance integration to use.
+
+| | |
+|---|---|
+| **YAML Key** | `integrationID` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Symbol
+
+The trading pair symbol.
+
+| | |
+|---|---|
+| **YAML Key** | `symbol` |
+| **Type** | string |
+| **Required** | No |
+
+### Info Type
+
+The type of information to retrieve.
+
+| | |
+|---|---|
+| **YAML Key** | `infoType` |
+| **Type** | string |
+| **Required** | No |
+
+**Allowed values:** `orders`, `positions`
+
+### Order ID
+
+A specific order ID to query.
+
+| | |
+|---|---|
+| **YAML Key** | `orderID` |
+| **Type** | string |
+| **Required** | No |
+
+### Futures
+
+Query futures trading information instead of spot.
+
+| | |
+|---|---|
+| **YAML Key** | `futures` |
+| **Type** | boolean |
+| **Required** | No |
+| **Default** | `false` |
+
+### Example
+
+```docs/actions/binance.mdx
+actions:
+  get_open_orders:
+    type: binance/tradeinfo
+    config:
+      integrationID: my_binance
+      symbol: BTCUSDT
+      infoType: orders
+    next: response.orders
+
+  get_specific_order:
+    type: binance/tradeinfo
+    config:
+      integrationID: my_binance
+      symbol: BTCUSDT
+      orderID: "{{ param \"order_id\" }}"
+    next: response.order_details
+
+  get_futures_positions:
+    type: binance/tradeinfo
+    config:
+      integrationID: my_binance
+      symbol: BTCUSDT
+      futures: true
+      infoType: positions
+    next: response.positions
+
+  get_all_futures_orders:
+    type: binance/tradeinfo
+    config:
+      integrationID: my_binance
+      futures: true
+      infoType: orders
+    next: response.all_orders
+```
+
+---
+
+## Common Patterns
+
+### Price Alert Bot
+
+Monitor price changes and send alerts:
+
+```docs/actions/binance.mdx
+actions:
+  check_price:
+    type: binance/pricedifference
+    config:
+      integrationID: my_binance
+      symbol: BTCUSDT
+      interval: "1h"
+      period: 1
+    next: conditional.price_dropped
+
+conditionals:
+  price_dropped:
+    expression: "{{ lt .check_price.differencePercent -3 }}"
+    onTrue: action.send_alert
+    onFalse: response.no_alert
+
+actions:
+  send_alert:
+    type: email
+    config:
+      senderEmail: "alerts@example.com"
+      recipientEmail: "{{ secret \"ALERT_EMAIL\" }}"
+      name: "Price Alert"
+      subject: "BTC Price Alert"
+      content: |
+        BTC has dropped {{ .check_price.differencePercent }}% in the last hour.
+        Current price: ${{ .check_price.currentPrice }}
+      auth:
+        serverHostname: smtp.example.com
+        serverPort: "587"
+        username: "{{ secret \"SMTP_USER\" }}"
+        password: "{{ secret \"SMTP_PASS\" }}"
+    next: response.alert_sent
+```
+
+### Dollar-Cost Averaging Bot
+
+Automatically buy a fixed amount on schedule:
+
+```docs/actions/binance.mdx
+actions:
+  check_balance:
+    type: binance/accountbalance
+    config:
+      integrationID: my_binance
+      symbol: USDT
+    next: conditional.has_funds
+
+conditionals:
+  has_funds:
+    expression: "{{ gt .check_balance.balance 100 }}"
+    onTrue: action.place_buy
+    onFalse: response.insufficient_funds
+
+actions:
+  place_buy:
+    type: binance/spotorder
+    config:
+      integrationID: my_binance
+      symbol: BTCUSDT
+      side: BUY
+      type: MARKET
+      quote_order_qty: "100"
+    next: response.order_placed
+    fail: response.order_failed
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Actions Overview" icon="play" href="/actions/overview">
+  Learn the fundamentals of ServFlow actions.
+</Card>
+
+<Card title="Flow Control" icon="code-branch" href="/actions/flow-control">
+  Run multiple trading checks in parallel.
+</Card>
+
+<Card title="Memory" icon="memory" href="/actions/memory">
+  Cache price data for faster lookups.
+</Card>
+
+<Card title="Communication" icon="envelope" href="/actions/communication">
+  Send trading alerts via email.
+</Card>
+
+</CardGroup>

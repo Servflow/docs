@@ -1,0 +1,284 @@
+---
+title: "Flow Control"
+description: "Execute multiple actions simultaneously with parallel processing"
+---
+
+Flow control actions allow you to manage the execution order and concurrency of your workflow. The parallel action enables you to run multiple action branches at the same time, improving performance when tasks are independent.
+
+---
+
+## parallel
+
+Executes multiple action branches simultaneously. Each branch runs independently and can have its own chain of subsequent actions.
+
+### Steps
+
+A list of action steps to execute in parallel. Each step is a reference to another action in the workflow.
+
+| | |
+|---|---|
+| **YAML Key** | `steps` |
+| **Type** | array |
+| **Required** | Yes |
+
+Each step follows the format `action.action_id` where `action_id` is the identifier of another action in your workflow.
+
+### Stop On Failure
+
+Whether to stop all parallel branches when any branch fails. When `true`, remaining branches are cancelled on the first failure.
+
+| | |
+|---|---|
+| **YAML Key** | `stopOnFailure` |
+| **Type** | boolean |
+| **Required** | No |
+| **Default** | `true` |
+
+Setting this to `false` allows all branches to complete even if some fail, useful when you want partial results.
+
+---
+
+## Examples
+
+### Fetch Multiple Data Sources
+
+Retrieve data from multiple tables simultaneously:
+
+```yaml
+actions:
+  fetch_all_data:
+    type: parallel
+    config:
+      steps:
+        - action.fetch_users
+        - action.fetch_orders
+        - action.fetch_products
+      stopOnFailure: false
+    next: response.combined_data
+    fail: response.partial_error
+
+  fetch_users:
+    type: fetch
+    config:
+      integrationID: my_database
+      table: users
+
+  fetch_orders:
+    type: fetch
+    config:
+      integrationID: my_database
+      table: orders
+
+  fetch_products:
+    type: fetch
+    config:
+      integrationID: my_database
+      table: products
+```
+
+After the parallel action completes, you can access results from each branch using their action IDs:
+- `{{ .fetch_users }}` — Results from the users query
+- `{{ .fetch_orders }}` — Results from the orders query
+- `{{ .fetch_products }}` — Results from the products query
+
+### Parallel API Calls
+
+Call multiple external APIs at the same time:
+
+```yaml
+actions:
+  fetch_external_data:
+    type: parallel
+    config:
+      steps:
+        - action.get_weather
+        - action.get_news
+        - action.get_stocks
+      stopOnFailure: true
+    next: action.combine_results
+
+  get_weather:
+    type: http
+    config:
+      url: "https://api.weather.com/current"
+      method: GET
+      headers:
+        Authorization: "Bearer {{ secret \"WEATHER_API_KEY\" }}"
+
+  get_news:
+    type: http
+    config:
+      url: "https://api.news.com/headlines"
+      method: GET
+      headers:
+        Authorization: "Bearer {{ secret \"NEWS_API_KEY\" }}"
+
+  get_stocks:
+    type: http
+    config:
+      url: "https://api.stocks.com/quotes"
+      method: GET
+      headers:
+        Authorization: "Bearer {{ secret \"STOCKS_API_KEY\" }}"
+
+  combine_results:
+    type: javascript
+    config:
+      script: |
+        function servflowRun(vars) {
+          return {
+            weather: vars.get_weather,
+            news: vars.get_news,
+            stocks: vars.get_stocks
+          };
+        }
+    next: response.dashboard
+```
+
+### Parallel with Chained Actions
+
+Each parallel branch can have its own chain of subsequent actions:
+
+```yaml
+actions:
+  process_all:
+    type: parallel
+    config:
+      steps:
+        - action.process_images
+        - action.process_documents
+    next: response.complete
+
+  process_images:
+    type: fetch
+    config:
+      integrationID: my_database
+      table: images
+      filters:
+        - field: status
+          operator: eq
+          value: pending
+    next: action.resize_images
+
+  resize_images:
+    type: javascript
+    config:
+      script: |
+        function servflowRun(vars) {
+          // Process images
+          return vars.process_images.map(img => ({
+            ...img,
+            status: 'processed'
+          }));
+        }
+
+  process_documents:
+    type: fetch
+    config:
+      integrationID: my_database
+      table: documents
+      filters:
+        - field: status
+          operator: eq
+          value: pending
+    next: action.analyze_documents
+
+  analyze_documents:
+    type: agent
+    config:
+      integrationID: my_openai
+      systemPrompt: "Analyze and summarize each document."
+      userPrompt: "{{ jsonout .process_documents }}"
+```
+
+### Graceful Degradation
+
+Allow partial failures to continue the workflow:
+
+```yaml
+actions:
+  fetch_optional_data:
+    type: parallel
+    config:
+      steps:
+        - action.fetch_required
+        - action.fetch_optional_cache
+        - action.fetch_optional_analytics
+      stopOnFailure: false
+    next: action.build_response
+
+  fetch_required:
+    type: fetch
+    config:
+      integrationID: my_database
+      table: users
+      filters:
+        - field: id
+          operator: eq
+          value: "{{ param \"user_id\" }}"
+      single: true
+
+  fetch_optional_cache:
+    type: memory_fetch
+    config:
+      key: "user_preferences_{{ param \"user_id\" }}"
+
+  fetch_optional_analytics:
+    type: http
+    config:
+      url: "https://analytics.example.com/user/{{ param \"user_id\" }}"
+      method: GET
+
+  build_response:
+    type: javascript
+    config:
+      script: |
+        function servflowRun(vars) {
+          return {
+            user: vars.fetch_required,
+            preferences: vars.fetch_optional_cache || {},
+            analytics: vars.fetch_optional_analytics || null
+          };
+        }
+    next: response.success
+```
+
+---
+
+## Best Practices
+
+<Note>
+**Independent Operations**: Only use parallel for actions that don't depend on each other's results. If action B needs the result of action A, they must run sequentially.
+</Note>
+
+<Tip>
+**Error Handling**: Set `stopOnFailure: false` when some branches are optional and you want the workflow to continue even if they fail.
+</Tip>
+
+<Warning>
+**Rate Limits**: Be mindful of rate limits when making parallel API calls to the same external service. You may need to implement throttling or use sequential processing instead.
+</Warning>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Data Operations" icon="database" href="/actions/data-operations">
+  Learn about fetching and storing data from databases.
+</Card>
+
+<Card title="HTTP Requests" icon="globe" href="/actions/http-requests">
+  Make parallel calls to external APIs.
+</Card>
+
+<Card title="Transformation" icon="wand-magic-sparkles" href="/actions/transformation">
+  Combine and transform parallel results with JavaScript.
+</Card>
+
+<Card title="Actions Overview" icon="play" href="/actions/overview">
+  Learn the fundamentals of actions in ServFlow.
+</Card>
+
+</CardGroup>

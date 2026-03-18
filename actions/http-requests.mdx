@@ -1,0 +1,237 @@
+---
+title: "HTTP Requests"
+description: "Make HTTP requests to external APIs and services from your ServFlow workflows"
+---
+
+The HTTP action allows you to call external APIs, webhooks, and web services from your workflows. Use it to integrate with third-party services, fetch remote data, or trigger external processes.
+
+---
+
+## http
+
+Makes HTTP requests to external APIs and returns the response.
+
+### URL
+
+The full URL to send the request to. Supports template variables.
+
+| | |
+|---|---|
+| **YAML Key** | `url` |
+| **Type** | string |
+| **Required** | Yes |
+
+**Example values:**
+- `https://api.example.com/users`
+- `https://api.example.com/users/{{ param "user_id" }}`
+
+### HTTP Method
+
+The HTTP method to use for the request.
+
+| | |
+|---|---|
+| **YAML Key** | `method` |
+| **Type** | string |
+| **Required** | Yes |
+
+**Supported methods:** `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD`, `OPTIONS`
+
+### Headers
+
+HTTP headers to include with the request as key-value pairs.
+
+| | |
+|---|---|
+| **YAML Key** | `headers` |
+| **Type** | map |
+| **Required** | No |
+
+Common headers include `Authorization`, `Content-Type`, and `Accept`.
+
+### Body
+
+The request body data. Typically used with `POST`, `PUT`, and `PATCH` requests.
+
+| | |
+|---|---|
+| **YAML Key** | `body` |
+| **Type** | object |
+| **Required** | No |
+
+The body is automatically serialized to JSON when `Content-Type` is `application/json`.
+
+### Response Path
+
+A JSONPath expression to extract a specific field from the response. When set, only the extracted value is returned instead of the full response.
+
+| | |
+|---|---|
+| **YAML Key** | `responsePath` |
+| **Type** | string |
+| **Required** | No |
+
+**Example:** `access_token` extracts just the token from an OAuth response.
+
+### Expected Response Code
+
+The expected HTTP status code. If the actual response code differs, the action fails and routes to the `fail` step.
+
+| | |
+|---|---|
+| **YAML Key** | `expectedResponseCode` |
+| **Type** | string |
+| **Required** | No |
+
+**Example:** `"201"` for expecting a created response.
+
+### Fail If Response Empty
+
+Whether to treat an empty response body as a failure.
+
+| | |
+|---|---|
+| **YAML Key** | `failIfResponseEmpty` |
+| **Type** | boolean |
+| **Required** | No |
+| **Default** | `true` |
+
+---
+
+## Examples
+
+### GET Request
+
+Fetch data from an external API:
+
+```yaml
+actions:
+  get_user_data:
+    type: http
+    config:
+      url: "https://api.example.com/users/{{ param \"user_id\" }}"
+      method: GET
+      headers:
+        Authorization: "Bearer {{ secret \"API_TOKEN\" }}"
+        Accept: application/json
+    next: response.success
+    fail: response.api_error
+```
+
+### POST Request
+
+Create a resource on an external service:
+
+```yaml
+actions:
+  create_resource:
+    type: http
+    config:
+      url: "https://api.example.com/resources"
+      method: POST
+      headers:
+        Authorization: "Bearer {{ secret \"API_TOKEN\" }}"
+        Content-Type: application/json
+      body:
+        name: "{{ param \"name\" }}"
+        type: "{{ param \"type\" }}"
+        metadata:
+          created_by: "{{ .authenticated_user.id }}"
+      expectedResponseCode: "201"
+    next: response.created
+    fail: response.create_failed
+```
+
+### Extract Field from Response
+
+Get just the access token from an OAuth token endpoint:
+
+```yaml
+actions:
+  get_access_token:
+    type: http
+    config:
+      url: "https://auth.example.com/oauth/token"
+      method: POST
+      headers:
+        Content-Type: application/x-www-form-urlencoded
+      body:
+        grant_type: client_credentials
+        client_id: "{{ secret \"CLIENT_ID\" }}"
+        client_secret: "{{ secret \"CLIENT_SECRET\" }}"
+      responsePath: "access_token"
+    next: action.use_token
+```
+
+### Webhook Call
+
+Trigger an external webhook with workflow data:
+
+```yaml
+actions:
+  notify_webhook:
+    type: http
+    config:
+      url: "{{ secret \"WEBHOOK_URL\" }}"
+      method: POST
+      headers:
+        Content-Type: application/json
+      body:
+        event: "order.completed"
+        order_id: "{{ .order.id }}"
+        total: "{{ .order.total }}"
+        timestamp: "{{ now }}"
+    next: response.success
+    fail: response.webhook_failed
+```
+
+### Chaining API Calls
+
+Use the result of one HTTP call in another:
+
+```yaml
+actions:
+  authenticate:
+    type: http
+    config:
+      url: "https://api.example.com/auth"
+      method: POST
+      body:
+        username: "{{ secret \"API_USER\" }}"
+        password: "{{ secret \"API_PASS\" }}"
+      responsePath: "token"
+    next: action.fetch_data
+
+  fetch_data:
+    type: http
+    config:
+      url: "https://api.example.com/data"
+      method: GET
+      headers:
+        Authorization: "Bearer {{ .authenticate }}"
+    next: response.success
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Secrets Management" icon="key" href="/references/secrets">
+  Securely store API keys and tokens for your HTTP requests.
+</Card>
+
+<Card title="Authentication" icon="lock" href="/actions/authentication">
+  Secure your own APIs with JWT and authentication actions.
+</Card>
+
+<Card title="Data Operations" icon="database" href="/actions/data-operations">
+  Store and retrieve data from databases.
+</Card>
+
+<Card title="Actions Overview" icon="play" href="/actions/overview">
+  Learn the fundamentals of actions in ServFlow.
+</Card>
+
+</CardGroup>

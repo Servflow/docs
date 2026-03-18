@@ -22,6 +22,23 @@
             "pages": ["references/concepts/actions"]
           },
           {
+            "group": "Actions",
+            "pages": [
+              "actions/overview",
+              "actions/data-operations",
+              "actions/vector-operations",
+              "actions/http-requests",
+              "actions/authentication",
+              "actions/transformation",
+              "actions/ai-agents",
+              "actions/flow-control",
+              "actions/communication",
+              "actions/command",
+              "actions/memory",
+              "actions/binance"
+            ]
+          },
+          {
             "group": "References",
             "pages": ["references/configuration", "references/secrets"]
           }
@@ -56,13 +73,13 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:support@servflow.io"
+        "href": "mailto:contact@servflow.io"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://app.servflow.io"
+      "href": "https://dash.servflow.io"
     }
   },
   "contextual": {
