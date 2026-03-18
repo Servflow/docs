@@ -18,6 +18,10 @@
             "pages": ["index", "installation", "quickstart", "development"]
           },
           {
+            "group": "Concepts",
+            "pages": ["references/concepts/actions"]
+          },
+          {
             "group": "References",
             "pages": ["references/configuration", "references/secrets"]
           }
