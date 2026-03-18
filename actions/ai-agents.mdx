@@ -1,0 +1,364 @@
+---
+title: "AI Agents"
+description: "Integrate AI models into your workflows with the agent action"
+---
+
+The agent action allows you to interact with AI models like OpenAI's GPT to process queries, generate content, and execute tool functions. Agents can be enhanced with tools that give them the ability to call other actions in your workflow or external services via MCP.
+
+---
+
+## agent
+
+Interacts with AI models to process queries and optionally execute tool functions.
+
+### Integration ID
+
+The AI integration to use (e.g., OpenAI).
+
+| | |
+|---|---|
+| **YAML Key** | `integrationID` |
+| **Type** | string |
+| **Required** | Yes |
+
+### System Prompt
+
+Instructions that define the agent's behavior and context. This sets the personality, constraints, and capabilities of the agent.
+
+| | |
+|---|---|
+| **YAML Key** | `systemPrompt` |
+| **Type** | string |
+| **Required** | No |
+
+### User Prompt
+
+The user's message or query to send to the agent.
+
+| | |
+|---|---|
+| **YAML Key** | `userPrompt` |
+| **Type** | string |
+| **Required** | No |
+
+### Tool Configurations
+
+An array of tool configurations that give the agent additional capabilities. Tools can be MCP endpoints or workflow actions.
+
+| | |
+|---|---|
+| **YAML Key** | `toolConfigs` |
+| **Type** | array |
+| **Required** | No |
+
+See [Tool Configuration](#tool-configuration) for details.
+
+### Conversation ID
+
+An identifier for maintaining conversation context across multiple interactions.
+
+| | |
+|---|---|
+| **YAML Key** | `conversationID` |
+| **Type** | string |
+| **Required** | No |
+
+### Return Last Message
+
+When enabled, returns only the final message instead of the full conversation history.
+
+| | |
+|---|---|
+| **YAML Key** | `returnLastMessage` |
+| **Type** | boolean |
+| **Required** | No |
+| **Default** | `false` |
+
+### File Upload
+
+Configuration for file inputs to the agent.
+
+| | |
+|---|---|
+| **YAML Key** | `fileUpload` |
+| **Type** | object |
+| **Required** | No |
+
+---
+
+## Examples
+
+### Simple Query
+
+A basic agent that answers user questions:
+
+```docs/actions/ai-agents.mdx
+actions:
+  ask_ai:
+    type: agent
+    config:
+      integrationID: my_openai
+      systemPrompt: "You are a helpful assistant that provides concise answers."
+      userPrompt: "{{ param \"question\" }}"
+    next: response.answer
+    fail: response.error
+```
+
+### Structured Response
+
+Generate structured data using the agent:
+
+```docs/actions/ai-agents.mdx
+actions:
+  analyze_sentiment:
+    type: agent
+    config:
+      integrationID: my_openai
+      systemPrompt: |
+        Analyze the sentiment of the provided text.
+        Respond with a JSON object containing:
+        - sentiment: "positive", "negative", or "neutral"
+        - confidence: a number between 0 and 1
+        - keywords: an array of relevant keywords
+      userPrompt: "{{ param \"text\" }}"
+      returnLastMessage: true
+    next: response.analysis
+```
+
+### Conversational Agent
+
+Maintain conversation context across requests:
+
+```docs/actions/ai-agents.mdx
+actions:
+  chat:
+    type: agent
+    config:
+      integrationID: my_openai
+      systemPrompt: "You are a friendly customer support agent for an e-commerce store."
+      userPrompt: "{{ param \"message\" }}"
+      conversationID: "{{ param \"session_id\" }}"
+    next: response.reply
+```
+
+---
+
+## Tool Configuration
+
+Tools extend an agent's capabilities by allowing it to perform actions during its reasoning process. There are two types of tools:
+
+### MCP Tools
+
+Connect to external services using the Model Context Protocol (MCP):
+
+```docs/actions/ai-agents.mdx
+actions:
+  db_agent:
+    type: agent
+    config:
+      integrationID: my_openai
+      systemPrompt: |
+        You are a database assistant. Use the provided tools to query data.
+        Never expose sensitive information like passwords.
+      userPrompt: "{{ param \"query\" }}"
+      toolConfigs:
+        - type: mcp
+          mcpConfig:
+            endpoint: "http://localhost:3000/mcp"
+            tools:
+              - query_database
+              - list_tables
+    next: response.result
+```
+
+#### MCP Config Fields
+
+| Field | Description |
+|-------|-------------|
+| `endpoint` | The MCP server endpoint URL |
+| `tools` | Array of tool names to make available to the agent |
+
+### Workflow Tools
+
+Allow the agent to execute other actions in your workflow:
+
+```docs/actions/ai-agents.mdx
+actions:
+  agent_with_db:
+    type: agent
+    config:
+      integrationID: my_openai
+      systemPrompt: "You can query the database using the provided tool."
+      userPrompt: "{{ param \"query\" }}"
+      toolConfigs:
+        - type: workflow
+          workflowConfig:
+            name: search_users
+            description: "Search for users by email or name"
+            params:
+              - filter
+              - projection
+            returnValue: "{{ jsonout .query_db }}"
+            start: action.query_db
+    next: response.result
+
+  query_db:
+    type: mongoquery
+    config:
+      integrationID: my_mongodb
+      collection: users
+      filterQuery: "{{ tool_param \"filter\" | stringescape }}"
+      projection: "{{ tool_param \"projection\" | stringescape }}"
+```
+
+#### Workflow Config Fields
+
+| Field | Description |
+|-------|-------------|
+| `name` | A unique name for the tool |
+| `description` | Description of what the tool does (helps the AI decide when to use it) |
+| `params` | Array of parameter names the tool accepts |
+| `returnValue` | Template for the value returned to the agent |
+| `start` | The action to execute when this tool is called |
+
+<Tip>
+Use `tool_param` to access parameters passed by the agent to your workflow tool.
+</Tip>
+
+---
+
+## Common Patterns
+
+### RAG (Retrieval-Augmented Generation)
+
+Combine vector search with an agent for knowledge-based responses:
+
+```docs/actions/ai-agents.mdx
+actions:
+  search_knowledge:
+    type: fetchvectors
+    config:
+      integrationID: my_qdrant
+      vector: "{{ .query_embedding }}"
+      options:
+        collection: knowledge_base
+        limit: 5
+    next: action.answer_with_context
+
+  answer_with_context:
+    type: agent
+    config:
+      integrationID: my_openai
+      systemPrompt: |
+        Answer the user's question using only the provided context.
+        If the context doesn't contain relevant information, say so.
+        
+        Context:
+        {{ range .search_knowledge }}
+        - {{ .content }}
+        {{ end }}
+      userPrompt: "{{ param \"question\" }}"
+    next: response.answer
+```
+
+### Multi-Tool Agent
+
+An agent with multiple workflow tools:
+
+```docs/actions/ai-agents.mdx
+actions:
+  smart_assistant:
+    type: agent
+    config:
+      integrationID: my_openai
+      systemPrompt: |
+        You are an assistant that can help with user management.
+        Use the provided tools to look up, create, or update users.
+      userPrompt: "{{ param \"request\" }}"
+      toolConfigs:
+        - type: workflow
+          workflowConfig:
+            name: get_user
+            description: "Get user details by ID"
+            params:
+              - user_id
+            returnValue: "{{ jsonout .fetch_user }}"
+            start: action.fetch_user
+        - type: workflow
+          workflowConfig:
+            name: list_users
+            description: "List all users with optional filters"
+            params:
+              - status
+            returnValue: "{{ jsonout .list_users }}"
+            start: action.list_users
+    next: response.result
+
+  fetch_user:
+    type: fetch
+    config:
+      integrationID: my_database
+      table: users
+      filters:
+        - field: id
+          operator: eq
+          value: "{{ tool_param \"user_id\" }}"
+      single: true
+
+  list_users:
+    type: fetch
+    config:
+      integrationID: my_database
+      table: users
+      filters:
+        - field: status
+          operator: eq
+          value: "{{ tool_param \"status\" }}"
+```
+
+### Content Generation
+
+Generate content with specific formatting:
+
+```docs/actions/ai-agents.mdx
+actions:
+  generate_email:
+    type: agent
+    config:
+      integrationID: my_openai
+      systemPrompt: |
+        You are a professional email writer. Generate emails that are:
+        - Clear and concise
+        - Professional in tone
+        - Properly formatted with greeting and signature
+      userPrompt: |
+        Write an email about: {{ param "topic" }}
+        Recipient: {{ param "recipient_name" }}
+        Tone: {{ param "tone" }}
+      returnLastMessage: true
+    next: action.send_email
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Vector Operations" icon="cube" href="/actions/vector-operations">
+  Build RAG pipelines with vector search.
+</Card>
+
+<Card title="Data Operations" icon="database" href="/actions/data-operations">
+  Connect agents to your database.
+</Card>
+
+<Card title="HTTP Requests" icon="globe" href="/actions/http-requests">
+  Call external APIs from your workflows.
+</Card>
+
+<Card title="Actions Overview" icon="play" href="/actions/overview">
+  Learn the fundamentals of ServFlow actions.
+</Card>
+
+</CardGroup>

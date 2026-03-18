@@ -1,0 +1,308 @@
+---
+title: "Memory"
+description: "Store and retrieve temporary data in memory for caching and workflow state"
+---
+
+Memory actions allow you to store and retrieve data in temporary memory storage. This is useful for caching frequently accessed data, passing state between workflow executions, and implementing cache-aside patterns.
+
+<Note>
+Memory storage persists across workflow executions but is cleared when the server restarts. For persistent storage, use [Data Operations](/actions/data-operations).
+</Note>
+
+---
+
+## memory_store
+
+Stores data in temporary memory using a key-value pattern.
+
+### Key
+
+The unique identifier for storing the data. Use template syntax to create dynamic keys.
+
+| | |
+|---|---|
+| **YAML Key** | `key` |
+| **Type** | string |
+| **Required** | Yes |
+
+<Tip>
+Include unique identifiers in your keys to avoid collisions. For example: `user_{{ param "user_id" }}` or `cache_{{ .request_hash }}`.
+</Tip>
+
+### Contents
+
+The data to store. Can be any value, including JSON objects.
+
+| | |
+|---|---|
+| **YAML Key** | `contents` |
+| **Type** | string |
+| **Required** | Yes |
+
+Use `{{ jsonout .action_result }}` to store complex objects from previous actions.
+
+### Example
+
+Store a user object in memory:
+
+```docs/actions/memory.mdx
+actions:
+  cache_user:
+    type: memory_store
+    config:
+      key: "user_{{ param \"user_id\" }}"
+      contents: "{{ jsonout .fetch_user }}"
+    next: response.success
+```
+
+Store a computed value:
+
+```docs/actions/memory.mdx
+actions:
+  store_token:
+    type: memory_store
+    config:
+      key: "auth_token_{{ .user.id }}"
+      contents: "{{ .generate_token }}"
+    next: action.use_token
+```
+
+---
+
+## memory_fetch
+
+Retrieves data from temporary memory storage using a key.
+
+### Key
+
+The key to look up in memory storage.
+
+| | |
+|---|---|
+| **YAML Key** | `key` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Example
+
+Retrieve a cached user:
+
+```docs/actions/memory.mdx
+actions:
+  get_cached_user:
+    type: memory_fetch
+    config:
+      key: "user_{{ param \"user_id\" }}"
+    next: conditional.cache_hit
+```
+
+The fetched value is available via `{{ .get_cached_user }}`. If the key doesn't exist, the result will be empty.
+
+---
+
+## Common Patterns
+
+### Cache-Aside Pattern
+
+Check the cache first, fetch from database if not found, then update the cache:
+
+```docs/actions/memory.mdx
+actions:
+  check_cache:
+    type: memory_fetch
+    config:
+      key: "data_{{ param \"id\" }}"
+    next: conditional.is_cached
+
+conditionals:
+  is_cached:
+    expression: "{{ notempty .check_cache \"\" }}"
+    onTrue: response.from_cache
+    onFalse: action.fetch_from_db
+
+actions:
+  fetch_from_db:
+    type: fetch
+    config:
+      integrationID: my_database
+      table: data
+      filters:
+        - field: id
+          operator: eq
+          value: "{{ param \"id\" }}"
+      single: true
+    next: action.update_cache
+
+  update_cache:
+    type: memory_store
+    config:
+      key: "data_{{ param \"id\" }}"
+      contents: "{{ jsonout .fetch_from_db }}"
+    next: response.success
+
+responses:
+  from_cache:
+    statusCode: 200
+    body:
+      source: "cache"
+      data: "{{ .check_cache }}"
+
+  success:
+    statusCode: 200
+    body:
+      source: "database"
+      data: "{{ .fetch_from_db }}"
+```
+
+### Session Storage
+
+Store and retrieve user session data:
+
+```docs/actions/memory.mdx
+actions:
+  store_session:
+    type: memory_store
+    config:
+      key: "session_{{ param \"session_id\" }}"
+      contents: |
+        {
+          "user_id": "{{ .authenticated_user.id }}",
+          "login_time": "{{ now }}",
+          "preferences": {{ jsonout .user_preferences }}
+        }
+    next: response.session_created
+```
+
+```docs/actions/memory.mdx
+actions:
+  get_session:
+    type: memory_fetch
+    config:
+      key: "session_{{ param \"session_id\" }}"
+    next: conditional.session_valid
+
+conditionals:
+  session_valid:
+    expression: "{{ notempty .get_session \"\" }}"
+    onTrue: action.process_request
+    onFalse: response.session_expired
+```
+
+### Rate Limiting Counter
+
+Track request counts for rate limiting:
+
+```docs/actions/memory.mdx
+actions:
+  get_request_count:
+    type: memory_fetch
+    config:
+      key: "rate_{{ param \"api_key\" }}"
+    next: action.increment_count
+
+  increment_count:
+    type: javascript
+    config:
+      script: |
+        function servflowRun(vars) {
+          const current = parseInt(vars.get_request_count) || 0;
+          return current + 1;
+        }
+    next: action.store_count
+
+  store_count:
+    type: memory_store
+    config:
+      key: "rate_{{ param \"api_key\" }}"
+      contents: "{{ .increment_count }}"
+    next: conditional.check_limit
+
+conditionals:
+  check_limit:
+    expression: "{{ lt .increment_count 100 }}"
+    onTrue: action.process_request
+    onFalse: response.rate_limited
+```
+
+### Temporary Token Storage
+
+Store and validate temporary tokens:
+
+```docs/actions/memory.mdx
+actions:
+  generate_reset_token:
+    type: javascript
+    config:
+      script: |
+        function servflowRun(vars) {
+          return Math.random().toString(36).substring(2, 15);
+        }
+    next: action.store_reset_token
+
+  store_reset_token:
+    type: memory_store
+    config:
+      key: "reset_{{ .generate_reset_token }}"
+      contents: |
+        {
+          "user_id": "{{ .fetch_user.id }}",
+          "email": "{{ .fetch_user.email }}",
+          "created_at": "{{ now }}"
+        }
+    next: action.send_reset_email
+```
+
+```docs/actions/memory.mdx
+actions:
+  validate_reset_token:
+    type: memory_fetch
+    config:
+      key: "reset_{{ param \"token\" }}"
+    next: conditional.token_valid
+
+conditionals:
+  token_valid:
+    expression: "{{ notempty .validate_reset_token \"\" }}"
+    onTrue: action.allow_password_reset
+    onFalse: response.invalid_token
+```
+
+---
+
+## Best Practices
+
+<Tip>
+**Key Naming**: Use consistent key naming conventions with prefixes to organize your cached data. For example: `user_`, `session_`, `cache_`, `rate_`.
+</Tip>
+
+<Note>
+**Data Size**: Keep stored values reasonably sized. For large datasets, consider storing only essential fields or IDs and fetching full data when needed.
+</Note>
+
+<Warning>
+**No TTL**: Memory storage doesn't support automatic expiration. Implement your own expiration logic by storing timestamps and checking them during retrieval.
+</Warning>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Data Operations" icon="database" href="/actions/data-operations">
+  Use persistent database storage for long-term data.
+</Card>
+
+<Card title="Transformation" icon="wand-magic-sparkles" href="/actions/transformation">
+  Process and transform cached data with JavaScript.
+</Card>
+
+<Card title="Flow Control" icon="code-branch" href="/actions/flow-control">
+  Combine caching with parallel data fetching.
+</Card>
+
+<Card title="Actions Overview" icon="play" href="/actions/overview">
+  Learn the fundamentals of ServFlow actions.
+</Card>
+
+</CardGroup>

@@ -1,0 +1,260 @@
+---
+title: "Transformation"
+description: "Transform and manipulate data using JavaScript code or static values"
+---
+
+Transformation actions allow you to process, reshape, and compute values within your workflows. Use these actions when you need custom logic that goes beyond what other actions provide.
+
+---
+
+## javascript
+
+Executes custom JavaScript code with access to all workflow variables. The script must define a `servflowRun` function that receives the workflow context and returns a result.
+
+### Script
+
+The JavaScript code to execute. Must contain a `servflowRun` function.
+
+| | |
+|---|---|
+| **YAML Key** | `script` |
+| **Type** | string |
+| **Required** | Yes |
+
+The `servflowRun` function receives a `vars` object containing:
+- Results from previous actions (e.g., `vars.fetch_users`)
+- Request parameters accessible via the workflow context
+
+### Dependencies
+
+Bundled JavaScript dependencies to include with the script.
+
+| | |
+|---|---|
+| **YAML Key** | `dependencies` |
+| **Type** | string |
+| **Required** | No |
+
+### Example
+
+Basic transformation:
+
+```docs/actions/transformation.mdx
+actions:
+  transform_data:
+    type: javascript
+    config:
+      script: |
+        function servflowRun(vars) {
+          const users = vars.fetch_users || [];
+          return users.map(user => ({
+            id: user.id,
+            displayName: user.firstName + ' ' + user.lastName,
+            email: user.email.toLowerCase()
+          }));
+        }
+    next: response.success
+```
+
+### Complex Calculations
+
+Perform calculations on workflow data:
+
+```docs/actions/transformation.mdx
+actions:
+  calculate_totals:
+    type: javascript
+    config:
+      script: |
+        function servflowRun(vars) {
+          const items = vars.cart_items || [];
+          const subtotal = items.reduce((sum, item) => 
+            sum + (item.price * item.quantity), 0);
+          const tax = subtotal * 0.1;
+          return {
+            subtotal: subtotal,
+            tax: tax,
+            total: subtotal + tax,
+            itemCount: items.length
+          };
+        }
+    next: response.cart_summary
+```
+
+### Data Validation
+
+Validate and sanitize input data:
+
+```docs/actions/transformation.mdx
+actions:
+  validate_input:
+    type: javascript
+    config:
+      script: |
+        function servflowRun(vars) {
+          const email = vars.request_email || '';
+          const name = vars.request_name || '';
+          
+          const errors = [];
+          
+          if (!email.includes('@')) {
+            errors.push('Invalid email address');
+          }
+          
+          if (name.length < 2) {
+            errors.push('Name must be at least 2 characters');
+          }
+          
+          return {
+            isValid: errors.length === 0,
+            errors: errors,
+            sanitized: {
+              email: email.toLowerCase().trim(),
+              name: name.trim()
+            }
+          };
+        }
+    next: conditional.check_valid
+```
+
+### Array Filtering and Sorting
+
+Filter and sort data:
+
+```docs/actions/transformation.mdx
+actions:
+  process_orders:
+    type: javascript
+    config:
+      script: |
+        function servflowRun(vars) {
+          const orders = vars.fetch_orders || [];
+          
+          // Filter to completed orders
+          const completed = orders.filter(o => o.status === 'completed');
+          
+          // Sort by date descending
+          completed.sort((a, b) => 
+            new Date(b.created_at) - new Date(a.created_at)
+          );
+          
+          // Get top 10
+          return completed.slice(0, 10);
+        }
+    next: response.recent_orders
+```
+
+---
+
+## static
+
+Returns a static value or a computed value using template syntax. Useful for setting constants, combining values, or preparing data for subsequent actions.
+
+### Return Value
+
+The value to return. Supports template syntax for dynamic values.
+
+| | |
+|---|---|
+| **YAML Key** | `return` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Example
+
+Return a constant value:
+
+```docs/actions/transformation.mdx
+actions:
+  set_status:
+    type: static
+    config:
+      return: "active"
+    next: action.create_record
+```
+
+### Combine Values
+
+Combine multiple values into a single result:
+
+```docs/actions/transformation.mdx
+actions:
+  build_greeting:
+    type: static
+    config:
+      return: "Hello, {{ param \"firstName\" }} {{ param \"lastName\" }}!"
+    next: response.greeting
+```
+
+### Prepare Data
+
+Prepare a JSON structure for another action:
+
+```docs/actions/transformation.mdx
+actions:
+  prepare_payload:
+    type: static
+    config:
+      return: |
+        {
+          "user_id": "{{ .authenticated_user.id }}",
+          "timestamp": "{{ now }}",
+          "action": "login"
+        }
+    next: action.log_event
+```
+
+### Set Default Values
+
+Provide fallback values using template functions:
+
+```docs/actions/transformation.mdx
+actions:
+  set_defaults:
+    type: static
+    config:
+      return: "{{ param \"category\" | default \"general\" }}"
+    next: action.fetch_items
+```
+
+---
+
+## When to Use Each
+
+| Scenario | Recommended Action |
+|----------|-------------------|
+| Simple string concatenation | `static` |
+| Setting constant values | `static` |
+| Complex data transformations | `javascript` |
+| Array manipulation (map, filter, reduce) | `javascript` |
+| Conditional logic with multiple branches | `javascript` |
+| Mathematical calculations | `javascript` |
+| Data validation | `javascript` |
+
+<Tip>
+Use `static` when template syntax is sufficient. Reserve `javascript` for complex logic that can't be expressed with templates.
+</Tip>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Data Operations" icon="database" href="/actions/data-operations">
+  Fetch and store the data you transform.
+</Card>
+
+<Card title="Flow Control" icon="code-branch" href="/actions/flow-control">
+  Run transformations in parallel.
+</Card>
+
+<Card title="AI Agents" icon="robot" href="/actions/ai-agents">
+  Combine transformations with AI processing.
+</Card>
+
+<Card title="Actions Overview" icon="play" href="/actions/overview">
+  Learn the fundamentals of ServFlow actions.
+</Card>
+
+</CardGroup>

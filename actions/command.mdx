@@ -1,0 +1,208 @@
+---
+title: "Command"
+description: "Execute shell commands and scripts from your ServFlow workflows"
+---
+
+The command action allows you to execute shell commands and scripts directly from your workflows. This is useful for system automation, running scripts, processing files, or integrating with command-line tools.
+
+<Warning>
+Be cautious when using user input in commands. Always validate and sanitize inputs to prevent command injection attacks.
+</Warning>
+
+---
+
+## command
+
+Executes shell commands and returns their output.
+
+### Command
+
+The shell command to execute.
+
+| | |
+|---|---|
+| **YAML Key** | `command` |
+| **Type** | string |
+| **Required** | Yes |
+
+The command is executed in the system's default shell. You can use pipes, redirects, and other shell features.
+
+---
+
+## Examples
+
+### Basic Command
+
+List files in a directory:
+
+```docs/actions/command.mdx
+actions:
+  list_files:
+    type: command
+    config:
+      command: "ls -la /data"
+    next: response.success
+    fail: response.error
+```
+
+### Run a Script
+
+Execute a script file:
+
+```docs/actions/command.mdx
+actions:
+  run_backup:
+    type: command
+    config:
+      command: "/scripts/backup.sh"
+    next: response.success
+    fail: response.backup_failed
+```
+
+### Command with Dynamic Values
+
+Use workflow data in commands (with caution):
+
+```docs/actions/command.mdx
+actions:
+  process_file:
+    type: command
+    config:
+      command: "python /scripts/process.py --file {{ .uploaded_file.path }}"
+    next: action.store_result
+    fail: response.processing_error
+```
+
+### Chained Commands
+
+Use pipes and shell operators:
+
+```docs/actions/command.mdx
+actions:
+  search_logs:
+    type: command
+    config:
+      command: "cat /var/log/app.log | grep ERROR | tail -20"
+    next: response.errors
+```
+
+### Process Command Output
+
+Use the command output in subsequent actions:
+
+```docs/actions/command.mdx
+actions:
+  get_disk_usage:
+    type: command
+    config:
+      command: "df -h / | tail -1 | awk '{print $5}'"
+    next: action.check_threshold
+
+  check_threshold:
+    type: javascript
+    config:
+      script: |
+        function servflowRun(vars) {
+          const usage = parseInt(vars.get_disk_usage.replace('%', ''));
+          return {
+            usage: usage,
+            alert: usage > 80
+          };
+        }
+    next: conditional.should_alert
+```
+
+### Environment Variables
+
+Access environment variables in commands:
+
+```docs/actions/command.mdx
+actions:
+  deploy:
+    type: command
+    config:
+      command: "AWS_PROFILE=production /scripts/deploy.sh {{ param \"version\" }}"
+    next: response.deployed
+    fail: response.deploy_failed
+```
+
+---
+
+## Security Considerations
+
+<Note>
+**Never directly interpolate user input into commands.** This can lead to command injection vulnerabilities.
+</Note>
+
+### Unsafe Pattern
+
+```docs/actions/command.mdx
+# DON'T DO THIS - vulnerable to injection
+actions:
+  unsafe_command:
+    type: command
+    config:
+      command: "echo {{ param \"user_input\" }}"
+```
+
+### Safer Pattern
+
+Validate and sanitize input before use:
+
+```docs/actions/command.mdx
+actions:
+  validate_input:
+    type: javascript
+    config:
+      script: |
+        function servflowRun(vars) {
+          const input = vars.request_filename || '';
+          // Only allow alphanumeric characters and underscores
+          const sanitized = input.replace(/[^a-zA-Z0-9_]/g, '');
+          return sanitized;
+        }
+    next: action.safe_command
+
+  safe_command:
+    type: command
+    config:
+      command: "cat /data/{{ .validate_input }}.txt"
+    next: response.content
+```
+
+---
+
+## Common Use Cases
+
+| Use Case | Example Command |
+|----------|-----------------|
+| File operations | `cp`, `mv`, `rm`, `mkdir` |
+| Data processing | `awk`, `sed`, `grep`, `jq` |
+| System information | `df`, `free`, `uptime` |
+| Running scripts | `python script.py`, `node script.js`, `bash script.sh` |
+| Git operations | `git pull`, `git log` |
+| Container management | `docker ps`, `docker exec` |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Memory" icon="brain" href="/actions/memory">
+  Cache command results for reuse.
+</Card>
+
+<Card title="Transformation" icon="wand-magic-sparkles" href="/actions/transformation">
+  Process command output with JavaScript.
+</Card>
+
+<Card title="Flow Control" icon="code-branch" href="/actions/flow-control">
+  Run multiple commands in parallel.
+</Card>
+
+<Card title="Actions Overview" icon="play" href="/actions/overview">
+  Learn the fundamentals of ServFlow actions.
+</Card>
+
+</CardGroup>

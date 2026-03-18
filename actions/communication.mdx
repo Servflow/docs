@@ -1,0 +1,370 @@
+---
+title: "Communication"
+description: "Send emails and notifications from your ServFlow workflows"
+---
+
+Communication actions allow you to send messages and notifications from your workflows. Use these actions to send transactional emails, alerts, and user notifications.
+
+---
+
+## email
+
+Sends email messages via SMTP. Use this action for transactional emails like welcome messages, password resets, order confirmations, and alerts.
+
+### Sender Email
+
+The email address the message will be sent from.
+
+| | |
+|---|---|
+| **YAML Key** | `senderEmail` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Recipient Email
+
+The email address to send the message to.
+
+| | |
+|---|---|
+| **YAML Key** | `recipientEmail` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Name
+
+The sender's display name that appears in the recipient's inbox.
+
+| | |
+|---|---|
+| **YAML Key** | `name` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Subject
+
+The email subject line.
+
+| | |
+|---|---|
+| **YAML Key** | `subject` |
+| **Type** | string |
+| **Required** | No |
+
+### Content
+
+The email body content. Supports plain text or HTML.
+
+| | |
+|---|---|
+| **YAML Key** | `content` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Auth
+
+SMTP server authentication configuration.
+
+| | |
+|---|---|
+| **YAML Key** | `auth` |
+| **Type** | object |
+| **Required** | Yes |
+
+The auth object contains the following fields:
+
+#### Server Hostname
+
+The SMTP server hostname.
+
+| | |
+|---|---|
+| **YAML Key** | `serverHostname` |
+| **Type** | string |
+| **Required** | Yes |
+
+#### Server Port
+
+The SMTP server port (typically 587 for TLS or 465 for SSL).
+
+| | |
+|---|---|
+| **YAML Key** | `serverPort` |
+| **Type** | string |
+| **Required** | Yes |
+
+#### Username
+
+The SMTP authentication username.
+
+| | |
+|---|---|
+| **YAML Key** | `username` |
+| **Type** | string |
+| **Required** | Yes |
+
+#### Password
+
+The SMTP authentication password.
+
+| | |
+|---|---|
+| **YAML Key** | `password` |
+| **Type** | string |
+| **Required** | Yes |
+
+<Tip>
+Store SMTP credentials in secrets and reference them with `{{ secret "SECRET_NAME" }}` to keep them secure.
+</Tip>
+
+---
+
+## Examples
+
+### Welcome Email
+
+Send a welcome email when a user registers:
+
+```yaml
+actions:
+  send_welcome_email:
+    type: email
+    config:
+      senderEmail: "noreply@example.com"
+      recipientEmail: "{{ param \"email\" }}"
+      name: "My Application"
+      subject: "Welcome to Our Service"
+      content: |
+        Hello {{ param "name" }},
+        
+        Welcome to our service! Your account has been created successfully.
+        
+        Here's what you can do next:
+        - Complete your profile
+        - Explore our features
+        - Connect with other users
+        
+        If you have any questions, reply to this email.
+        
+        Best regards,
+        The Team
+      auth:
+        serverHostname: smtp.example.com
+        serverPort: "587"
+        username: "{{ secret \"SMTP_USER\" }}"
+        password: "{{ secret \"SMTP_PASS\" }}"
+    next: response.success
+    fail: response.email_error
+```
+
+### Password Reset Email
+
+Send a password reset link:
+
+```yaml
+actions:
+  generate_reset_token:
+    type: jwt
+    config:
+      mode: encode
+      field: "{{ .user.id }}"
+      key: "{{ secret \"JWT_SECRET\" }}"
+      claims:
+        purpose: password_reset
+        exp: "{{ now | date_modify \"+1h\" | unixEpoch }}"
+    next: action.send_reset_email
+
+  send_reset_email:
+    type: email
+    config:
+      senderEmail: "security@example.com"
+      recipientEmail: "{{ .user.email }}"
+      name: "Example Security"
+      subject: "Password Reset Request"
+      content: |
+        Hi {{ .user.name }},
+        
+        We received a request to reset your password.
+        
+        Click the link below to reset your password:
+        https://example.com/reset-password?token={{ .generate_reset_token }}
+        
+        This link expires in 1 hour.
+        
+        If you didn't request this, you can safely ignore this email.
+        
+        - The Security Team
+      auth:
+        serverHostname: "{{ secret \"SMTP_HOST\" }}"
+        serverPort: "{{ secret \"SMTP_PORT\" }}"
+        username: "{{ secret \"SMTP_USER\" }}"
+        password: "{{ secret \"SMTP_PASS\" }}"
+    next: response.success
+```
+
+### Order Confirmation Email
+
+Send an order confirmation with details:
+
+```yaml
+actions:
+  send_order_confirmation:
+    type: email
+    config:
+      senderEmail: "orders@example.com"
+      recipientEmail: "{{ .customer.email }}"
+      name: "Example Store"
+      subject: "Order Confirmation #{{ .order.id }}"
+      content: |
+        Thank you for your order, {{ .customer.name }}!
+        
+        Order Number: {{ .order.id }}
+        Order Date: {{ .order.created_at }}
+        
+        Items:
+        {{ range .order.items }}
+        - {{ .name }} x {{ .quantity }}: ${{ .price }}
+        {{ end }}
+        
+        Subtotal: ${{ .order.subtotal }}
+        Tax: ${{ .order.tax }}
+        Total: ${{ .order.total }}
+        
+        Shipping Address:
+        {{ .customer.address.street }}
+        {{ .customer.address.city }}, {{ .customer.address.state }} {{ .customer.address.zip }}
+        
+        You will receive a shipping confirmation when your order ships.
+        
+        Thank you for shopping with us!
+      auth:
+        serverHostname: smtp.example.com
+        serverPort: "587"
+        username: "{{ secret \"SMTP_USER\" }}"
+        password: "{{ secret \"SMTP_PASS\" }}"
+    next: response.confirmation_sent
+```
+
+### Alert Notification
+
+Send an alert email when an event occurs:
+
+```yaml
+actions:
+  send_alert:
+    type: email
+    config:
+      senderEmail: "alerts@example.com"
+      recipientEmail: "{{ secret \"ADMIN_EMAIL\" }}"
+      name: "System Alerts"
+      subject: "[ALERT] {{ param \"alert_type\" }} - Immediate Attention Required"
+      content: |
+        An alert has been triggered:
+        
+        Type: {{ param "alert_type" }}
+        Severity: {{ param "severity" }}
+        Timestamp: {{ now }}
+        
+        Details:
+        {{ param "message" }}
+        
+        Please investigate immediately.
+        
+        ---
+        This is an automated message from the monitoring system.
+      auth:
+        serverHostname: smtp.example.com
+        serverPort: "587"
+        username: "{{ secret \"SMTP_USER\" }}"
+        password: "{{ secret \"SMTP_PASS\" }}"
+    next: response.alert_sent
+    fail: response.alert_failed
+```
+
+### HTML Email
+
+Send a formatted HTML email:
+
+```yaml
+actions:
+  send_html_email:
+    type: email
+    config:
+      senderEmail: "marketing@example.com"
+      recipientEmail: "{{ param \"email\" }}"
+      name: "Example Newsletter"
+      subject: "Your Weekly Update"
+      content: |
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; }
+            .header { background: #4A90D9; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; }
+            .button { background: #4A90D9; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; }
+            .footer { background: #f5f5f5; padding: 10px; text-align: center; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Weekly Update</h1>
+          </div>
+          <div class="content">
+            <p>Hello {{ param "name" }},</p>
+            <p>Here's what's new this week...</p>
+            <p><a href="https://example.com/read-more" class="button">Read More</a></p>
+          </div>
+          <div class="footer">
+            <p>You're receiving this because you subscribed to our newsletter.</p>
+            <p><a href="https://example.com/unsubscribe">Unsubscribe</a></p>
+          </div>
+        </body>
+        </html>
+      auth:
+        serverHostname: smtp.example.com
+        serverPort: "587"
+        username: "{{ secret \"SMTP_USER\" }}"
+        password: "{{ secret \"SMTP_PASS\" }}"
+    next: response.sent
+```
+
+---
+
+## Common SMTP Providers
+
+| Provider | Hostname | Port |
+|----------|----------|------|
+| Gmail | smtp.gmail.com | 587 |
+| SendGrid | smtp.sendgrid.net | 587 |
+| Mailgun | smtp.mailgun.org | 587 |
+| Amazon SES | email-smtp.{region}.amazonaws.com | 587 |
+| Outlook/Office 365 | smtp.office365.com | 587 |
+
+<Note>
+Some providers require app-specific passwords or API keys instead of your regular account password. Check your provider's documentation for SMTP authentication requirements.
+</Note>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Secrets Management" icon="key" href="/references/secrets">
+  Securely store SMTP credentials for your email actions.
+</Card>
+
+<Card title="Authentication" icon="lock" href="/actions/authentication">
+  Generate password reset tokens and secure links.
+</Card>
+
+<Card title="Data Operations" icon="database" href="/actions/data-operations">
+  Fetch user data to personalize your emails.
+</Card>
+
+<Card title="Actions Overview" icon="play" href="/actions/overview">
+  Learn the fundamentals of ServFlow actions.
+</Card>
+
+</CardGroup>
