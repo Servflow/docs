@@ -1,0 +1,445 @@
+---
+title: "Conditionals"
+description: "Understanding Conditionals in ServFlow — branching logic for your API workflows"
+---
+
+Conditionals are decision points in ServFlow workflows that evaluate expressions and route execution to different steps based on the result. They enable you to create dynamic workflows that respond differently based on input data, action results, or any other runtime values.
+
+You can configure conditionals in two ways:
+
+- **Dashboard UI** — Visual interface with structured forms or a template editor for advanced expressions
+- **YAML Configuration** — Code-based configuration files for version control and complex logic
+
+For information on how conditionals fit into the overall execution flow, see the [Actions](/references/concepts/actions) documentation.
+
+---
+
+## Conditionals in the Dashboard UI
+
+The ServFlow dashboard provides a visual interface for adding and configuring conditionals in your workflows.
+
+### Adding a Conditional Node
+
+To add a conditional to your workflow:
+
+1. Click the **+** button below an existing node in the workflow canvas
+2. Select **Branch** from the node type options
+3. The conditional node will be added to your workflow with True and False output handles
+
+<Frame>
+  <img src="/images/concepts/add-condition.png" alt="Node type selection showing Branch option for adding conditionals" />
+</Frame>
+
+### Configuring a Conditional
+
+Selecting a conditional node opens the configuration panel on the left side of the screen. ServFlow offers two configuration modes:
+
+#### Structured Mode (Default)
+
+Structured mode provides a form-based interface for building conditions without writing template expressions manually.
+
+<Frame>
+  <img src="/images/concepts/conditions-structure.png" alt="Structured conditional configuration with field, compare function, and comparison value" />
+</Frame>
+
+The configuration panel displays:
+
+- **Field** — The value to evaluate (use `{{ .Variable }}` for dynamic values)
+- **Compare Function** — The comparison operation (eq, ne, gt, lt, etc.)
+- **Comparison** — The value to compare against
+
+You can build complex logic using:
+
+- **+ Add** — Adds another condition to the current group (AND logic)
+- **+ "OR" Group** — Adds a new condition group (OR logic between groups)
+
+#### Template Editor Mode (Advanced)
+
+For complex expressions, toggle **Template Editor** to write Go template expressions directly.
+
+<Frame>
+  <img src="/images/concepts/conditions-tempalte.png" alt="Template editor mode for writing custom conditional expressions" />
+</Frame>
+
+In template mode, write expressions that evaluate to a boolean value. The expression must be wrapped in `{{ }}` template delimiters.
+
+<Tip>
+Use template mode when you need complex logic like nested conditions, multiple AND/OR combinations, or custom validation functions.
+</Tip>
+
+### Understanding Conditional Outputs
+
+Every conditional node has two output handles:
+
+- **True** — The path taken when the expression evaluates to `true`
+- **False** — The path taken when the expression evaluates to `false`
+
+Drag connections from these handles to other actions, conditionals, or response nodes to define your workflow's branching logic.
+
+---
+
+## Conditionals in YAML Configuration
+
+For code-based workflows, conditionals are defined in YAML configuration files. This approach is ideal for version control, complex expressions, and programmatic configuration.
+
+### Conditional Structure
+
+Every conditional follows this structure:
+
+```yaml
+conditionals:
+  conditional_id:
+    expression: "{{ eq .status \"active\" }}"
+    onTrue: action.process_active
+    onFalse: response.inactive
+    type: template
+```
+
+The `conditional_id` is a unique identifier you choose for the conditional. You'll use this ID when routing other steps to this conditional.
+
+### Common Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `expression` | string | Yes* | Template expression that evaluates to `true` or `false` |
+| `onTrue` | string | No | Step to execute if expression evaluates to `true` |
+| `onFalse` | string | No | Step to execute if expression evaluates to `false` |
+| `type` | string | No | Conditional type: `template` (default) or `structured` |
+| `structure` | array | No | Structured condition definition (for `structured` type) |
+
+*Required for `template` type; `structure` is required for `structured` type.
+
+### Routing Syntax
+
+The `onTrue` and `onFalse` fields use the standard step reference syntax:
+
+- `action.action_id` — Route to an action
+- `conditional.conditional_id` — Route to another conditional
+- `response.response_id` — Route to a response
+
+---
+
+## Conditional Types
+
+### Template Conditionals
+
+Template conditionals use Go template expressions that must evaluate to `true` or `false`.
+
+```yaml
+conditionals:
+  is_admin:
+    type: template
+    expression: "{{ eq .user.role \"admin\" }}"
+    onTrue: action.admin_action
+    onFalse: response.forbidden
+```
+
+Template expressions can use comparison functions, logical operators, and access any data available in the workflow context.
+
+### Structured Conditionals
+
+Structured conditionals use a visual-friendly format with predefined functions. They support AND/OR logic through nested arrays.
+
+The `content` and `comparison` fields contain raw template expressions **without** curly braces. The system automatically wraps the generated expression in `{{ }}`.
+
+```yaml
+conditionals:
+  validate_input:
+    type: structured
+    structure:
+      - - content: .email
+          function: email
+          title: Email
+        - content: .password
+          function: notempty
+          title: Password
+    onTrue: action.create_user
+    onFalse: response.validation_error
+```
+
+**Logic structure:**
+- Items in the same inner array are combined with **AND**
+- Inner arrays are combined with **OR**
+
+For example, `(A AND B) OR (C AND D)`:
+
+```yaml
+structure:
+  - - content: .fieldA
+      function: notempty
+      title: Field A
+    - content: .fieldB
+      function: notempty
+      title: Field B
+  - - content: .fieldC
+      function: notempty
+      title: Field C
+    - content: .fieldD
+      function: notempty
+      title: Field D
+```
+
+This generates: `{{ or (and (notempty (.fieldA) ("Field A")) (notempty (.fieldB) ("Field B"))) (and (notempty (.fieldC) ("Field C")) (notempty (.fieldD) ("Field D"))) }}`
+
+### Structured Condition Item Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `content` | string | Yes | Raw template expression to evaluate (no curly braces) |
+| `function` | string | Yes | The validation function to use |
+| `comparison` | string | No | Raw template expression for comparison functions (no curly braces) |
+| `title` | string | No | Field name for validation error messages |
+
+---
+
+## Validation Functions
+
+These functions are available in both template and structured conditionals.
+
+| Function | Description | Requires Comparison |
+|----------|-------------|---------------------|
+| `eq` | Checks if two values are equal | Yes |
+| `ne` | Checks if two values are not equal | Yes |
+| `gt` | Greater than comparison | Yes |
+| `ge` | Greater than or equal | Yes |
+| `lt` | Less than comparison | Yes |
+| `le` | Less than or equal | Yes |
+| `email` | Validates email format | No |
+| `notempty` | Checks value is not empty | No |
+| `empty` | Checks value is empty | No |
+| `bcrypt` | Compares plain text against bcrypt hash | Yes |
+
+### Function Examples
+
+**Template syntax:**
+
+```yaml
+# Equality check
+expression: "{{ eq .user.status \"active\" }}"
+
+# Greater than with length
+expression: "{{ gt (len .fetch_results) 0 }}"
+
+# Email validation
+expression: "{{ email (param \"email\") \"Email\" }}"
+
+# Not empty with error collection
+expression: "{{ notempty (param \"name\") \"Name\" true }}"
+
+# Password verification
+expression: "{{ bcrypt (param \"password\") .user.password \"Password\" }}"
+```
+
+**Structured syntax:**
+
+```yaml
+# Equality check
+structure:
+  - - content: .user.status
+      comparison: '"active"'
+      function: eq
+
+# Email validation
+structure:
+  - - content: param "email"
+      function: email
+      title: Email
+
+# Password verification with bcrypt
+structure:
+  - - content: param "password"
+      comparison: .user.password
+      function: bcrypt
+      title: Password
+
+# Greater than with length
+structure:
+  - - content: len .fetch_users
+      comparison: "0"
+      function: gt
+```
+
+---
+
+## Common Patterns
+
+### Input Validation
+
+Validate required fields before processing:
+
+```yaml
+conditionals:
+  validate_registration:
+    expression: |
+      {{ and
+        (notempty (param "email") "Email" true)
+        (email (param "email") "Email")
+        (notempty (param "password") "Password" true)
+      }}
+    onTrue: action.create_user
+    onFalse: response.validation_error
+```
+
+### Checking if Data Exists
+
+Route based on whether a fetch action returned results:
+
+```yaml
+conditionals:
+  user_exists:
+    expression: "{{ gt (len .fetch_user) 0 }}"
+    onTrue: response.user_already_exists
+    onFalse: action.create_user
+```
+
+### Role-Based Access Control
+
+Check user permissions before allowing access:
+
+```yaml
+conditionals:
+  is_privileged:
+    expression: |
+      {{ or
+        (eq .user.role "admin")
+        (eq .user.role "moderator")
+      }}
+    onTrue: action.privileged_action
+    onFalse: response.forbidden
+```
+
+### Password Verification
+
+Verify passwords during login:
+
+```yaml
+conditionals:
+  verify_password:
+    expression: "{{ bcrypt (param \"password\") .user.password \"Password\" }}"
+    onTrue: action.generate_token
+    onFalse: response.invalid_credentials
+```
+
+### Complex Nested Conditions
+
+Combine multiple conditions with AND/OR logic:
+
+```yaml
+conditionals:
+  can_access_resource:
+    expression: |
+      {{ or
+        (eq .user.role "admin")
+        (and
+          (eq .resource.owner_id .user.id)
+          (eq .resource.status "published")
+        )
+      }}
+    onTrue: action.serve_resource
+    onFalse: response.forbidden
+```
+
+### Form Validation with Structured Conditions
+
+Use structured conditionals for form validation with automatic error collection:
+
+```yaml
+conditionals:
+  validate_contact_form:
+    type: structured
+    structure:
+      - - content: param "name"
+          function: notempty
+          title: Name
+        - content: param "email"
+          function: email
+          title: Email
+        - content: param "message"
+          function: notempty
+          title: Message
+    onTrue: action.send_email
+    onFalse: response.validation_error
+```
+
+### Role-Based Access with Structured Conditions
+
+Check if a user is an admin OR owns the resource:
+
+```yaml
+conditionals:
+  check_admin_or_owner:
+    type: structured
+    structure:
+      # User is admin
+      - - content: .user.role
+          comparison: '"admin"'
+          function: eq
+      # OR user owns the resource
+      - - content: .resource.owner_id
+          comparison: .user.id
+          function: eq
+    onTrue: action.allow_access
+    onFalse: response.forbidden
+```
+
+---
+
+## Validation Error Collection
+
+When validation functions like `notempty`, `email`, and `bcrypt` include a title parameter, validation errors are automatically collected. Access these errors in responses using the `.errors` variable.
+
+```yaml
+conditionals:
+  validate:
+    expression: |
+      {{ and
+        (notempty (param "email") "Email" true)
+        (email (param "email") "Email")
+        (notempty (param "password") "Password" true)
+      }}
+    onTrue: action.create_user
+    onFalse: response.validation_error
+
+responses:
+  validation_error:
+    code: 400
+    responseObject:
+      fields:
+        success:
+          value: "false"
+        errors:
+          value: "{{ .errors }}"
+```
+
+This returns a response like:
+
+```json
+{
+  "success": false,
+  "errors": ["Email is required", "Password is required"]
+}
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Actions" icon="bolt" href="/references/concepts/actions">
+  Learn about actions — the building blocks of workflows.
+</Card>
+
+<Card title="Actions Reference" icon="book" href="/actions/overview">
+  Explore all available action types and their configuration.
+</Card>
+
+<Card title="Configuration Reference" icon="gear" href="/references/configuration">
+  See the complete ServFlow configuration options.
+</Card>
+
+<Card title="Secrets Management" icon="key" href="/references/secrets">
+  Securely store credentials used in your conditionals.
+</Card>
+
+</CardGroup>
