@@ -2,6 +2,11 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "ServFlow Documentation",
+  "integrations": {
+    "ga4": {
+      "measurementId": "G-LCJ06LBSBY"
+    }
+  },
   "colors": {
     "primary": "#8F0BC7",
     "light": "#bc60e3",
@@ -15,13 +20,27 @@
         "groups": [
           {
             "group": "Getting Started",
-            "pages": ["index", "installation", "quickstart", "development"]
+            "pages": [
+              "index",
+              "installation",
+              {
+                "group": "Quickstart",
+                "pages": [
+                  "quickstart",
+                  "quickstart-dashboard",
+                  "quickstart-yaml"
+                ]
+              },
+              "running-modes",
+              "development"
+            ]
           },
           {
             "group": "Concepts",
             "pages": [
               "references/concepts/actions",
               "references/concepts/conditionals",
+              "references/concepts/responses",
               "references/concepts/dynamic-content"
             ]
           },

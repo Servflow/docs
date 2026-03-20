@@ -1,0 +1,148 @@
+---
+title: "Dashboard Quickstart"
+description: "Create your first Hello World API with the ServFlow dashboard in under 5 minutes"
+---
+
+ServFlow is a visual backend engine that lets you build APIs through an intuitive dashboard interface. This guide walks you through creating a simple "Hello World" API endpoint using the dashboard. By the end, you'll have a working API that responds to HTTP requests.
+
+<Tip>
+Prefer writing configuration files directly? See the [YAML Quickstart](/quickstart-yaml) for a code-first approach, or learn about [Running Modes](/running-modes) to understand when to use each.
+</Tip>
+
+### Prerequisites
+
+Before starting, make sure you have ServFlow Pro running with the dashboard enabled:
+
+```docs/quickstart.mdx#L13-L14
+servflow-pro start --config config.toml --dashboard
+```
+
+<Tip>
+See the [Installation Guide](/installation) if you haven't set up ServFlow Pro yet.
+</Tip>
+
+### Step 1: Open the Dashboard
+
+Open your browser and navigate to the ServFlow dashboard:
+
+```docs/quickstart.mdx#L24-L25
+http://localhost:3000
+```
+
+You'll see the ServFlow builder interface with the **Files Available** panel on the left side.
+
+<Frame>
+  <img src="/images/getting-started/step-1.png" alt="ServFlow Dashboard with Files Available panel" />
+</Frame>
+
+### Step 2: Create a New API Configuration
+
+Click the **+** button in the **Files Available** panel header to create a new API configuration.
+
+<Frame>
+  <img src="/images/getting-started/step-2.png" alt="Create New API Configuration dialog" />
+</Frame>
+
+In the dialog that appears:
+1. Enter a name for your configuration (e.g., `hello-world`)
+2. Click **Create**
+
+<Note>
+Configuration names can only contain letters, numbers, hyphens (-), and underscores (_).
+</Note>
+
+### Step 3: Configure Your HTTP Entry Point
+
+After creating the configuration, you'll see a visual workflow editor with an **Http Request Entry** node automatically created.
+
+<Frame>
+  <img src="/images/getting-started/step-3.png" alt="Workflow editor with HTTP Request Entry node" />
+</Frame>
+
+The entry node is pre-configured with:
+- **Method**: GET
+- **ListenPath**: /hello-world (based on your configuration name)
+
+Click on the entry node to modify these settings if needed.
+
+### Step 4: Add a Response
+
+Click the **+** button below the Http Request Entry node to add a new node.
+
+<Frame>
+  <img src="/images/getting-started/step-4.png" alt="Node type selection dialog" />
+</Frame>
+
+A dialog will appear with three options:
+- **Actions** — Perform operations like HTTP requests, transformations, etc.
+- **Branch** — Add conditional logic to your workflow
+- **Responses** — Return a response to the client
+
+Select **Responses** to add a response node to your workflow.
+
+### Step 5: Configure the Response
+
+Configure your response node with a simple JSON payload:
+
+1. Set **Status Code** to `200`
+2. Add a response body:
+
+```docs/quickstart.mdx#L86-L90
+{
+  "message": "Hello, World!",
+  "status": "success"
+}
+```
+
+<Frame>
+  <img src="/images/getting-started/step-5.png" alt="Configured workflow with response" />
+</Frame>
+
+### Step 6: Save Your Configuration
+
+Click the **Save** button in the top-left corner to save your API configuration.
+
+### Step 7: Test Your API
+
+Your API is now live! Test it using curl:
+
+```docs/quickstart.mdx#L102-L103
+curl http://localhost:8080/hello-world
+```
+
+You should receive the response:
+
+```docs/quickstart.mdx#L108-L112
+{
+  "message": "Hello, World!",
+  "status": "success"
+}
+```
+
+<Check>
+**Congratulations!** You've successfully created your first API with ServFlow.
+</Check>
+
+## Next Steps
+
+Now that you've created your first API, explore more features:
+
+<CardGroup cols={2}>
+
+<Card title="Secrets Management" icon="key" href="/references/secrets">
+  Securely store API keys and credentials for your workflows.
+</Card>
+
+<Card title="Configuration Reference" icon="gear" href="/references/configuration">
+  Explore all ServFlow configuration options.
+</Card>
+
+<Card title="Local Development" icon="laptop-code" href="/development">
+  Set up your local development environment with tracing and more.
+</Card>
+
+<Card title="Installation" icon="download" href="/installation">
+  Deploy ServFlow to your infrastructure.
+</Card>
+
+</CardGroup>
