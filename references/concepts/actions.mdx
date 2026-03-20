@@ -5,20 +5,15 @@ description: "Understanding Actions in ServFlow — the building blocks of your 
 
 Actions are the core building blocks of ServFlow workflows. They perform discrete operations such as fetching data from a database, calling external APIs, running AI agents, or transforming values. Every workflow consists of an entry point, one or more actions, and a response.
 
-You can configure actions in two ways:
-
-- **Dashboard UI** — Visual drag-and-drop interface for building workflows
-- **YAML Configuration** — Code-based configuration files for version control and advanced setups
-
 For detailed documentation on each action type, see the [Actions reference pages](/actions/overview).
 
 ---
 
-## Actions in the Dashboard UI
+## Working with Actions in the Dashboard
 
 The ServFlow dashboard provides a visual interface for adding and configuring actions in your workflows.
 
-### Adding an Action Node
+### Adding an Action
 
 To add an action to your workflow:
 
@@ -49,10 +44,10 @@ The configuration panel displays:
 - **Save Action** — Button to save your configuration
 
 <Tip>
-Use `{{ .Variable }}` syntax in input fields to reference dynamic content from previous actions or request parameters.
+Use `{{ .Variable }}` syntax in input fields to reference dynamic content from previous actions or request parameters. See [Dynamic Content](/references/concepts/dynamic-content) for more details.
 </Tip>
 
-### Connecting Actions
+### Action Outputs
 
 Actions have output handles that let you define the flow:
 
@@ -64,21 +59,25 @@ Drag connections from these handles to other actions, conditionals, or response 
 
 ### Using Action Results
 
-When an action completes, its result is stored and can be referenced by subsequent nodes. Use the `{{ .Variable }}` syntax in any input field to access these values.
+When an action completes, its result is stored and can be referenced by subsequent nodes. Use the `{{ .action_id }}` syntax in any input field to access these values.
 
-For example, if an action with ID `get_user` returns user data, you can access the email field in a later action with `{{ .get_user.email }}`.
+For example, if an action with ID `get_user` returns user data, you can access fields in later actions:
+
+- `{{ .get_user }}` — The full result object
+- `{{ .get_user.email }}` — A specific field from the result
+- `{{ .get_user.profile.name }}` — Nested field access
 
 ---
 
-## Actions in YAML Configuration
+## Advanced: YAML Configuration
 
-For code-based workflows, actions are defined in YAML configuration files. This approach is ideal for version control, complex workflows, and programmatic configuration.
+For code-based workflows, actions can be defined in YAML configuration files. This approach is useful for version control, CI/CD pipelines, or programmatic configuration generation.
 
 ### Action Structure
 
-Every action follows this structure:
+Every action follows this structure in YAML:
 
-```docs/references/concepts/actions.mdx
+```yaml
 actions:
   action_id:
     type: action_type
@@ -116,7 +115,7 @@ The routing syntax follows the pattern `type.identifier`:
 
 Action results are stored under the action's ID and can be accessed using template syntax:
 
-```docs/references/concepts/actions.mdx
+```yaml
 # Access the full result from action 'fetch_user'
 value: "{{ .fetch_user }}"
 
@@ -129,7 +128,7 @@ expression: "{{ gt (len .fetch_user) 0 }}"
 
 Here's an example of chaining actions where the second action uses data from the first:
 
-```docs/references/concepts/actions.mdx
+```yaml
 actions:
   get_user:
     type: fetch
@@ -248,12 +247,12 @@ ServFlow provides a comprehensive set of actions organized by category. Click th
   Explore the complete actions reference documentation.
 </Card>
 
-<Card title="Quickstart" icon="rocket" href="/quickstart">
-  See actions in practice by building your first API.
+<Card title="Conditionals" icon="code-branch" href="/references/concepts/conditionals">
+  Add branching logic to your workflows.
 </Card>
 
-<Card title="Configuration Reference" icon="gear" href="/references/configuration">
-  Explore all ServFlow configuration options.
+<Card title="Dynamic Content" icon="wand-magic-sparkles" href="/references/concepts/dynamic-content">
+  Learn about template syntax and dynamic values.
 </Card>
 
 <Card title="Secrets Management" icon="key" href="/references/secrets">
