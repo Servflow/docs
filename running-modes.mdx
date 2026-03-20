@@ -1,0 +1,231 @@
+---
+title: "Running Modes"
+description: "Understanding Dashboard Mode vs Headless Mode — two ways to run ServFlow Pro"
+---
+
+ServFlow Pro can run in two distinct modes depending on your workflow and deployment needs. This guide explains both modes, when to use each, and how they differ.
+
+## Overview
+
+When you start ServFlow Pro, you choose how to run it:
+
+- **Dashboard Mode** — Visual UI for building and managing APIs interactively
+- **Headless Mode** — YAML-first approach for production deployments and code-based workflows
+
+Both modes execute the same API engine — the difference is how you create and manage your API configurations.
+
+```bash
+# Dashboard Mode — includes the visual builder UI
+servflow-pro start --config config.toml --dashboard
+
+# Headless Mode — runs APIs from YAML files only
+servflow-pro start --config config.toml
+```
+
+---
+
+## Dashboard Mode
+
+Dashboard Mode starts the visual web interface alongside the API server. This is the recommended mode for:
+
+- **Learning ServFlow** — Visual feedback helps you understand how workflows connect
+- **Rapid prototyping** — Quickly build and test APIs without writing configuration files
+- **Interactive development** — See changes immediately in the builder interface
+
+### Starting Dashboard Mode
+
+```bash
+servflow-pro start --config config.toml --dashboard
+```
+
+This starts two servers:
+
+| Server | Default Port | Purpose |
+|--------|--------------|---------|
+| API Server | `8080` | Handles incoming API requests |
+| Dashboard | `3000` | Visual builder interface |
+
+### What You Get
+
+- **Visual workflow builder** — Drag-and-drop interface for creating API workflows
+- **Real-time editing** — Changes saved in the dashboard are immediately available
+- **Secrets management UI** — Store and manage API keys through the interface
+- **Integration management** — Configure database connections and external services visually
+
+<Tip>
+The dashboard saves your API configurations as YAML files in the `config_folder` directory. This means you can start with the dashboard, then switch to headless mode for production.
+</Tip>
+
+### When to Use Dashboard Mode
+
+| Use Case | Why Dashboard Mode |
+|----------|-------------------|
+| New to ServFlow | Visual interface provides guided experience |
+| Building new APIs | Faster iteration with immediate visual feedback |
+| Debugging workflows | See the flow structure and test interactively |
+| Team demos | Easy to show and explain API logic visually |
+
+---
+
+## Headless Mode
+
+Headless Mode runs the API server without the dashboard interface. ServFlow reads YAML configuration files directly from your `config_folder` and serves the defined APIs. This is the recommended mode for:
+
+- **Production deployments** — No UI overhead, minimal attack surface
+- **CI/CD pipelines** — Deploy APIs from version-controlled YAML files
+- **Code-first workflows** — Write configurations in your editor with full control
+- **Containerized environments** — Smaller footprint without dashboard dependencies
+
+### Starting Headless Mode
+
+```bash
+servflow-pro start --config config.toml
+```
+
+This starts only the API server (default port `8080`). No dashboard is available.
+
+### What You Get
+
+- **Lightweight execution** — Only the API server runs
+- **File-based configuration** — All APIs defined in YAML files
+- **Version control friendly** — YAML files can be tracked in Git
+- **Reproducible deployments** — Same config files produce same behavior
+
+### When to Use Headless Mode
+
+| Use Case | Why Headless Mode |
+|----------|------------------|
+| Production deployment | No UI overhead, security-focused |
+| GitOps workflows | YAML configs stored in repositories |
+| Automated deployments | CI/CD pipelines deploy config changes |
+| Resource-constrained environments | Lower memory and CPU usage |
+
+---
+
+## Feature Comparison
+
+Not all features are available in both modes. Here's what each mode supports:
+
+| Feature | Dashboard Mode | Headless Mode |
+|---------|---------------|---------------|
+| API execution | ✅ | ✅ |
+| YAML config files | ✅ | ✅ |
+| Visual workflow builder | ✅ | ❌ |
+| Secrets management UI | ✅ | ❌ |
+| Integration management UI | ✅ | ❌ |
+| Metrics dashboard | ✅ | ❌ |
+| OAuth integrations | ✅ (requires SQLite) | ❌ |
+| File-based storage | ✅ | ✅ |
+| SQLite storage | ✅ | ✅ |
+
+<Note>
+Some dashboard features like secrets management and OAuth integrations require SQLite storage. See [Configuration Reference](/references/configuration) for SQLite setup.
+</Note>
+
+---
+
+## Typical Workflow: Dashboard to Production
+
+A common pattern is to use Dashboard Mode during development, then deploy with Headless Mode:
+
+### 1. Develop with Dashboard
+
+Start with the dashboard to build and test your APIs visually:
+
+```bash
+servflow-pro start --config config.toml --dashboard
+```
+
+Create your workflows in the visual builder. The dashboard saves configurations as YAML files in your `config_folder`.
+
+### 2. Version Control Your Configs
+
+The YAML files in `config_folder` are your source of truth. Commit them to Git:
+
+```bash
+git add configs/
+git commit -m "Add user authentication API"
+```
+
+### 3. Deploy in Headless Mode
+
+In production, run without the dashboard:
+
+```bash
+servflow-pro start --config config.toml
+```
+
+Or with Docker:
+
+```bash
+docker run -d \
+  -p 8080:8080 \
+  -v $(pwd)/config.toml:/app/config.toml \
+  -v $(pwd)/configs:/app/configs \
+  servflow/servflow-pro start --config /app/config.toml
+```
+
+### 4. Update via CI/CD
+
+When you need to update APIs:
+1. Make changes in the dashboard (development environment)
+2. Commit the updated YAML files
+3. CI/CD pipeline deploys new configs to production
+
+---
+
+## Importing Existing Configs
+
+If you have existing YAML configurations and want to manage them in the dashboard with SQLite storage, use the `--import-configs` flag:
+
+```bash
+servflow-pro start --config config.toml --dashboard --import-configs
+```
+
+This imports all YAML files from `config_folder` into the SQLite database, making them editable in the dashboard.
+
+<Warning>
+The `--import-configs` flag requires both `--dashboard` and SQLite to be configured. It's a one-time import operation — run it once when transitioning to dashboard-managed configs.
+</Warning>
+
+---
+
+## Choosing Your Mode
+
+| Question | Recommended Mode |
+|----------|-----------------|
+| Are you new to ServFlow? | Dashboard Mode |
+| Building APIs for the first time? | Dashboard Mode |
+| Deploying to production? | Headless Mode |
+| Using GitOps or CI/CD? | Headless Mode |
+| Need visual debugging? | Dashboard Mode |
+| Running in containers? | Headless Mode |
+| Want full code control? | Headless Mode |
+
+<Tip>
+You can switch between modes at any time. The same YAML configuration files work in both modes.
+</Tip>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Quickstart (Dashboard)" icon="rocket" href="/quickstart-dashboard">
+  Build your first API using the visual dashboard interface.
+</Card>
+
+<Card title="Quickstart (YAML)" icon="code" href="/quickstart-yaml">
+  Build your first API using YAML configuration files.
+</Card>
+
+<Card title="Configuration Reference" icon="gear" href="/references/configuration">
+  Explore all TOML configuration options for both modes.
+</Card>
+
+<Card title="Actions Overview" icon="play" href="/actions/overview">
+  Learn about the actions available for your workflows.
+</Card>
+
+</CardGroup>

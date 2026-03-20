@@ -88,6 +88,41 @@ Running without SQLite disables certain features:
 | `--dashboard` | Start the web dashboard interface |
 | `--import-configs` | Import API configs from config folder to SQLite (requires `--dashboard`) |
 
+## Running Modes
+
+ServFlow Pro can run in two modes depending on your needs:
+
+### Dashboard Mode
+
+Include the `--dashboard` flag to start the visual web interface:
+
+```bash
+servflow-pro start --config config.toml --dashboard
+```
+
+This starts both the API server (port 8080) and the dashboard UI (port 3000). Use this mode for:
+- Building and testing APIs visually
+- Managing secrets and integrations through the UI
+- Learning ServFlow with immediate visual feedback
+
+### Headless Mode
+
+Omit the `--dashboard` flag to run without the UI:
+
+```bash
+servflow-pro start --config config.toml
+```
+
+This starts only the API server. Use this mode for:
+- Production deployments
+- CI/CD pipelines
+- Containerized environments
+- GitOps workflows
+
+<Tip>
+Both modes read API configurations from the same `config_folder`. You can develop with the dashboard, then deploy the same YAML files in headless mode. See [Running Modes](/running-modes) for a detailed comparison.
+</Tip>
+
 ## Next Steps
 
 <CardGroup cols={2}>

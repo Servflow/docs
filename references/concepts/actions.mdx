@@ -69,9 +69,18 @@ For example, if an action with ID `get_user` returns user data, you can access f
 
 ---
 
-## Advanced: YAML Configuration
+## YAML Configuration (Code-First)
 
-For code-based workflows, actions can be defined in YAML configuration files. This approach is useful for version control, CI/CD pipelines, or programmatic configuration generation.
+Actions can also be defined directly in YAML configuration files. This approach is equally valid as the dashboard UI and is preferred for:
+
+- **Version control** — Track API changes in Git
+- **CI/CD pipelines** — Deploy configurations automatically
+- **Production deployments** — Run in [Headless Mode](/running-modes) without the dashboard
+- **Programmatic generation** — Generate configs from code or templates
+
+<Tip>
+See [Running Modes](/running-modes) to understand when to use the dashboard vs. YAML-first workflows, and the [YAML Quickstart](/quickstart-yaml) for a complete tutorial.
+</Tip>
 
 ### Action Structure
 

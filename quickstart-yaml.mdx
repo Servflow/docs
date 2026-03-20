@@ -1,0 +1,276 @@
+---
+title: "YAML Quickstart"
+description: "Create your first API using YAML configuration files without the dashboard UI"
+---
+
+ServFlow supports a code-first workflow where you define APIs directly in YAML configuration files. This approach is ideal for developers who prefer text editors, need version control for their API definitions, or want to integrate with CI/CD pipelines.
+
+<Tip>
+Prefer a visual interface? See the [Dashboard Quickstart](/quickstart-dashboard) to build APIs using the web UI.
+</Tip>
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- ServFlow Pro installed ([Installation Guide](/installation))
+- A text editor
+- A terminal or command-line interface
+
+## What You'll Build
+
+By the end of this tutorial, you'll have a working "Hello World" API endpoint defined entirely in YAML, running without the dashboard UI.
+
+---
+
+## Step 1: Create Your Project Structure
+
+Create a directory for your ServFlow project and the required folders:
+
+```bash
+mkdir my-servflow-project
+cd my-servflow-project
+mkdir configs
+```
+
+The `configs` directory will hold your API configuration files.
+
+---
+
+## Step 2: Create the TOML Configuration
+
+Create a `config.toml` file in your project root:
+
+```toml
+[server]
+port = "8080"
+config_folder = "./configs"
+env = "development"
+```
+
+This minimal configuration tells ServFlow:
+- Listen for API requests on port `8080`
+- Load API definitions from the `./configs` folder
+
+<Note>
+The `config_folder` is the only required setting. ServFlow uses sensible defaults for everything else.
+</Note>
+
+---
+
+## Step 3: Create Your First API Configuration
+
+Create a file named `hello-world.yaml` in the `configs` directory:
+
+```yaml
+http:
+  method: GET
+  listen_path: /hello-world
+
+responses:
+  success:
+    status_code: 200
+    body:
+      message: "Hello, World!"
+      status: "success"
+
+entry: response.success
+```
+
+This YAML configuration defines:
+
+| Field | Description |
+|-------|-------------|
+| `http.method` | The HTTP method this endpoint accepts (GET) |
+| `http.listen_path` | The URL path to listen on (/hello-world) |
+| `responses.success` | A response definition with status code and body |
+| `entry` | Where the workflow starts — directly returning the success response |
+
+---
+
+## Step 4: Start ServFlow in Headless Mode
+
+Run ServFlow without the `--dashboard` flag:
+
+```bash
+servflow-pro start --config config.toml
+```
+
+You should see output indicating the server has started:
+
+```
+INFO    Starting ServFlow Pro    {"config_folder": "./configs", "port": "8080", "dashboard": false}
+```
+
+<Note>
+Without `--dashboard`, ServFlow runs in headless mode — it serves your APIs but doesn't start the web UI. This is the recommended mode for production deployments.
+</Note>
+
+---
+
+## Step 5: Test Your API
+
+Open a new terminal and test your endpoint:
+
+```bash
+curl http://localhost:8080/hello-world
+```
+
+You should receive:
+
+```json
+{
+  "message": "Hello, World!",
+  "status": "success"
+}
+```
+
+<Check>
+**Congratulations!** You've created your first API using YAML configuration.
+</Check>
+
+---
+
+## Adding Actions to Your Workflow
+
+Most APIs need to do more than return static responses. Here's an expanded example that demonstrates actions:
+
+```yaml
+http:
+  method: GET
+  listen_path: /greeting
+  query_params:
+    - name
+
+actions:
+  build_greeting:
+    type: static
+    config:
+      value:
+        greeting: "Hello, {{ param \"name\" }}!"
+        timestamp: "{{ now }}"
+    next: response.success
+
+responses:
+  success:
+    status_code: 200
+    body: "{{ .build_greeting }}"
+
+entry: action.build_greeting
+```
+
+This configuration:
+1. Accepts a `name` query parameter
+2. Uses a `static` action to build a dynamic response
+3. Returns the greeting with the current timestamp
+
+Test it with:
+
+```bash
+curl "http://localhost:8080/greeting?name=Developer"
+```
+
+---
+
+## YAML Configuration Structure
+
+Every API configuration file follows this structure:
+
+```yaml
+# Entry point definition (HTTP or MCP)
+http:
+  method: GET|POST|PUT|DELETE|PATCH
+  listen_path: /your-path
+  query_params: []    # Optional
+  headers: []         # Optional
+
+# Actions perform operations
+actions:
+  action_id:
+    type: action_type
+    config:
+      # Type-specific configuration
+    next: action.next_step    # On success
+    fail: response.error      # On failure
+
+# Conditional branching
+conditionals:
+  condition_id:
+    expression: "{{ expression }}"
+    if_true: action.do_something
+    if_false: response.not_found
+
+# Response definitions
+responses:
+  response_id:
+    status_code: 200
+    body:
+      # Response body
+
+# Where the workflow begins
+entry: action.first_step
+```
+
+<Tip>
+See the [Actions Reference](/actions/overview) for all available action types and their configurations.
+</Tip>
+
+---
+
+## Hot Reloading
+
+ServFlow automatically detects changes to YAML files in your `config_folder`. When you save a file:
+- New configurations are loaded immediately
+- Modified configurations are updated
+- Deleted files remove the corresponding endpoints
+
+No server restart required during development.
+
+---
+
+## Version Control Best Practices
+
+Since your APIs are defined in YAML files, you can:
+
+- **Track changes** with Git or other version control systems
+- **Review API changes** through pull requests
+- **Deploy consistently** across environments using the same configuration files
+- **Roll back** to previous versions if issues arise
+
+Example `.gitignore` for a ServFlow project:
+
+```gitignore
+# ServFlow data
+data/
+*.db
+
+# Environment-specific config
+config.toml
+
+# Keep configs in version control
+!configs/
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Running Modes" icon="toggle-on" href="/running-modes">
+  Understand when to use headless mode vs. dashboard mode.
+</Card>
+
+<Card title="Actions Reference" icon="play" href="/actions/overview">
+  Explore all available actions for your workflows.
+</Card>
+
+<Card title="Dynamic Content" icon="wand-magic-sparkles" href="/references/concepts/dynamic-content">
+  Learn template syntax for dynamic values in your YAML.
+</Card>
+
+<Card title="Configuration Reference" icon="gear" href="/references/configuration">
+  Explore all TOML configuration options.
+</Card>
+
+</CardGroup>
