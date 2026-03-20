@@ -21,7 +21,8 @@
             "group": "Concepts",
             "pages": [
               "references/concepts/actions",
-              "references/concepts/conditionals"
+              "references/concepts/conditionals",
+              "references/concepts/dynamic-content"
             ]
           },
           {
