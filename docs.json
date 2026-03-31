@@ -38,27 +38,26 @@
           {
             "group": "Concepts",
             "pages": [
-              "references/concepts/actions",
+              {
+                "group": "Actions",
+                "pages": [
+                  "concepts/actions/overview",
+                  "concepts/actions/data-operations",
+                  "concepts/actions/vector-operations",
+                  "concepts/actions/http-requests",
+                  "concepts/actions/authentication",
+                  "concepts/actions/transformation",
+                  "concepts/actions/ai-agents",
+                  "concepts/actions/flow-control",
+                  "concepts/actions/communication",
+                  "concepts/actions/command",
+                  "concepts/actions/memory",
+                  "concepts/actions/binance"
+                ]
+              },
               "references/concepts/conditionals",
               "references/concepts/responses",
               "references/concepts/dynamic-content"
-            ]
-          },
-          {
-            "group": "Actions",
-            "pages": [
-              "actions/overview",
-              "actions/data-operations",
-              "actions/vector-operations",
-              "actions/http-requests",
-              "actions/authentication",
-              "actions/transformation",
-              "actions/ai-agents",
-              "actions/flow-control",
-              "actions/communication",
-              "actions/command",
-              "actions/memory",
-              "actions/binance"
             ]
           },
           {
