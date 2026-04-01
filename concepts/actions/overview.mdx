@@ -5,30 +5,30 @@ description: "Understanding actions — the building blocks of ServFlow workflow
 
 Actions are the core building blocks of ServFlow workflows. They perform discrete operations such as fetching data from a database, calling external APIs, running AI agents, or transforming values. Every workflow consists of an entry point, one or more actions, and a response.
 
-You can configure actions in two ways:
+---
 
-- **Dashboard UI** — Visual interface for building workflows by selecting action types and filling in configuration fields. Best for learning, prototyping, and rapid development.
-- **YAML Configuration** — Code-based configuration files for version control, CI/CD pipelines, and production deployments.
+## How Actions Work
 
-Both approaches produce the same result — the dashboard saves configurations as YAML files, so you can seamlessly switch between them. See [Running Modes](/running-modes) to understand when to use each approach.
+When a workflow executes, actions run in sequence based on the routing you define. Each action:
+
+1. **Receives input** — Data from the request or previous action results
+2. **Executes its operation** — Fetches data, calls an API, transforms values, etc.
+3. **Stores its result** — Output is saved and accessible to subsequent steps
+4. **Routes to the next step** — Either `next` (on success) or `fail` (on error)
+
+You reference action results using the `{{ .action_id }}` syntax. For example, if an action with ID `get_user` returns user data, access the email field with `{{ .get_user.email }}`.
 
 ---
 
-## Working with Actions in the Dashboard
+## Creating Actions in the Dashboard
 
-The ServFlow dashboard provides a visual interface for adding and configuring actions in your workflows.
+The ServFlow dashboard provides a visual interface for adding and configuring actions.
 
 ### Adding an Action
 
-To add an action to your workflow:
-
 1. Click the **+** button below an existing node in the workflow canvas
 2. Select **Actions** from the node type options
-3. Browse the list of available actions in the sidebar
-
-### Browsing Available Actions
-
-When you click to add an action, a sidebar panel displays all available action types. Each action shows its name and a brief description of what it does.
+3. Browse the available actions in the sidebar and select one
 
 <Frame>
   <img src="/images/concepts/actions-list.png" alt="Available actions list in the ServFlow dashboard sidebar" />
@@ -42,36 +42,25 @@ Selecting an action opens the configuration panel on the left side of the screen
   <img src="/images/concepts/action-config.png" alt="Action configuration panel showing AI Agent settings" />
 </Frame>
 
-The configuration panel displays:
-
-- **Action type** — The selected action (e.g., AI Agent)
-- **Configuration fields** — Type-specific settings such as identifiers, prompts, or connection details
-- **Save Action** — Button to save your configuration
-
 <Tip>
-Use `{{ .Variable }}` syntax in input fields to reference dynamic content from previous actions or request parameters. See [Dynamic Content](/references/concepts/dynamic-content) for more details.
+Use `{{ .Variable }}` syntax in input fields to reference dynamic content from previous actions or request parameters. See [Dynamic Content](/references/concepts/dynamic-content) for details.
 </Tip>
 
 ### Action Outputs
 
-Actions have output handles that let you define the flow:
+Actions have output handles for defining the flow:
 
-- **Next** — Where to route on successful completion
-- **Fail** — Where to route when an error occurs
+- **Next** — Routes on successful completion
+- **Fail** — Routes when an error occurs
 - **Tools** — Additional outputs for specific action types (e.g., AI Agent tools)
 
-Drag connections from these handles to other actions, conditionals, or response nodes to build your workflow logic.
+Drag connections from these handles to other actions, conditionals, or response nodes.
 
 ---
 
-## YAML Configuration
+## Creating Actions in YAML
 
-Actions can also be defined directly in YAML configuration files. This approach is preferred for:
-
-- **Version control** — Track API changes in Git
-- **CI/CD pipelines** — Deploy configurations automatically
-- **Production deployments** — Run in [Headless Mode](/running-modes) without the dashboard
-- **Programmatic generation** — Generate configs from code or templates
+Actions can also be defined in YAML configuration files. This approach is preferred for version control, CI/CD pipelines, and production deployments in [Headless Mode](/running-modes).
 
 <Tip>
 See the [YAML Quickstart](/quickstart-yaml) for a complete tutorial on building workflows with YAML.
@@ -79,7 +68,7 @@ See the [YAML Quickstart](/quickstart-yaml) for a complete tutorial on building 
 
 ### Action Structure
 
-Every action follows this structure in YAML:
+Every action follows this structure:
 
 ```yaml
 actions:
@@ -91,8 +80,6 @@ actions:
     fail: response.error
 ```
 
-The `action_id` is a unique identifier you choose for the action. You'll use this ID to reference the action's results in other parts of your workflow.
-
 ### Common Fields
 
 | Field | Type | Required | Description |
@@ -102,22 +89,13 @@ The `action_id` is a unique identifier you choose for the action. You'll use thi
 | `next` | string | No | Step to execute on success |
 | `fail` | string | No | Step to execute on failure |
 
----
+### Chaining Actions
 
-## Chaining Actions
-
-Use the `next` and `fail` fields to define your workflow's execution path:
-
-- **`next`** — Routes to another step when the action succeeds
-- **`fail`** — Routes to an error handler when the action fails
-
-The routing syntax follows the pattern `type.identifier`:
+Use the `next` and `fail` fields to define execution paths. The routing syntax follows the pattern `type.identifier`:
 
 - `action.other_action` — Route to another action
 - `conditional.check_value` — Route to a conditional branch
 - `response.success` — Route to a response
-
-Here's an example of chaining actions where the second action uses data from the first:
 
 ```yaml
 actions:
@@ -144,161 +122,24 @@ actions:
 
 ---
 
-## Accessing Action Results
-
-When an action completes, its result is stored and can be referenced by subsequent nodes. Use the `{{ .action_id }}` syntax to access these values.
-
-```yaml
-# Access the full result from action 'fetch_user'
-value: "{{ .fetch_user }}"
-
-# Access a nested field
-value: "{{ .fetch_user.email }}"
-
-# Use in expressions
-expression: "{{ gt (len .fetch_user) 0 }}"
-```
-
-For example, if an action with ID `get_user` returns user data, you can access the email field in a later action with `{{ .get_user.email }}`.
-
----
-
-## Filter Syntax
-
-Several actions use filters to query data. Filters follow this structure:
-
-```yaml
-filters:
-  - field: field_name
-    operator: eq
-    value: "comparison_value"
-```
-
-### Available Operators
-
-| Operator | Description |
-|----------|-------------|
-| `eq` | Equal to |
-| `ne` | Not equal to |
-| `gt` | Greater than |
-| `gte` | Greater than or equal |
-| `lt` | Less than |
-| `lte` | Less than or equal |
-| `in` | Value in array |
-| `nin` | Value not in array |
-
-**Example with multiple filters:**
-
-```yaml
-filters:
-  - field: status
-    operator: eq
-    value: active
-  - field: age
-    operator: gte
-    value: "18"
-  - field: role
-    operator: in
-    value:
-      - admin
-      - moderator
-```
-
----
-
-## Available Actions
-
-ServFlow provides actions organized by category:
-
-### Data Operations
-| Action | Description |
-|--------|-------------|
-| [`fetch`](/concepts/actions/data-operations#fetch) | Retrieves data from a database table |
-| [`store`](/concepts/actions/data-operations#store) | Stores a new record in a database table |
-| [`update`](/concepts/actions/data-operations#update) | Updates existing records |
-| [`delete`](/concepts/actions/data-operations#delete) | Deletes records from a database table |
-| [`mongoquery`](/concepts/actions/data-operations#mongoquery) | Executes native MongoDB queries |
-
-### Vector Operations
-| Action | Description |
-|--------|-------------|
-| [`storevector`](/concepts/actions/vector-operations#storevector) | Stores vector embeddings |
-| [`fetchvectors`](/concepts/actions/vector-operations#fetchvectors) | Queries vectors for similarity search |
-
-### HTTP & External APIs
-| Action | Description |
-|--------|-------------|
-| [`http`](/concepts/actions/http-requests#http) | Makes HTTP requests to external APIs |
-
-### Authentication & Security
-| Action | Description |
-|--------|-------------|
-| [`authenticate`](/concepts/actions/authentication#authenticate) | Validates JWT tokens and fetches user data |
-| [`jwt`](/concepts/actions/authentication#jwt) | Encodes or decodes JWT tokens |
-| [`hash`](/concepts/actions/authentication#hash) | Hashes values using bcrypt |
-
-### Transformation & Logic
-| Action | Description |
-|--------|-------------|
-| [`javascript`](/concepts/actions/transformation#javascript) | Executes custom JavaScript code |
-| [`static`](/concepts/actions/transformation#static) | Returns a static or computed value |
-
-### AI & Agents
-| Action | Description |
-|--------|-------------|
-| [`agent`](/concepts/actions/ai-agents#agent) | Interacts with AI models |
-
-### Flow Control
-| Action | Description |
-|--------|-------------|
-| [`parallel`](/concepts/actions/flow-control#parallel) | Executes multiple actions simultaneously |
-
-### Communication
-| Action | Description |
-|--------|-------------|
-| [`email`](/concepts/actions/communication#email) | Sends email messages via SMTP |
-
-### System
-| Action | Description |
-|--------|-------------|
-| [`command`](/concepts/actions/command#command) | Executes shell commands |
-
-### Memory
-| Action | Description |
-|--------|-------------|
-| [`memory_store`](/concepts/actions/memory#memory-store) | Stores data in temporary memory |
-| [`memory_fetch`](/concepts/actions/memory#memory-fetch) | Retrieves data from temporary memory |
-
-### Binance Trading
-| Action | Description |
-|--------|-------------|
-| [`binance/getprice`](/concepts/actions/binance#binancegetprice) | Gets cryptocurrency price data |
-| [`binance/accountbalance`](/concepts/actions/binance#binanceaccountbalance) | Queries Binance account balances |
-| [`binance/spotorder`](/concepts/actions/binance#binancespotorder) | Places spot trading orders |
-| [`binance/futuresorder`](/concepts/actions/binance#binancefuturesorder) | Places futures orders |
-| [`binance/pricedifference`](/concepts/actions/binance#binancepricedifference) | Calculates price changes |
-| [`binance/tradeinfo`](/concepts/actions/binance#binancetradeinfo) | Gets order and position info |
-
----
-
 ## Next Steps
 
 <CardGroup cols={2}>
 
-<Card title="Data Operations" icon="database" href="/concepts/actions/data-operations">
-  Learn how to fetch, store, update, and delete data.
-</Card>
-
-<Card title="HTTP Requests" icon="globe" href="/concepts/actions/http-requests">
-  Call external APIs from your workflows.
-</Card>
-
-<Card title="AI Agents" icon="robot" href="/concepts/actions/ai-agents">
-  Integrate AI models into your workflows.
+<Card title="Available Actions" icon="list" href="/concepts/actions/available">
+  Browse all available action types by category.
 </Card>
 
 <Card title="Conditionals" icon="code-branch" href="/references/concepts/conditionals">
   Add branching logic to your workflows.
+</Card>
+
+<Card title="Responses" icon="reply" href="/references/concepts/responses">
+  Define how your workflow returns data.
+</Card>
+
+<Card title="Dynamic Content" icon="wand-magic-sparkles" href="/references/concepts/dynamic-content">
+  Use templates to reference dynamic values.
 </Card>
 
 </CardGroup>

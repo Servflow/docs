@@ -36,23 +36,33 @@
             ]
           },
           {
+            "group": "Tutorials",
+            "pages": ["tutorials/telegram-binance-bot"]
+          },
+          {
             "group": "Concepts",
             "pages": [
               {
                 "group": "Actions",
                 "pages": [
                   "concepts/actions/overview",
-                  "concepts/actions/data-operations",
-                  "concepts/actions/vector-operations",
-                  "concepts/actions/http-requests",
-                  "concepts/actions/authentication",
-                  "concepts/actions/transformation",
-                  "concepts/actions/ai-agents",
-                  "concepts/actions/flow-control",
-                  "concepts/actions/communication",
-                  "concepts/actions/command",
-                  "concepts/actions/memory",
-                  "concepts/actions/binance"
+                  {
+                    "group": "Available Actions",
+                    "pages": [
+                      "concepts/actions/available",
+                      "concepts/actions/data-operations",
+                      "concepts/actions/vector-operations",
+                      "concepts/actions/http-requests",
+                      "concepts/actions/authentication",
+                      "concepts/actions/transformation",
+                      "concepts/actions/ai-agents",
+                      "concepts/actions/flow-control",
+                      "concepts/actions/communication",
+                      "concepts/actions/command",
+                      "concepts/actions/memory",
+                      "concepts/actions/binance"
+                    ]
+                  }
                 ]
               },
               "references/concepts/conditionals",
