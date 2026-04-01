@@ -1,0 +1,504 @@
+---
+title: "Build a Telegram Trading Bot"
+description: "Create a no-code Telegram bot that manages Binance trades using AI agents and secure credential storage"
+icon: "robot"
+---
+
+Build a fully functional Telegram bot that allows users to interact with their Binance accounts through natural language. The bot uses an AI agent to understand user requests and execute trading operations on their behalf — all configured through the ServFlow dashboard without writing code.
+
+<Info>
+**What you'll build:**
+- A Telegram bot that responds to messages via webhook
+- Secure per-user credential storage in MongoDB
+- AI-powered natural language processing for trading commands
+- Dynamic Binance integration using stored credentials
+- Account balance checking and price history tools
+</Info>
+
+---
+
+## Import & Run
+
+Get started immediately by importing the complete workflow:
+
+<Steps>
+  <Step title="Download the Configuration">
+    Download the workflow from the [ServFlow Cookbook](https://github.com/Servflow/cookbook/blob/main/telegram/binance-assistant.yaml)
+  </Step>
+  <Step title="Import into ServFlow">
+    In the ServFlow dashboard, click **Import** in the Files panel and select the downloaded YAML file
+  </Step>
+  <Step title="Configure Integrations">
+    Set up the required integrations:
+    - **mongo-main** — MongoDB for storing user credentials
+    - **open-ai-main** — OpenAI for the AI agent
+  </Step>
+  <Step title="Add Your Bot Token">
+    Go to **Settings** → **Secrets** and add:
+    | Name | Value |
+    |------|-------|
+    | `TELEGRAM_BOT_TOKEN` | Your bot token from [BotFather](https://t.me/botfather) |
+  </Step>
+  <Step title="Set the Telegram Webhook">
+    Tell Telegram where to send messages:
+    ```bash
+    curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
+      -H "Content-Type: application/json" \
+      -d '{"url": "https://your-servflow-domain.com/telegram"}'
+    ```
+  </Step>
+  <Step title="Test Your Bot">
+    Open your bot in Telegram and try:
+    - `/save_creds your_api_key your_secret_key` — Save Binance credentials
+    - "What's my account balance?" — Check your balance
+    - "Show me BTC price history for the last 12 hours" — Get price data
+  </Step>
+</Steps>
+
+<Tip>
+For local development, use [ngrok](https://ngrok.com) to expose your local ServFlow instance to the internet.
+</Tip>
+
+---
+
+## How It Works
+
+The rest of this guide explains how the imported workflow is structured and what each component does.
+
+<Frame>
+  <img src="/images/tutorials/flow-chart.png" alt="Telegram bot workflow flowchart showing message processing logic" />
+</Frame>
+
+The workflow follows this decision tree:
+
+1. **New message arrives** → Check if user has stored Binance credentials
+2. **If credentials exist** → Send typing indicator → Process with AI agent → Send response
+3. **If no credentials** → Check if message is a `/save_creds` command
+4. **If save command** → Store credentials → Confirm to user
+5. **If not save command** → Tell user how to save credentials
+
+---
+
+## Workflow Entry Point
+
+The workflow listens for Telegram webhook requests via an HTTP POST endpoint.
+
+| Setting | Value | Purpose |
+|---------|-------|---------|
+| **Listen Path** | `/telegram` | The URL path Telegram sends messages to |
+| **HTTP Method** | `POST` | Telegram webhooks use POST requests |
+
+<Note>
+Telegram sends webhook payloads as JSON containing message details. The key fields are `message.chat.id`, `message.from.id`, and `message.text`.
+</Note>
+
+---
+
+## Telegram Field Presets
+
+Throughout this workflow, you'll see references to Telegram message data. ServFlow automatically detects Telegram webhooks and provides convenient presets in the content editor.
+
+When editing any field, open the content editor and expand **Popular Variables** → **Telegram**:
+
+<Frame>
+  <img src="/images/tutorials/telegram-fields.png" alt="Content editor showing Telegram preset variables including User ID, Message Body, and Chat ID" />
+</Frame>
+
+| Preset | Template Syntax | Description |
+|--------|-----------------|-------------|
+| **User ID** | `{{ body "message.from.id" }}` | Unique identifier of the message sender |
+| **Message Body** | `{{ body "message.text" }}` | The text content of the message |
+| **Chat ID** | `{{ body "message.chat.id" }}` | The chat/conversation identifier |
+
+Click any preset to insert it automatically — no need to memorize the syntax!
+
+---
+
+## Action: Fetch Credentials
+
+**Type:** `fetch`
+
+This action checks if the user has already stored their Binance API credentials in the database.
+
+| Field | Value | Purpose |
+|-------|-------|---------|
+| **Integration ID** | `mongo-main` | The MongoDB integration to query |
+| **Table** | `credentials` | Collection storing user credentials |
+| **Single Result** | ✅ Enabled | Return one document instead of an array |
+| **Should Fail** | ✅ Enabled | Trigger fail path if query fails |
+| **Fail If Empty** | ✅ Enabled | Treat no results as a failure |
+
+### Filter Configuration
+
+| Field | Operation | Comparator |
+|-------|-----------|------------|
+| `user_id` | `==` | **User ID** preset |
+
+### Routing
+
+| Path | Destination | When |
+|------|-------------|------|
+| **Next** | `Is typing` | User has stored credentials |
+| **Fail** | `parse_command` | No credentials found |
+
+---
+
+## Action: Parse Command
+
+**Type:** `javascript`
+
+When a user doesn't have credentials, this action parses the incoming message to check if they're sending a `/save_creds` command.
+
+### Script Logic
+
+```javascript
+function servflowRun(vars) {
+  const text = "{{ body \"message.text\"}}";
+  const match = text.trim().match(/^\/(\w+)\s*(.*)$/);
+
+  if (!match || match[1].toLowerCase() !== "save_creds") {
+    return { command: "", args: [] };
+  }
+
+  const command = "/" + match[1];
+  const args = match[2]?.trim() ? match[2].trim().split(/\s+/) : [];
+  
+  return { command, args };
+}
+```
+
+### Output
+
+| Field | Description |
+|-------|-------------|
+| `.parse_command.command` | The parsed command (e.g., `/save_creds`) or empty string |
+| `.parse_command.args` | Array of arguments (e.g., `["api_key", "secret_key"]`) |
+
+---
+
+## Conditional: Is Save Credentials
+
+**Type:** `conditional`
+
+Checks if the parsed command is `/save_creds`.
+
+| Field | Value |
+|-------|-------|
+| **Expression** | `{{ eq .parse_command.command "/save_creds" }}` |
+
+### Routing
+
+| Path | Destination | When |
+|------|-------------|------|
+| **True** | `save_creds` | User is saving credentials |
+| **False** | `Add credentials` | User needs instructions |
+
+---
+
+## Action: Save Credentials
+
+**Type:** `store`
+
+Stores the user's Binance API credentials in MongoDB.
+
+| Field | Value | Purpose |
+|-------|-------|---------|
+| **Integration ID** | `mongo-main` | MongoDB integration |
+| **Table** | `credentials` | Collection to store in |
+
+### Fields Stored
+
+| Field Name | Value | Purpose |
+|------------|-------|---------|
+| `user_id` | **User ID** preset | Links credentials to Telegram user |
+| `api_key` | `{{ index .parse_command.args 0 }}` | First argument from command |
+| `api_secret` | `{{ index .parse_command.args 1 }}` | Second argument from command |
+| `saved_at` | `{{ now }}` | Timestamp for record-keeping |
+
+---
+
+## Action: Credentials Saved (HTTP)
+
+**Type:** `http`
+
+Sends a confirmation message to the user via Telegram.
+
+| Field | Value |
+|-------|-------|
+| **HTTP Method** | `POST` |
+| **URL** | `https://api.telegram.org/bot{{ secret "TELEGRAM_BOT_TOKEN" }}/sendMessage` |
+
+### Request Body
+
+| Field | Value |
+|-------|-------|
+| `chat_id` | **Chat ID** preset |
+| `text` | `Credentials saved successfully` |
+
+---
+
+## Action: Add Credentials (HTTP)
+
+**Type:** `http`
+
+Tells users without credentials how to save them.
+
+| Field | Value |
+|-------|-------|
+| **HTTP Method** | `POST` |
+| **URL** | `https://api.telegram.org/bot{{ secret "TELEGRAM_BOT_TOKEN" }}/sendMessage` |
+
+### Request Body
+
+| Field | Value |
+|-------|-------|
+| `chat_id` | **Chat ID** preset |
+| `text` | `Please add credentials first with /save_creds <api_key> <secret_key>` |
+
+---
+
+## Action: Is Typing (HTTP)
+
+**Type:** `http`
+
+Sends a "typing" indicator so users know the bot is processing their request.
+
+| Field | Value |
+|-------|-------|
+| **HTTP Method** | `GET` |
+| **URL** | `https://api.telegram.org/bot{{ secret "TELEGRAM_BOT_TOKEN" }}/sendChatAction?chat_id={{ body "message.chat.id" }}&action=typing` |
+
+---
+
+## Action: Agent LLM
+
+**Type:** `agent`
+
+The AI agent that understands natural language and decides which tools to use.
+
+| Field | Value | Purpose |
+|-------|-------|---------|
+| **Integration ID** | `open-ai-main` | OpenAI integration |
+| **Conversation ID** | **Chat ID** preset | Maintains context across messages |
+| **Return Last Message** | ❌ Disabled | Return full agent response |
+
+### System Prompt
+
+```
+You are a helpful telegram bot for performing actions on behalf of a user. You have access to tools to help you achieve your request.
+```
+
+### User Prompt
+
+**Message Body** preset — the actual message text from the user.
+
+### Tool: Price Difference
+
+Allows the agent to fetch price history data.
+
+| Field | Value |
+|-------|-------|
+| **Type** | `workflow` |
+| **Name** | `price_difference` |
+| **Description** | Gets price history ticks for a period. The period is the number of 1hr intervals (e.g., 12), the symbol is the pair (e.g., BTCUSDT) |
+| **Parameters** | `period`, `symbol` |
+| **Start Action** | `Binance Price Difference` |
+| **Return Value** | `{{ escape (jsonout .get_price_difference) }}` |
+
+### Tool: Account Balance
+
+Allows the agent to check the user's Binance balance.
+
+| Field | Value |
+|-------|-------|
+| **Type** | `workflow` |
+| **Name** | `account_balance` |
+| **Description** | Fetches the account balance of the user |
+| **Parameters** | (none) |
+| **Start Action** | `fetch account balance` |
+| **Return Value** | `{{ .get_account_balance }}` |
+
+---
+
+## Action: Binance Price Difference
+
+**Type:** `binance/pricedifference`
+
+Called by the agent's `price_difference` tool.
+
+| Field | Value | Purpose |
+|-------|-------|---------|
+| **Integration ID** | `telegram_bot_cred_storage_binance` | Dynamic Binance integration |
+| **Interval** | `1h` | Candlestick interval |
+| **Period** | `{{ tool_param "period" }}` | From agent tool call |
+| **Symbol** | `{{ tool_param "symbol" }}` | From agent tool call |
+
+<Note>
+The `tool_param` function accesses parameters passed by the AI agent when it calls this tool.
+</Note>
+
+---
+
+## Action: Fetch Account Balance
+
+**Type:** `binance/accountbalance`
+
+Called by the agent's `account_balance` tool.
+
+| Field | Value | Purpose |
+|-------|-------|---------|
+| **Integration ID** | `telegram_bot_cred_storage_binance` | Dynamic Binance integration |
+| **Futures** | ❌ Disabled | Query spot account |
+| **Symbol** | (empty) | Return all balances |
+
+---
+
+## Action: Telegram Reply (HTTP)
+
+**Type:** `http`
+
+Sends the AI agent's response back to the user.
+
+| Field | Value |
+|-------|-------|
+| **HTTP Method** | `POST` |
+| **URL** | `https://api.telegram.org/bot{{ secret "TELEGRAM_BOT_TOKEN" }}/sendMessage` |
+
+### Request Body
+
+| Field | Value |
+|-------|-------|
+| `chat_id` | **Chat ID** preset |
+| `text` | `{{ .agent_llm \| escape }}` |
+
+<Tip>
+The `escape` function ensures special characters in the AI response don't break the JSON payload.
+</Tip>
+
+---
+
+## Dynamic Binance Integration
+
+The key to supporting multiple users is the **lazy-loaded integration** that uses each user's stored credentials.
+
+| Field | Value | Purpose |
+|-------|-------|---------|
+| **ID** | `telegram_bot_cred_storage_binance` | Referenced by Binance actions |
+| **Type** | `binance` | Binance exchange integration |
+| **Lazy Load** | ✅ Enabled | Only initialize when first used |
+
+### Dynamic Credentials
+
+| Field | Value | Source |
+|-------|-------|--------|
+| **API Key** | `{{ .fetch_credentials.api_key }}` | From MongoDB query |
+| **Secret Key** | `{{ .fetch_credentials.api_secret }}` | From MongoDB query |
+| **Testnet** | ❌ Disabled | Use production (enable for testing) |
+| **Timeout** | `30` | Request timeout in seconds |
+
+<Note>
+**Lazy Load** means the integration initializes only when an action uses it. At that point, the credentials from the `fetch_credentials` action are available, allowing each user's Binance operations to use their own stored API keys.
+</Note>
+
+---
+
+## Response Definitions
+
+### Success Response
+
+| Field | Value |
+|-------|-------|
+| **Name** | `success` |
+| **Status Code** | `200` |
+| **Response Field** | `message`: `Reply sent via Telegram` |
+
+### Error Response
+
+| Field | Value |
+|-------|-------|
+| **Name** | `error` |
+| **Status Code** | `500` |
+| **Response Field** | `error`: `{{ .error }}` |
+
+---
+
+## Testing
+
+Use ServFlow's test mode to simulate requests without setting up the Telegram webhook.
+
+<Frame>
+  <img src="/images/tutorials/test-run-button.png" alt="Test run button location in the ServFlow dashboard" />
+</Frame>
+
+Click the **Play button** in the top-right corner and enter a sample payload:
+
+```json
+{
+  "message": {
+    "message_id": 123,
+    "from": {
+      "id": 12345678,
+      "first_name": "Test",
+      "username": "testuser"
+    },
+    "chat": {
+      "id": 12345678,
+      "type": "private"
+    },
+    "text": "What is my account balance?"
+  }
+}
+```
+
+---
+
+## Security Considerations
+
+<Warning>
+**Important security notes:**
+
+1. **Never share your bot token** — Anyone with the token can control your bot
+2. **Use HTTPS** — Always deploy with SSL to protect credentials in transit
+3. **Consider encryption** — For production, encrypt stored API credentials at rest
+4. **Rate limiting** — Consider adding rate limiting to prevent abuse
+5. **API key permissions** — Use Binance API keys with minimal required permissions
+</Warning>
+
+---
+
+## Extending the Bot
+
+Now that you understand how the bot works, consider adding:
+
+- **More Binance tools** — Spot/futures trading, order management
+- **Price alerts** — Scheduled checks that notify users of price movements
+- **Trade logging** — Store trades to MongoDB for user history
+- **Multi-exchange support** — Add integrations for other exchanges
+
+<Frame>
+  <img src="/images/tutorials/action-list.png" alt="ServFlow workflow showing all configured actions" />
+</Frame>
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="AI Agents" icon="robot" href="/concepts/actions/ai-agents">
+  Learn more about configuring AI agents and tools.
+</Card>
+
+<Card title="Binance Trading" icon="chart-line" href="/concepts/actions/binance">
+  Explore all available Binance actions.
+</Card>
+
+<Card title="Data Operations" icon="database" href="/concepts/actions/data-operations">
+  Master MongoDB and database operations.
+</Card>
+
+<Card title="Secrets Management" icon="key" href="/references/secrets">
+  Securely manage API tokens and credentials.
+</Card>
+
+</CardGroup>
