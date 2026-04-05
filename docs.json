@@ -35,10 +35,7 @@
               "development"
             ]
           },
-          {
-            "group": "Tutorials",
-            "pages": ["tutorials/telegram-binance-bot"]
-          },
+
           {
             "group": "Concepts",
             "pages": [
@@ -73,6 +70,15 @@
           {
             "group": "References",
             "pages": ["references/configuration", "references/secrets"]
+          }
+        ]
+      },
+      {
+        "tab": "Tutorials",
+        "groups": [
+          {
+            "group": "Tutorials",
+            "pages": ["tutorials/telegram-binance-bot"]
           }
         ]
       },

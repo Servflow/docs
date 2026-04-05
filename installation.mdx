@@ -1,54 +1,138 @@
 ---
 title: "Installation"
-description: "Deploy ServFlow Pro to your infrastructure for production use"
+description: "Install ServFlow Pro on your system using your preferred method"
 ---
 
-ServFlow Pro is a visual backend engine for building and running APIs. This guide covers deploying ServFlow to your infrastructure for production or staging environments.
+ServFlow Pro is a visual backend engine for building and running APIs. This guide covers all available installation methods to get ServFlow Pro running on your system.
 
 <Tip>
-Looking to set up a local development environment instead? See the [Local Environment Setup](/development) guide.
+Looking to set up a local development environment with tracing and debugging? See the [Local Environment Setup](/development) guide.
 </Tip>
 
 ## Prerequisites
 
-- **Docker** (recommended) or
-- **ServFlow Pro binary** for your platform
+- A terminal or command-line interface
+- One of the following: Docker, Homebrew, npm, or Go (depending on your installation method)
 
-## Using Docker (Recommended)
+## Quick Start
 
-Pull and run the official ServFlow Pro image:
+The fastest way to get started:
+
+```bash
+# Using Homebrew (macOS/Linux)
+brew install Servflow/servflow/servflow-pro
+servflow-pro start --config config.toml --dashboard
+
+# Or using Docker
+docker run -p 8080:8080 -p 3000:3000 servflow/servflow-pro
+```
+
+Access the dashboard at `http://localhost:3000`
+
+## Installation Methods
+
+### Homebrew (macOS / Linux)
+
+The recommended installation method for macOS and Linux users:
+
+```bash
+brew install Servflow/servflow/servflow-pro
+```
+
+After installation, verify it works:
+
+```bash
+servflow-pro --version
+```
+
+### npm
+
+Install globally using npm:
+
+```bash
+npm install -g servflow-pro
+```
+
+After installation, verify it works:
+
+```bash
+servflow-pro --version
+```
+
+### Docker
+
+Pull the latest image from Docker Hub:
+
+```bash
+docker pull servflow/servflow-pro:latest
+```
+
+Run with default configuration:
+
+```bash
+docker run -p 8080:8080 -p 3000:3000 servflow/servflow-pro
+```
+
+Run with custom configuration and persistent storage:
 
 ```bash
 docker run -d \
   --name servflow-pro \
   -p 8080:8080 \
   -p 3000:3000 \
-  -v $(pwd)/config.toml:/app/config.toml \
-  -v $(pwd)/data:/app/data \
-  -v $(pwd)/configs:/app/configs \
-  servflow/servflow-pro start --config /app/config.toml --dashboard
+  -v $(pwd)/config.toml:/data/config.toml \
+  -v $(pwd)/configs:/data/configs \
+  -v $(pwd)/data:/data \
+  servflow/servflow-pro
 ```
 
 This command:
 - Exposes port **8080** for the API server
 - Exposes port **3000** for the dashboard
-- Mounts your configuration file and data directories
+- Mounts your configuration file and data directories for persistence
 
-## Using the Binary
+### Binary Downloads
 
-<Note>
-Binary downloads will be available soon. Check back for direct download links for Linux, macOS, and Windows.
-</Note>
+Download pre-built binaries from the [Releases](https://github.com/Servflow/servflow-pro/releases) page.
 
-Once downloaded, run:
+Available platforms:
+- **Linux** (x86_64, arm64)
+- **macOS** (x86_64, arm64)
 
 ```bash
+# Download and extract (example for Linux x86_64)
+tar -xzf servflow-pro_Linux_x86_64.tar.gz
+
+# Make executable
+chmod +x servflow-pro
+
+# Run
 ./servflow-pro start --config config.toml --dashboard
 ```
 
+### From Source
+
+Build from source using Go:
+
+```bash
+# Clone the repository
+git clone https://github.com/Servflow/servflow-pro.git
+cd servflow-pro
+
+# Build
+go build -o servflow-pro
+
+# Run
+./servflow-pro start --config config.toml --dashboard
+```
+
+<Note>
+Building from source requires Go 1.21 or later.
+</Note>
+
 ## Configuration
 
-ServFlow uses a TOML configuration file. Create a `config.toml` with the following setup:
+ServFlow Pro uses a TOML configuration file. Create a `config.toml` with the following setup:
 
 ```toml
 [server]
@@ -69,7 +153,7 @@ path = "./data/servflow.db"
 Never commit your `master_key` to version control. Use environment variables for sensitive values in production.
 </Warning>
 
-## Running Without SQLite
+### Running Without SQLite
 
 ServFlow can run without SQLite by omitting the `[sqlite]` section or leaving the path empty. In this mode, ServFlow uses file-based storage.
 
@@ -80,17 +164,15 @@ Running without SQLite disables certain features:
 - **Metrics Storage** — Usage and performance metrics persistence
 </Warning>
 
-## Command Line Options
+## Running ServFlow Pro
+
+### Command Line Options
 
 | Flag | Description |
 |------|-------------|
 | `--config, -c` | Path to TOML configuration file (required) |
 | `--dashboard` | Start the web dashboard interface |
 | `--import-configs` | Import API configs from config folder to SQLite (requires `--dashboard`) |
-
-## Running Modes
-
-ServFlow Pro can run in two modes depending on your needs:
 
 ### Dashboard Mode
 
@@ -140,7 +222,7 @@ Both modes read API configurations from the same `config_folder`. You can develo
 </Card>
 
 <Card title="Local Development" icon="laptop-code" href="/development">
-  Set up a local development environment.
+  Set up a local development environment with tracing.
 </Card>
 
 </CardGroup>
