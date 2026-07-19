@@ -1,6 +1,7 @@
 ---
 title: "Transformation"
 description: "Transform and manipulate data using JavaScript code or static values"
+icon: "shuffle"
 ---
 
 Transformation actions allow you to process, reshape, and compute values within your workflows. Use these actions when you need custom logic that goes beyond what other actions provide.
@@ -39,7 +40,7 @@ Bundled JavaScript dependencies to include with the script.
 
 Basic transformation:
 
-```docs/actions/transformation.mdx
+```yaml
 actions:
   transform_data:
     type: javascript
@@ -60,7 +61,7 @@ actions:
 
 Perform calculations on workflow data:
 
-```docs/actions/transformation.mdx
+```yaml
 actions:
   calculate_totals:
     type: javascript
@@ -85,7 +86,7 @@ actions:
 
 Validate and sanitize input data:
 
-```docs/actions/transformation.mdx
+```yaml
 actions:
   validate_input:
     type: javascript
@@ -121,7 +122,7 @@ actions:
 
 Filter and sort data:
 
-```docs/actions/transformation.mdx
+```yaml
 actions:
   process_orders:
     type: javascript
@@ -164,7 +165,7 @@ The value to return. Supports template syntax for dynamic values.
 
 Return a constant value:
 
-```docs/actions/transformation.mdx
+```yaml
 actions:
   set_status:
     type: static
@@ -177,7 +178,7 @@ actions:
 
 Combine multiple values into a single result:
 
-```docs/actions/transformation.mdx
+```yaml
 actions:
   build_greeting:
     type: static
@@ -190,7 +191,7 @@ actions:
 
 Prepare a JSON structure for another action:
 
-```docs/actions/transformation.mdx
+```yaml
 actions:
   prepare_payload:
     type: static
@@ -208,7 +209,7 @@ actions:
 
 Provide fallback values using template functions:
 
-```docs/actions/transformation.mdx
+```yaml
 actions:
   set_defaults:
     type: static

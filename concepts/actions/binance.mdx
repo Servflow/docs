@@ -1,6 +1,7 @@
 ---
 title: "Binance Trading"
 description: "Execute cryptocurrency trades and retrieve market data from Binance"
+icon: "chart-line"
 ---
 
 Binance trading actions allow you to interact with the Binance exchange for cryptocurrency trading. These actions support retrieving market data, checking account balances, and placing both spot and futures orders.
@@ -51,7 +52,7 @@ The type of price data to retrieve.
 
 ### Example
 
-```docs/actions/binance.mdx
+```yaml
 actions:
   get_btc_price:
     type: binance/getprice
@@ -73,7 +74,7 @@ actions:
 ### Response
 
 **Current price response:**
-```docs/actions/binance.mdx
+```json
 {
   "symbol": "BTCUSDT",
   "price": 45000.50,
@@ -82,7 +83,7 @@ actions:
 ```
 
 **24-hour stats response:**
-```docs/actions/binance.mdx
+```json
 {
   "symbol": "BTCUSDT",
   "priceChange": "1250.00",
@@ -134,7 +135,7 @@ Query the futures account instead of the spot account.
 
 ### Example
 
-```docs/actions/binance.mdx
+```yaml
 actions:
   get_btc_balance:
     type: binance/accountbalance
@@ -162,7 +163,7 @@ actions:
 ### Response
 
 **Single asset response:**
-```docs/actions/binance.mdx
+```json
 {
   "symbol": "BTC",
   "balance": "1.25000000",
@@ -171,7 +172,7 @@ actions:
 ```
 
 **Multiple assets response:**
-```docs/actions/binance.mdx
+```json
 [
   {"symbol": "BTC", "balance": "1.25000000", "time": 1699900000},
   {"symbol": "ETH", "balance": "10.50000000", "time": 1699900000},
@@ -294,7 +295,7 @@ How long the order remains active.
 
 ### Example
 
-```docs/actions/binance.mdx
+```yaml
 actions:
   market_buy:
     type: binance/spotorder
@@ -333,7 +334,7 @@ actions:
 
 ### Response
 
-```docs/actions/binance.mdx
+```json
 {
   "orderId": 123456789,
   "symbol": "BTCUSDT",
@@ -448,7 +449,7 @@ The price for limit orders.
 
 ### Example
 
-```docs/actions/binance.mdx
+```yaml
 actions:
   open_long:
     type: binance/futuresorder
@@ -491,7 +492,7 @@ actions:
 
 ### Response
 
-```docs/actions/binance.mdx
+```json
 {
   "orderId": 987654321,
   "symbol": "BTCUSDT",
@@ -554,7 +555,7 @@ The number of intervals to look back.
 
 ### Example
 
-```docs/actions/binance.mdx
+```yaml
 actions:
   check_btc_change:
     type: binance/pricedifference
@@ -583,7 +584,7 @@ conditionals:
 
 ### Response
 
-```docs/actions/binance.mdx
+```json
 {
   "symbol": "BTCUSDT",
   "currentPrice": 45000.50,
@@ -666,7 +667,7 @@ Query futures trading information instead of spot.
 
 ### Example
 
-```docs/actions/binance.mdx
+```yaml
 actions:
   get_open_orders:
     type: binance/tradeinfo
@@ -710,7 +711,7 @@ actions:
 
 Monitor price changes and send alerts:
 
-```docs/actions/binance.mdx
+```yaml
 actions:
   check_price:
     type: binance/pricedifference
@@ -750,7 +751,7 @@ actions:
 
 Automatically buy a fixed amount on schedule:
 
-```docs/actions/binance.mdx
+```yaml
 actions:
   check_balance:
     type: binance/accountbalance

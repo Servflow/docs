@@ -1,0 +1,246 @@
+---
+title: "Deploy your first API declaratively"
+description: "Define a workflow as a configuration file, validate it, and deploy it with the ServFlow CLI"
+icon: "code"
+---
+
+ServFlow is an agent builder: you define AI agents and the workflows they run, and a Go engine serves them. Alongside the visual builder, every object can be defined as a JSON or YAML configuration file and deployed with the `servflow-pro` CLI — which is what you want for version control, code review, and CI/CD.
+
+In this tutorial you'll define a "Hello World" workflow as a file, validate it without deploying, deploy it, and call it.
+
+<Tip>
+Prefer a visual interface? See [Deploy your first API with the dashboard](/quickstart-dashboard). Both produce the same objects, so you can move between them freely.
+</Tip>
+
+## Prerequisites
+
+- ServFlow Pro installed — see [Installation](/installation)
+- A text editor and a terminal
+
+You do **not** need the dashboard running for this tutorial. The CLI works directly against the store.
+
+## What you'll build
+
+A `GET /hello-world` endpoint that returns a JSON greeting, defined entirely in a YAML file and deployed from the command line.
+
+## Step 1: Create a configuration file
+
+Create a project directory with a `configs` folder:
+
+```bash
+mkdir -p my-servflow-project/configs
+cd my-servflow-project
+```
+
+Add a `config.toml` in the project root:
+
+```toml
+[server]
+port = "8080"
+config_folder = "./configs"
+env = "development"
+
+[sqlite]
+path = "./data/servflow.db"
+```
+
+`config_folder` is the only required setting. See the [Configuration Reference](/references/configuration) for the rest.
+
+## Step 2: Start from a real example
+
+Rather than writing a workflow from memory, ask the CLI for a complete, valid one:
+
+```bash
+servflow-pro resource config example --config config.toml --output yaml
+```
+
+This prints a fully-formed workflow showing how entries, actions, conditionals, and responses wire together. It is the best reference for the schema, because it comes from the engine you are running.
+
+## Step 3: Write your workflow
+
+Create `configs/hello-world.yaml`:
+
+```yaml
+id: hello-world
+name: hello-world
+enabled: true
+
+http:
+  method: GET
+  listenPath: /hello-world
+  next: response.success
+
+responses:
+  success:
+    type: template
+    name: success
+    code: 200
+    template: '{"message":"Hello, World!","status":"success"}'
+```
+
+The pieces:
+
+| Field | Description |
+|---|---|
+| `id` | The workflow's stable, human-readable identity. Other objects reference it by this value |
+| `name` | Display name shown in the dashboard |
+| `enabled` | Whether the engine should serve this workflow |
+| `http` | The entry: which method and path this workflow answers on |
+| `http.next` | Where execution goes first, as a `<section>.<key>` reference |
+| `responses` | Named responses the workflow can return |
+
+Steps connect with reference strings — `action.<key>`, `conditional.<key>`, or `response.<key>` — where the key is the map key in that section. Here the entry routes straight to `response.success`.
+
+## Step 4: Validate before deploying
+
+Dry-run the config. This validates it and prints exactly what would be stored, without writing anything:
+
+```bash
+servflow-pro resource config create \
+  -f configs/hello-world.yaml \
+  --dry-run --reload=false \
+  --config config.toml
+```
+
+On success it prints the materialized workflow and exits `0`. On failure it prints one specific error — a missing required field, say, or a reference to a step that doesn't exist. Fix that one thing and run it again.
+
+<Tip>
+This validate-fix loop is the fastest way to author configs. Lean on it rather than trying to get a file perfect in one pass.
+</Tip>
+
+## Step 5: Deploy it
+
+Run the same command without `--dry-run`:
+
+```bash
+servflow-pro resource config create \
+  -f configs/hello-world.yaml \
+  --config config.toml
+```
+
+The workflow is saved and the command returns the stored object. `--reload` is on by default, so a running instance picks up the change immediately; if no server is running the command notes that and completes anyway.
+
+## Step 6: Start the server and call it
+
+```bash
+servflow-pro start --config config.toml
+```
+
+The engine owns the root path, so your workflow answers at its listen path directly:
+
+```bash
+curl http://localhost:8080/hello-world
+```
+
+```json
+{
+  "message": "Hello, World!",
+  "status": "success"
+}
+```
+
+<Check>
+You've defined, validated, and deployed your first workflow from the command line.
+</Check>
+
+## Adding an action
+
+Most workflows do more than return a fixed value. This version reads a query parameter and builds the response from it:
+
+```yaml
+id: greeting
+name: greeting
+enabled: true
+
+http:
+  method: GET
+  listenPath: /greeting
+  next: action.buildGreeting
+
+actions:
+  buildGreeting:
+    type: static
+    name: build greeting
+    config:
+      return: 'Hello, {{ param "name" }}!'
+    next: response.success
+    fail: response.error
+
+responses:
+  success:
+    type: json_object
+    name: success
+    code: 200
+    responseObject:
+      fields:
+        greeting:
+          value: '{{ .buildGreeting }}'
+  error:
+    type: template
+    name: error
+    code: 500
+    template: '{"error":"could not build greeting"}'
+```
+
+Deploy and call it:
+
+```bash
+servflow-pro resource config create -f configs/greeting.yaml --config config.toml
+curl "http://localhost:8080/greeting?name=Developer"
+```
+
+Two things worth noting:
+
+- **Dynamic values use `{{ }}` templates.** `param` reads a query or form parameter, `body` reads a field from a JSON body, and `urlparam` reads a path variable. See [Dynamic Content](/references/concepts/dynamic-content).
+- **An action's result is available as `{{ .<actionKey> }}`** to every later step, and `fail` routes execution when the action errors.
+
+## Discovering what's available
+
+The CLI is the authoritative source for what your engine supports — more reliable than any document, because it reflects the binary you are running:
+
+```bash
+# every action type
+servflow-pro resource action list --config config.toml
+
+# the fields one action accepts
+servflow-pro resource action describe static --config config.toml
+
+# every template function
+servflow-pro resource config template-functions --config config.toml
+```
+
+## Version control
+
+Because workflows are plain files, they can be reviewed and deployed like any other code. A typical `.gitignore`:
+
+```gitignore
+# Local data and secrets
+data/
+*.db
+config.toml
+
+# Workflow definitions belong in version control
+!configs/
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+
+<Card title="Deploy with the dashboard" icon="window" href="/quickstart-dashboard">
+  Build the same kind of workflow visually.
+</Card>
+
+<Card title="Actions" icon="play" href="/concepts/actions/overview">
+  Browse every action you can put in a workflow.
+</Card>
+
+<Card title="Dynamic Content" icon="wand-magic-sparkles" href="/references/concepts/dynamic-content">
+  Template syntax for dynamic values.
+</Card>
+
+<Card title="Running ServFlow" icon="server" href="/running-modes">
+  How to deploy an instance to production.
+</Card>
+
+</CardGroup>

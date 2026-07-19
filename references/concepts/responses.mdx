@@ -1,6 +1,7 @@
 ---
 title: "Responses"
 description: "Understanding Responses in ServFlow — defining what your API returns to clients"
+icon: "reply"
 ---
 
 Responses are the terminal steps in ServFlow workflows that define what data is returned to API clients. Every workflow path must eventually reach a response node, which specifies the HTTP status code and the structure of the JSON body sent back to the caller.
@@ -134,7 +135,7 @@ ServFlow APIs can also be defined using YAML configuration files. This approach 
 
 Every response follows this structure:
 
-```docs/references/concepts/responses.mdx
+```yaml
 responses:
   response_id:
     code: 200
@@ -169,7 +170,7 @@ A field should have either `value` or `fields`, not both. Use `value` for leaf v
 
 Create nested JSON structures by using `fields` instead of `value`:
 
-```docs/references/concepts/responses.mdx
+```yaml
 responses:
   user_response:
     code: 200
@@ -222,7 +223,7 @@ Responses can include dynamic content from anywhere in your workflow using templ
 
 Access results from previous actions using the action ID with a dot prefix:
 
-```docs/references/concepts/responses.mdx
+```yaml
 responseObject:
   fields:
     users:
@@ -237,7 +238,7 @@ responseObject:
 
 Access original request data with the `param` function:
 
-```docs/references/concepts/responses.mdx
+```yaml
 responseObject:
   fields:
     received_email:
@@ -248,7 +249,7 @@ responseObject:
 
 When using validation functions in conditionals, errors are collected in the `.errors` variable:
 
-```docs/references/concepts/responses.mdx
+```yaml
 responses:
   validation_error:
     code: 400
@@ -266,7 +267,7 @@ responses:
 
 When an action fails and routes to a response via its `fail` path, access error details with `.error`:
 
-```docs/references/concepts/responses.mdx
+```yaml
 responses:
   error:
     code: 500
@@ -288,7 +289,7 @@ For more details on template syntax and available functions, see the [Dynamic Co
 
 ### Success Response with Data
 
-```docs/references/concepts/responses.mdx
+```yaml
 responses:
   success:
     code: 200
@@ -302,7 +303,7 @@ responses:
 
 ### Resource Created Response
 
-```docs/references/concepts/responses.mdx
+```yaml
 responses:
   created:
     code: 201
@@ -322,7 +323,7 @@ responses:
 
 ### Validation Error Response
 
-```docs/references/concepts/responses.mdx
+```yaml
 responses:
   validation_error:
     code: 400
@@ -338,7 +339,7 @@ responses:
 
 ### Not Found Response
 
-```docs/references/concepts/responses.mdx
+```yaml
 responses:
   not_found:
     code: 404
@@ -352,7 +353,7 @@ responses:
 
 ### Unauthorized Response
 
-```docs/references/concepts/responses.mdx
+```yaml
 responses:
   unauthorized:
     code: 401

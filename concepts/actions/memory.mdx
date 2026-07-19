@@ -1,12 +1,13 @@
 ---
 title: "Memory"
 description: "Store and retrieve temporary data in memory for caching and workflow state"
+icon: "memory"
 ---
 
 Memory actions allow you to store and retrieve data in temporary memory storage. This is useful for caching frequently accessed data, passing state between workflow executions, and implementing cache-aside patterns.
 
 <Note>
-Memory storage persists across workflow executions but is cleared when the server restarts. For persistent storage, use [Data Operations](/actions/data-operations).
+Memory storage persists across workflow executions but is cleared when the server restarts. For persistent storage, use [Data Operations](/concepts/actions/data-operations).
 </Note>
 
 ---
@@ -45,7 +46,7 @@ Use `{{ jsonout .action_result }}` to store complex objects from previous action
 
 Store a user object in memory:
 
-```docs/actions/memory.mdx
+```yaml
 actions:
   cache_user:
     type: memory_store
@@ -57,7 +58,7 @@ actions:
 
 Store a computed value:
 
-```docs/actions/memory.mdx
+```yaml
 actions:
   store_token:
     type: memory_store
@@ -87,7 +88,7 @@ The key to look up in memory storage.
 
 Retrieve a cached user:
 
-```docs/actions/memory.mdx
+```yaml
 actions:
   get_cached_user:
     type: memory_fetch
@@ -106,7 +107,7 @@ The fetched value is available via `{{ .get_cached_user }}`. If the key doesn't 
 
 Check the cache first, fetch from database if not found, then update the cache:
 
-```docs/actions/memory.mdx
+```yaml
 actions:
   check_cache:
     type: memory_fetch
@@ -158,7 +159,7 @@ responses:
 
 Store and retrieve user session data:
 
-```docs/actions/memory.mdx
+```yaml
 actions:
   store_session:
     type: memory_store
@@ -173,7 +174,7 @@ actions:
     next: response.session_created
 ```
 
-```docs/actions/memory.mdx
+```yaml
 actions:
   get_session:
     type: memory_fetch
@@ -192,7 +193,7 @@ conditionals:
 
 Track request counts for rate limiting:
 
-```docs/actions/memory.mdx
+```yaml
 actions:
   get_request_count:
     type: memory_fetch
@@ -228,7 +229,7 @@ conditionals:
 
 Store and validate temporary tokens:
 
-```docs/actions/memory.mdx
+```yaml
 actions:
   generate_reset_token:
     type: javascript
@@ -252,7 +253,7 @@ actions:
     next: action.send_reset_email
 ```
 
-```docs/actions/memory.mdx
+```yaml
 actions:
   validate_reset_token:
     type: memory_fetch

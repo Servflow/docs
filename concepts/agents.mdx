@@ -1,0 +1,102 @@
+---
+title: "Agents"
+description: "The top-level object in ServFlow — what an agent owns, and how workflows attach to it"
+icon: "robot"
+---
+
+ServFlow is an agent builder: you define AI agents and the workflows they run, and a Go engine serves them. The **agent** is the top-level object. Everything else — workflows, a workspace, the integrations it may use — belongs to one.
+
+This page explains the model. To build one, see [Deploy your first API with the dashboard](/quickstart-dashboard).
+
+## What an agent owns
+
+| Part | What it is |
+|---|---|
+| **Workflows** | The units of work the agent runs, attached as *webhooks* or *tasks* |
+| **Workspace** | A directory of files the agent can read and write |
+| **Integrations & secrets** | The AI models, databases, and APIs it is allowed to reach |
+
+An agent has a name and an optional description. Everything else it does comes from the workflows attached to it.
+
+## Webhooks and tasks
+
+Workflows attach to an agent in one of two roles, decided by the workflow's **entry**:
+
+- **Webhook** — a workflow with an **HTTP entry**. It is reachable from outside at its listen path, and is how the world sends work to the agent.
+- **Task** — a workflow with a **trigger entry**. It is not exposed over HTTP. It runs on a schedule, or because another workflow called it.
+
+A single agent typically has one webhook that receives requests and several tasks doing the internal work.
+
+<Note>
+A task with no cron schedule is simply never scheduled. That makes `task` the right role for internal helper workflows that exist only to be called by another workflow — they stay owned by the agent rather than floating unattached.
+</Note>
+
+## Agent resource vs. the `agent` action
+
+These are different things, and the names collide:
+
+| | What it is |
+|---|---|
+| **Agent** (this page) | The top-level object that owns workflows, a workspace, and integrations |
+| **`agent` action** | A single step *inside* a workflow that calls an AI model |
+
+You can use the `agent` action in a workflow without creating an agent resource — that's just an endpoint that happens to call a model. You create an agent resource when you want a named thing that bundles several workflows, holds a workspace, and is managed as a unit. See [AI Agents](/concepts/actions/ai-agents) for the action.
+
+## How a workflow's entry decides its role
+
+When you create a workflow, the entry type you choose determines both how it is reached and how it attaches:
+
+| Entry type | Reached by | Attached as |
+|---|---|---|
+| **API (HTTP)** | An inbound HTTP request | Webhook |
+| **Trigger (manual)** | Another workflow calling it | Task |
+| **Scheduled** | A cron schedule | Task |
+
+## Identity and references
+
+Every workflow has a stable, human-readable `id` — a slug like `order-sync`. This is the identity everything else uses: attaching a workflow to an agent records this id, and one workflow calling another names it this way.
+
+A workflow also has a numeric store id, assigned when it is created. That one is only used for direct CRUD (`get`, `update`, `delete`); nothing references a workflow by it.
+
+## Managing agents from the CLI
+
+Everything the dashboard does is available from `servflow-pro resource`:
+
+```bash
+# list agents
+servflow-pro resource agent list
+
+# create one from a body with a name and optional description
+echo '{"name":"support-agent"}' | servflow-pro resource agent create -f -
+
+# attach a workflow, by its human-readable config id
+servflow-pro resource agent add-config <agentId> \
+  --config-id order-sync --config-type task
+
+# inspect what an agent now owns
+servflow-pro resource agent get <agentId>
+```
+
+`--config-type` accepts **`webhook`** or **`task`** — attach HTTP-entry workflows as webhooks and everything else as tasks. Use `remove-config` to detach.
+
+## Next steps
+
+<CardGroup cols={2}>
+
+<Card title="Deploy with the dashboard" icon="window" href="/quickstart-dashboard">
+  Create your first agent and give it a workflow.
+</Card>
+
+<Card title="AI Agents" icon="brain" href="/concepts/actions/ai-agents">
+  The `agent` action — calling an AI model inside a workflow.
+</Card>
+
+<Card title="Actions" icon="play" href="/concepts/actions/overview">
+  The building blocks a workflow is made of.
+</Card>
+
+<Card title="Running ServFlow" icon="server" href="/running-modes">
+  What an instance serves, and how to deploy it.
+</Card>
+
+</CardGroup>

@@ -1,6 +1,7 @@
 ---
 title: "Vector Operations"
 description: "Store and query vector embeddings for similarity search and RAG applications"
+icon: "cube"
 ---
 
 Vector operations allow you to store and retrieve vector embeddings from vector databases like Qdrant. These actions are essential for building semantic search, recommendation systems, and Retrieval-Augmented Generation (RAG) applications.
@@ -60,7 +61,7 @@ Common options:
 
 ### Example
 
-```docs/actions/vector-operations.mdx
+```yaml
 actions:
   store_embedding:
     type: storevector
@@ -119,7 +120,7 @@ Common options:
 
 ### Example
 
-```docs/actions/vector-operations.mdx
+```yaml
 actions:
   search_similar:
     type: fetchvectors
@@ -141,7 +142,7 @@ actions:
 
 A typical RAG (Retrieval-Augmented Generation) workflow combines vector search with an AI agent:
 
-```docs/actions/vector-operations.mdx
+```yaml
 actions:
   embed_query:
     type: agent
@@ -175,7 +176,7 @@ actions:
 
 Store documents with their embeddings for later retrieval:
 
-```docs/actions/vector-operations.mdx
+```yaml
 actions:
   generate_embedding:
     type: agent

@@ -1,6 +1,7 @@
 ---
 title: "Data Operations"
 description: "Actions for reading, writing, updating, and deleting data in databases"
+icon: "database"
 ---
 
 Data operation actions allow you to interact with databases in your workflows. These actions support SQL databases (PostgreSQL, MySQL, SQLite) and MongoDB through configured integrations.
@@ -69,7 +70,7 @@ Treat no results as a failure, routing to the `fail` step.
 
 ### Example
 
-```docs/actions/data-operations.mdx
+```yaml
 actions:
   get_user:
     type: fetch
@@ -134,7 +135,7 @@ Additional datasource-specific options.
 
 ### Example
 
-```docs/actions/data-operations.mdx
+```yaml
 actions:
   create_user:
     type: store
@@ -212,7 +213,7 @@ Additional datasource-specific options.
 
 ### Example
 
-```docs/actions/data-operations.mdx
+```yaml
 actions:
   update_user:
     type: update
@@ -278,7 +279,7 @@ Additional datasource-specific options.
 
 ### Example
 
-```docs/actions/data-operations.mdx
+```yaml
 actions:
   delete_user:
     type: delete
@@ -352,7 +353,7 @@ Treat no results as a failure, routing to the `fail` step.
 
 ### Example
 
-```docs/actions/data-operations.mdx
+```yaml
 actions:
   query_users:
     type: mongoquery
@@ -367,7 +368,7 @@ actions:
 
 **Dynamic filter example:**
 
-```docs/actions/data-operations.mdx
+```yaml
 actions:
   search_users:
     type: mongoquery
@@ -388,7 +389,7 @@ Use the `stringescape` template function when inserting user input into JSON que
 
 The `fetch`, `update`, and `delete` actions use a common filter syntax:
 
-```docs/actions/data-operations.mdx
+```yaml
 filters:
   - field: field_name
     operator: eq
@@ -410,7 +411,7 @@ filters:
 
 ### Multiple Filters Example
 
-```docs/actions/data-operations.mdx
+```yaml
 filters:
   - field: status
     operator: eq

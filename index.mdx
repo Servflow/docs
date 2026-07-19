@@ -1,128 +1,86 @@
 ---
 title: "Introduction"
-description: "A visual backend engine for developing and rapidly prototyping scalable backends"
+description: "ServFlow is an agent builder — design AI agents and the workflows they run, then serve them from a fast Go engine"
+icon: "house"
 ---
 
 ## What is ServFlow?
 
-ServFlow is a **visual backend engine** designed for developing and rapidly prototyping scalable backend services. Whether you're building a new API from scratch or connecting to existing infrastructure, ServFlow provides an intuitive interface to design, test, and deploy your backend logic without sacrificing performance or flexibility.
+ServFlow is an **agent builder**. You define AI agents — what they know, which tools they can call, and how the outside world reaches them — and ServFlow serves them from a compiled Go engine.
 
-<Card
-  title="Get Started in 5 Minutes"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our quickstart guide to build your first API.
+An **agent** is the main object. Each agent owns:
+
+- **Workflows** — the units of work it runs, either as inbound HTTP endpoints (*webhooks*) or as internal and scheduled jobs (*tasks*)
+- **A workspace** — files the agent can read and write
+- **Integrations and secrets** — the AI models, databases, and APIs it is allowed to use
+
+A workflow is a graph: an **entry** receives a request, **actions** do the work, **conditionals** branch, and **responses** return a result. The same engine that powers an agent's tools also serves plain HTTP APIs, so ServFlow works just as well when you only want an endpoint.
+
+<Card title="Deploy your first API in 5 minutes" icon="rocket" href="/quickstart" horizontal>
+  Pick the dashboard or the declarative path and ship a working endpoint.
 </Card>
 
 ## Why ServFlow?
 
 <CardGroup cols={2}>
-  <Card
-    title="Visual Development"
-    icon="wand-magic-sparkles"
-  >
-    Design your APIs visually with an intuitive builder interface. Reduce boilerplate and focus on your business logic.
+  <Card title="Agents as first-class objects" icon="robot">
+    Bundle prompts, tools, workflows, and a workspace under one named agent instead of wiring scripts together.
   </Card>
-  <Card
-    title="Connect Your Infrastructure"
-    icon="database"
-  >
-    Seamlessly integrate with your existing databases like PostgreSQL, MongoDB, and other data sources you already use.
+  <Card title="Build visually or declaratively" icon="wand-magic-sparkles">
+    Design in the visual builder, or define agents and workflows as JSON/YAML and deploy them from the CLI.
   </Card>
-  <Card
-    title="Built with Go"
-    icon="bolt"
-  >
-    Written in Go for minimal overhead and maximum efficiency. ServFlow scales effortlessly to handle high-throughput workloads.
+  <Card title="Connect your infrastructure" icon="database">
+    Integrate the databases, vector stores, and APIs you already run — PostgreSQL, MongoDB, and more.
   </Card>
-  <Card
-    title="Rapid Prototyping"
-    icon="clock"
-  >
-    Go from idea to working API in minutes. Iterate quickly and validate your backend architecture before committing to production.
+  <Card title="Built with Go" icon="bolt">
+    A compiled engine with minimal overhead, so agents and APIs stay fast under real traffic.
   </Card>
 </CardGroup>
 
-## How It Works
+## How it works
 
-ServFlow uses a workflow-based approach to API development:
+1. **Create an agent** — give it a name, and optionally start from a template
+2. **Add workflows** — an HTTP entry for inbound requests, or a trigger entry for internal and scheduled work
+3. **Add actions** — call AI models, query databases, hit external APIs, transform data
+4. **Configure responses** — decide what the workflow returns
+5. **Run it** — locally or on your own infrastructure
 
-1. **Define Entry Points** — Create HTTP endpoints that listen for incoming requests
-2. **Add Actions** — Chain together actions like HTTP calls, database queries, transformations, and integrations
-3. **Configure Responses** — Define what data to return based on your workflow logic
-4. **Deploy** — Run your APIs locally or deploy to your infrastructure
+## Three ways to build
 
-### Two Ways to Build
+ServFlow gives you the same engine through three interfaces — mix them freely:
 
-ServFlow offers two approaches to creating APIs:
+| Approach | Best for | Start here |
+|---|---|---|
+| **Dashboard** | Learning, prototyping, visual debugging | [Deploy with the dashboard](/quickstart-dashboard) |
+| **Declarative (CLI + config files)** | Version control, CI/CD, reproducible deploys | [Deploy declaratively](/quickstart-declarative) |
+| **Headless** | Production, containers, minimal surface | [Running ServFlow](/running-modes) |
 
-- **Dashboard Mode** — Use the visual web interface to build workflows interactively. Great for learning, prototyping, and rapid development.
-- **Headless Mode** — Define APIs in YAML configuration files and run without the UI. Ideal for production deployments, CI/CD pipelines, and code-first workflows.
+Configurations created in the dashboard are the same objects the CLI reads and writes, so you can prototype visually and then manage the result in code.
 
-Both modes use the same underlying engine — you can even start with the dashboard, then deploy your YAML configs in headless mode.
-
-<Tip>
-See [Running Modes](/running-modes) to understand when to use each approach.
-</Tip>
-
-## Deployment Options
-
-ServFlow gives you the flexibility to deploy your backend wherever it makes sense for your team.
+## Deployment options
 
 <CardGroup cols={2}>
-  <Card
-    title="Self-Hosted"
-    icon="server"
-  >
-    Run ServFlow on your own infrastructure for complete control over your data and environment. Perfect for teams with specific compliance or security requirements.
+  <Card title="Self-hosted" icon="server">
+    Run ServFlow on your own infrastructure for full control over your data and environment.
   </Card>
-  <Card
-    title="Cloud"
-    icon="cloud"
-  >
-    Use ServFlow Cloud for easier deployment and managed infrastructure. Get started faster without worrying about server maintenance or scaling.
+  <Card title="Cloud" icon="cloud">
+    Use ServFlow Cloud for managed infrastructure without maintaining servers yourself.
   </Card>
 </CardGroup>
 
-## Performance at Scale
-
-ServFlow is engineered for performance:
-
-- **Minimal Overhead** — Go's efficient runtime ensures your APIs respond quickly with low resource consumption
-- **High Throughput** — Handle thousands of concurrent requests without breaking a sweat
-- **Easy Scaling** — Scale horizontally as your traffic grows, whether self-hosted or in the cloud
-
-## Next Steps
+## Next steps
 
 <CardGroup cols={2}>
-  <Card
-    title="Installation"
-    icon="download"
-    href="/installation"
-  >
-    Install ServFlow using Docker or the binary.
+  <Card title="Installation" icon="download" href="/installation">
+    Install ServFlow and create your first account.
   </Card>
-  <Card
-    title="Quickstart"
-    icon="play"
-    href="/quickstart"
-  >
-    Build and deploy your first API with ServFlow.
+  <Card title="Quickstart" icon="play" href="/quickstart">
+    Deploy your first API with the dashboard or declaratively.
   </Card>
-  <Card
-    title="Local Development"
-    icon="laptop-code"
-    href="/development"
-  >
-    Set up your local development environment.
+  <Card title="Running ServFlow" icon="server" href="/running-modes">
+    Understand what the server serves and how to deploy it.
   </Card>
-  <Card
-    title="Configuration Reference"
-    icon="gear"
-    href="/references/configuration"
-  >
-    Explore all configuration options.
+  <Card title="Configuration Reference" icon="gear" href="/references/configuration">
+    Every TOML option and environment variable.
   </Card>
 </CardGroup>
