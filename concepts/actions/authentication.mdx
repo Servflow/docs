@@ -1,6 +1,7 @@
 ---
 title: "Authentication"
 description: "Secure your APIs with JWT tokens, user authentication, and password hashing"
+icon: "lock"
 ---
 
 Authentication actions help you secure your ServFlow APIs. Use them to validate JWT tokens, authenticate users against your database, generate new tokens, and securely hash passwords.
@@ -78,7 +79,7 @@ Whether authentication failures should route to the `fail` step.
 
 ### Example
 
-```docs/actions/authentication.mdx
+```yaml
 actions:
   auth_user:
     type: authenticate
@@ -177,7 +178,7 @@ Whether token validation failures should route to the `fail` step.
 
 Generate a JWT token after user login:
 
-```docs/actions/authentication.mdx
+```yaml
 actions:
   generate_token:
     type: jwt
@@ -196,7 +197,7 @@ actions:
 
 Verify a token and extract its claims:
 
-```docs/actions/authentication.mdx
+```yaml
 actions:
   verify_token:
     type: jwt
@@ -215,7 +216,7 @@ The decoded token claims are available via `{{ .verify_token }}`.
 
 Verify tokens from an OAuth provider:
 
-```docs/actions/authentication.mdx
+```yaml
 actions:
   verify_oauth_token:
     type: jwt
@@ -259,7 +260,7 @@ The hashing algorithm to use.
 
 Hash a password before storing it:
 
-```docs/actions/authentication.mdx
+```yaml
 actions:
   hash_password:
     type: hash
@@ -288,7 +289,7 @@ actions:
 
 Complete user registration with password hashing and token generation:
 
-```docs/actions/authentication.mdx
+```yaml
 actions:
   hash_password:
     type: hash
@@ -334,7 +335,7 @@ responses:
 
 Authenticate requests before processing:
 
-```docs/actions/authentication.mdx
+```yaml
 actions:
   verify_auth:
     type: jwt

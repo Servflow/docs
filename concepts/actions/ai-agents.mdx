@@ -1,6 +1,7 @@
 ---
 title: "AI Agents"
 description: "Integrate AI models into your workflows with the agent action"
+icon: "brain"
 ---
 
 The agent action allows you to interact with AI models like OpenAI's GPT to process queries, generate content, and execute tool functions. Agents can be enhanced with tools that give them the ability to call other actions in your workflow or external services via MCP.
@@ -92,7 +93,7 @@ Configuration for file inputs to the agent.
 
 A basic agent that answers user questions:
 
-```docs/actions/ai-agents.mdx
+```yaml
 actions:
   ask_ai:
     type: agent
@@ -108,7 +109,7 @@ actions:
 
 Generate structured data using the agent:
 
-```docs/actions/ai-agents.mdx
+```yaml
 actions:
   analyze_sentiment:
     type: agent
@@ -129,7 +130,7 @@ actions:
 
 Maintain conversation context across requests:
 
-```docs/actions/ai-agents.mdx
+```yaml
 actions:
   chat:
     type: agent
@@ -151,7 +152,7 @@ Tools extend an agent's capabilities by allowing it to perform actions during it
 
 Connect to external services using the Model Context Protocol (MCP):
 
-```docs/actions/ai-agents.mdx
+```yaml
 actions:
   db_agent:
     type: agent
@@ -164,7 +165,7 @@ actions:
       toolConfigs:
         - type: mcp
           mcpConfig:
-            endpoint: "http://localhost:3000/mcp"
+            endpoint: "https://mcp.example.com/mcp"
             tools:
               - query_database
               - list_tables
@@ -182,7 +183,7 @@ actions:
 
 Allow the agent to execute other actions in your workflow:
 
-```docs/actions/ai-agents.mdx
+```yaml
 actions:
   agent_with_db:
     type: agent
@@ -233,7 +234,7 @@ Use `tool_param` to access parameters passed by the agent to your workflow tool.
 
 Combine vector search with an agent for knowledge-based responses:
 
-```docs/actions/ai-agents.mdx
+```yaml
 actions:
   search_knowledge:
     type: fetchvectors
@@ -265,7 +266,7 @@ actions:
 
 An agent with multiple workflow tools:
 
-```docs/actions/ai-agents.mdx
+```yaml
 actions:
   smart_assistant:
     type: agent
@@ -320,7 +321,7 @@ actions:
 
 Generate content with specific formatting:
 
-```docs/actions/ai-agents.mdx
+```yaml
 actions:
   generate_email:
     type: agent

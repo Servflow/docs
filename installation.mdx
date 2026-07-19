@@ -1,67 +1,54 @@
 ---
 title: "Installation"
-description: "Install ServFlow Pro on your system using your preferred method"
+description: "Install ServFlow Pro, start the server, and create your first account"
+icon: "download"
 ---
 
-ServFlow Pro is a visual backend engine for building and running APIs. This guide covers all available installation methods to get ServFlow Pro running on your system.
+ServFlow is an agent builder: you define AI agents and the workflows they run, and a Go engine serves them. This guide installs the `servflow-pro` binary, starts an instance, and walks through the first-run account setup.
 
 <Tip>
-Looking to set up a local development environment with tracing and debugging? See the [Local Environment Setup](/development) guide.
+Setting up a local environment with tracing and debugging? See [Local Environment Setup](/development).
 </Tip>
 
 ## Prerequisites
 
-- A terminal or command-line interface
-- One of the following: Docker, Homebrew, npm, or Go (depending on your installation method)
+- A terminal
+- One of: Docker, Homebrew, npm, or Go — depending on the method you pick
 
-## Quick Start
-
-The fastest way to get started:
+## Quick start
 
 ```bash
-# Using Homebrew (macOS/Linux)
+# Homebrew (macOS/Linux)
 brew install Servflow/servflow/servflow-pro
 servflow-pro start --config config.toml --dashboard
 
-# Or using Docker
-docker run -p 8080:8080 -p 3000:3000 servflow/servflow-pro
+# Or Docker
+docker run -p 8080:8080 servflow/servflow-pro
 ```
 
-Access the dashboard at `http://localhost:3000`
+Then open **`http://localhost:8080/dashboard`** and create your account.
 
-## Installation Methods
+<Note>
+One port serves everything. The engine owns the root path, and `--dashboard` mounts the builder UI under `/dashboard` on that same port. Earlier versions used a separate port for the dashboard; they no longer do.
+</Note>
+
+## Installation methods
 
 ### Homebrew (macOS / Linux)
 
-The recommended installation method for macOS and Linux users:
-
 ```bash
 brew install Servflow/servflow/servflow-pro
-```
-
-After installation, verify it works:
-
-```bash
 servflow-pro --version
 ```
 
 ### npm
 
-Install globally using npm:
-
 ```bash
 npm install -g servflow-pro
-```
-
-After installation, verify it works:
-
-```bash
 servflow-pro --version
 ```
 
 ### Docker
-
-Pull the latest image from Docker Hub:
 
 ```bash
 docker pull servflow/servflow-pro:latest
@@ -70,59 +57,39 @@ docker pull servflow/servflow-pro:latest
 Run with default configuration:
 
 ```bash
-docker run -p 8080:8080 -p 3000:3000 servflow/servflow-pro
+docker run -p 8080:8080 servflow/servflow-pro
 ```
 
-Run with custom configuration and persistent storage:
+Run with a custom configuration and persistent storage:
 
 ```bash
 docker run -d \
   --name servflow-pro \
   -p 8080:8080 \
-  -p 3000:3000 \
   -v $(pwd)/config.toml:/data/config.toml \
   -v $(pwd)/configs:/data/configs \
   -v $(pwd)/data:/data \
   servflow/servflow-pro
 ```
 
-This command:
-- Exposes port **8080** for the API server
-- Exposes port **3000** for the dashboard
-- Mounts your configuration file and data directories for persistence
+This exposes port **8080** for the engine, the API, and the dashboard, and mounts your configuration and data directories so agents survive restarts.
 
-### Binary Downloads
+### Binary downloads
 
-Download pre-built binaries from the [Releases](https://github.com/Servflow/servflow-pro/releases) page.
-
-Available platforms:
-- **Linux** (x86_64, arm64)
-- **macOS** (x86_64, arm64)
+Download pre-built binaries from the [Releases](https://github.com/Servflow/servflow-pro/releases) page. Available for **Linux** (x86_64, arm64) and **macOS** (x86_64, arm64).
 
 ```bash
-# Download and extract (example for Linux x86_64)
 tar -xzf servflow-pro_Linux_x86_64.tar.gz
-
-# Make executable
 chmod +x servflow-pro
-
-# Run
 ./servflow-pro start --config config.toml --dashboard
 ```
 
-### From Source
-
-Build from source using Go:
+### From source
 
 ```bash
-# Clone the repository
 git clone https://github.com/Servflow/servflow-pro.git
 cd servflow-pro
-
-# Build
 go build -o servflow-pro
-
-# Run
 ./servflow-pro start --config config.toml --dashboard
 ```
 
@@ -130,9 +97,9 @@ go build -o servflow-pro
 Building from source requires Go 1.21 or later.
 </Note>
 
-## Configuration
+## Create a configuration file
 
-ServFlow Pro uses a TOML configuration file. Create a `config.toml` with the following setup:
+ServFlow reads a TOML file. Only `server.config_folder` is required:
 
 ```toml
 [server]
@@ -140,89 +107,98 @@ port = "8080"
 config_folder = "./configs"
 env = "production"
 
-[dashboard]
-port = "3000"
-configs_folder = "./configs"
-master_key = "your-secure-master-key"
-
 [sqlite]
 path = "./data/servflow.db"
+master_key = "your-secure-master-key"
 ```
 
 <Warning>
-Never commit your `master_key` to version control. Use environment variables for sensitive values in production.
+Never commit `master_key` to version control. Set it with the `SERVFLOW_SQLITE_MASTER_KEY` environment variable in production.
 </Warning>
 
-### Running Without SQLite
+SQLite stores agents, workflow configs, secrets, integrations, and user accounts. Running without it falls back to file-based storage and disables secrets management, OAuth integrations, and the account system.
 
-ServFlow can run without SQLite by omitting the `[sqlite]` section or leaving the path empty. In this mode, ServFlow uses file-based storage.
+See the [Configuration Reference](/references/configuration) for every option.
 
-<Warning>
-Running without SQLite disables certain features:
-- **Secrets Management** — Encrypted storage for API keys and credentials
-- **OAuth Integrations** — OAuth provider configurations and token storage
-- **Metrics Storage** — Usage and performance metrics persistence
-</Warning>
-
-## Running ServFlow Pro
-
-### Command Line Options
-
-| Flag | Description |
-|------|-------------|
-| `--config, -c` | Path to TOML configuration file (required) |
-| `--dashboard` | Start the web dashboard interface |
-| `--import-configs` | Import API configs from config folder to SQLite (requires `--dashboard`) |
-
-### Dashboard Mode
-
-Include the `--dashboard` flag to start the visual web interface:
+## Start the server
 
 ```bash
 servflow-pro start --config config.toml --dashboard
 ```
 
-This starts both the API server (port 8080) and the dashboard UI (port 3000). Use this mode for:
-- Building and testing APIs visually
-- Managing secrets and integrations through the UI
-- Learning ServFlow with immediate visual feedback
+| Flag | Description |
+|---|---|
+| `--config`, `-c` | Path to the TOML configuration file. Defaults to `~/.servflow/config.toml` |
+| `--dashboard` | Mount the visual builder under `/dashboard` |
+| `--import-configs` | Import workflow configs from the config folder into SQLite. Requires `--dashboard` |
 
-### Headless Mode
+Without `--dashboard`, only the engine and API run — see [Running ServFlow](/running-modes).
 
-Omit the `--dashboard` flag to run without the UI:
+## First run: create your account
 
-```bash
-servflow-pro start --config config.toml
+The dashboard is gated by default (`authentication.mode = "local"`). On a fresh instance with no accounts yet:
+
+<Steps>
+
+<Step title="Open the dashboard">
+Navigate to `http://localhost:8080/dashboard`.
+</Step>
+
+<Step title="Complete setup">
+A first-run setup wizard collects instance settings — your workspaces directory and whether to enable tracing. These are written to your `config.toml`.
+
+<Note>
+Setup settings are read once at startup, so ServFlow asks you to **restart the server** after saving them.
+</Note>
+</Step>
+
+<Step title="Create the first account">
+Register with an email and a password of at least **8 characters**. The first account is created without authentication to bootstrap the instance; afterwards, creating more accounts requires being signed in.
+</Step>
+
+<Step title="Sign in">
+Use those credentials on the sign-in screen. Sessions are opaque tokens stored in the database, so they survive restarts.
+</Step>
+
+</Steps>
+
+<Warning>
+Setup and first-account registration are only available while **no account exists**. Once one does, both are closed off.
+</Warning>
+
+To disable the gate entirely on a trusted local machine, set `mode = "none"`:
+
+```toml
+[authentication]
+mode = "none"
 ```
 
-This starts only the API server. Use this mode for:
-- Production deployments
-- CI/CD pipelines
-- Containerized environments
-- GitOps workflows
+## Verify the installation
 
-<Tip>
-Both modes read API configurations from the same `config_folder`. You can develop with the dashboard, then deploy the same YAML files in headless mode. See [Running Modes](/running-modes) for a detailed comparison.
-</Tip>
+With the server running, create an agent and its first workflow in the dashboard, or check the CLI can reach your store:
 
-## Next Steps
+```bash
+servflow-pro resource config list --config config.toml
+```
+
+## Next steps
 
 <CardGroup cols={2}>
 
 <Card title="Quickstart" icon="rocket" href="/quickstart">
-  Build and deploy your first API with ServFlow.
+  Deploy your first API with the dashboard or declaratively.
 </Card>
 
 <Card title="Configuration Reference" icon="gear" href="/references/configuration">
-  Explore all configuration options and environment variables.
+  Every TOML option and environment variable.
+</Card>
+
+<Card title="Running ServFlow" icon="server" href="/running-modes">
+  What the server serves, and how to deploy it.
 </Card>
 
 <Card title="Secrets Management" icon="key" href="/references/secrets">
-  Learn how to manage secrets securely.
-</Card>
-
-<Card title="Local Development" icon="laptop-code" href="/development">
-  Set up a local development environment with tracing.
+  Store API keys and credentials securely.
 </Card>
 
 </CardGroup>

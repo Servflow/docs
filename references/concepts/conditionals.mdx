@@ -1,6 +1,7 @@
 ---
 title: "Conditionals"
 description: "Understanding Conditionals in ServFlow — branching logic for your API workflows"
+icon: "code-branch"
 ---
 
 Conditionals are decision points in ServFlow workflows that evaluate expressions and route execution to different paths based on the result. They enable you to create dynamic workflows that respond differently based on input data, action results, or any other runtime values.
@@ -138,7 +139,7 @@ In template mode, write expressions that evaluate to a boolean value. The expres
 
 ### Template Expression Examples
 
-```docs/references/concepts/conditionals.mdx
+```yaml
 # Simple equality check
 {{ eq .user.role "admin" }}
 
@@ -165,7 +166,7 @@ ServFlow APIs can also be defined using YAML configuration files. This approach 
 
 Every conditional follows this structure in YAML:
 
-```docs/references/concepts/conditionals.mdx
+```yaml
 conditionals:
   conditional_id:
     expression: "{{ eq .status \"active\" }}"
@@ -198,7 +199,7 @@ The `onTrue` and `onFalse` fields use the standard step reference syntax:
 
 Template conditionals use Go template expressions:
 
-```docs/references/concepts/conditionals.mdx
+```yaml
 conditionals:
   is_admin:
     type: template
@@ -211,7 +212,7 @@ conditionals:
 
 Structured conditionals use a visual-friendly format with nested arrays for AND/OR logic:
 
-```docs/references/concepts/conditionals.mdx
+```yaml
 conditionals:
   validate_input:
     type: structured
@@ -243,7 +244,7 @@ conditionals:
 
 **Input Validation:**
 
-```docs/references/concepts/conditionals.mdx
+```yaml
 conditionals:
   validate_registration:
     expression: |
@@ -258,7 +259,7 @@ conditionals:
 
 **Checking if Data Exists:**
 
-```docs/references/concepts/conditionals.mdx
+```yaml
 conditionals:
   user_exists:
     expression: "{{ gt (len .fetch_user) 0 }}"
@@ -268,7 +269,7 @@ conditionals:
 
 **Role-Based Access Control:**
 
-```docs/references/concepts/conditionals.mdx
+```yaml
 conditionals:
   is_privileged:
     expression: |
@@ -282,7 +283,7 @@ conditionals:
 
 **Password Verification:**
 
-```docs/references/concepts/conditionals.mdx
+```yaml
 conditionals:
   verify_password:
     expression: "{{ bcrypt (param \"password\") .user.password \"Password\" }}"
@@ -296,7 +297,7 @@ conditionals:
 
 When validation functions like `notempty`, `email`, and `bcrypt` include a title parameter, validation errors are automatically collected. Access these errors in responses using the `.errors` variable.
 
-```docs/references/concepts/conditionals.mdx
+```yaml
 conditionals:
   validate:
     expression: |
@@ -321,7 +322,7 @@ responses:
 
 This returns a response like:
 
-```docs/references/concepts/conditionals.mdx
+```json
 {
   "success": false,
   "errors": ["Email is required", "Password is required"]

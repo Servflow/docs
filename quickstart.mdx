@@ -1,50 +1,61 @@
 ---
 title: "Quickstart"
-description: "Get started with ServFlow — choose your preferred approach to building APIs"
+description: "Choose how to deploy your first ServFlow API — visually or declaratively"
+icon: "rocket"
 ---
 
-ServFlow offers two ways to build APIs: a visual dashboard interface or YAML configuration files. Both approaches use the same underlying engine and produce the same results — choose the one that fits your workflow.
+ServFlow is an agent builder: you define AI agents and the workflows they run, and a Go engine serves them. There are two ways to build, and they produce the same objects — pick whichever fits how you work.
 
-## Choose Your Path
+## Choose your path
 
 <CardGroup cols={2}>
 
-<Card title="Dashboard Quickstart" icon="window" href="/quickstart-dashboard">
-  Build your first API using the visual web interface. Best for learning ServFlow and rapid prototyping.
-  
+<Card title="With the dashboard" icon="window" href="/quickstart-dashboard">
+  Create an agent and its first workflow in the visual builder. Best for learning ServFlow and prototyping.
+
   **Time:** ~5 minutes
 </Card>
 
-<Card title="YAML Quickstart" icon="code" href="/quickstart-yaml">
-  Build your first API using YAML configuration files. Best for code-first workflows and CI/CD pipelines.
-  
+<Card title="Declaratively" icon="code" href="/quickstart-declarative">
+  Define a workflow as a configuration file and deploy it with the CLI. Best for version control and CI/CD.
+
   **Time:** ~5 minutes
 </Card>
 
 </CardGroup>
 
-## Which Should I Choose?
+## Which should I choose?
 
-| If you... | Start with... |
-|-----------|---------------|
-| Are new to ServFlow | [Dashboard Quickstart](/quickstart-dashboard) |
-| Prefer visual interfaces | [Dashboard Quickstart](/quickstart-dashboard) |
-| Want to learn how workflows connect | [Dashboard Quickstart](/quickstart-dashboard) |
-| Prefer writing code/config files | [YAML Quickstart](/quickstart-yaml) |
-| Plan to use version control for APIs | [YAML Quickstart](/quickstart-yaml) |
-| Are setting up CI/CD pipelines | [YAML Quickstart](/quickstart-yaml) |
+| If you… | Start with… |
+|---|---|
+| Are new to ServFlow | [The dashboard](/quickstart-dashboard) |
+| Want to see how a workflow fits together | [The dashboard](/quickstart-dashboard) |
+| Prefer writing configuration in an editor | [Declaratively](/quickstart-declarative) |
+| Plan to keep your APIs in version control | [Declaratively](/quickstart-declarative) |
+| Are setting up CI/CD | [Declaratively](/quickstart-declarative) |
 
 <Tip>
-You can switch between approaches at any time. The dashboard saves configurations as YAML files, so you can start visually and later manage configs in code — or vice versa. See [Running Modes](/running-modes) for more details.
+You can switch at any time. The dashboard and the CLI read and write the same objects, so you can prototype visually and then manage the result in code — or the reverse.
 </Tip>
 
 ## Prerequisites
 
-Before starting either quickstart, make sure you have ServFlow Pro installed:
+Both tutorials need ServFlow Pro installed and an account created on first run.
 
-- **Docker** (recommended) or the ServFlow Pro binary
-- A terminal or command-line interface
-
-<Card title="Installation Guide" icon="download" href="/installation">
-  Follow the installation guide if you haven't set up ServFlow Pro yet.
+<Card title="Installation" icon="download" href="/installation">
+  Install ServFlow, start the server, and create your first account.
 </Card>
+
+## Next steps
+
+<CardGroup cols={2}>
+
+<Card title="Running ServFlow" icon="server" href="/running-modes">
+  What an instance serves, and how to deploy it.
+</Card>
+
+<Card title="Actions" icon="play" href="/concepts/actions/overview">
+  The building blocks you put inside a workflow.
+</Card>
+
+</CardGroup>

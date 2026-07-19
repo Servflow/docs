@@ -20,31 +20,36 @@
         "groups": [
           {
             "group": "Getting Started",
+            "icon": "flag",
             "pages": [
               "index",
               "installation",
               {
                 "group": "Quickstart",
+                "icon": "rocket",
                 "pages": [
                   "quickstart",
                   "quickstart-dashboard",
-                  "quickstart-yaml"
+                  "quickstart-declarative"
                 ]
               },
               "running-modes",
               "development"
             ]
           },
-
           {
             "group": "Concepts",
+            "icon": "lightbulb",
             "pages": [
+              "concepts/agents",
               {
                 "group": "Actions",
+                "icon": "bolt",
                 "pages": [
                   "concepts/actions/overview",
                   {
                     "group": "Available Actions",
+                    "icon": "table-list",
                     "pages": [
                       "concepts/actions/available",
                       "concepts/actions/data-operations",
@@ -69,7 +74,11 @@
           },
           {
             "group": "References",
-            "pages": ["references/configuration", "references/secrets"]
+            "icon": "book",
+            "pages": [
+              "references/configuration",
+              "references/secrets"
+            ]
           }
         ]
       },
@@ -78,25 +87,9 @@
         "groups": [
           {
             "group": "Tutorials",
-            "pages": ["tutorials/telegram-binance-bot"]
-          }
-        ]
-      },
-      {
-        "tab": "API Reference",
-        "hidden": true,
-        "groups": [
-          {
-            "group": "API Documentation",
-            "pages": ["api-reference/introduction"]
-          },
-          {
-            "group": "Endpoint Examples",
+            "icon": "graduation-cap",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "tutorials/telegram-binance-bot"
             ]
           }
         ]
@@ -116,8 +109,8 @@
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://dash.servflow.io"
+      "label": "Get Started",
+      "href": "https://servflow.mintlify.app/quickstart"
     }
   },
   "contextual": {

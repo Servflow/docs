@@ -1,118 +1,122 @@
 ---
-title: "Dashboard Quickstart"
-description: "Create your first Hello World API with the ServFlow dashboard in under 5 minutes"
+title: "Deploy your first API with the dashboard"
+description: "Create an agent and its first workflow in the ServFlow visual builder, then call the live endpoint"
+icon: "window"
 ---
 
-ServFlow is a visual backend engine that lets you build APIs through an intuitive dashboard interface. This guide walks you through creating a simple "Hello World" API endpoint using the dashboard. By the end, you'll have a working API that responds to HTTP requests.
+ServFlow is an agent builder: you define AI agents and the workflows they run, and a Go engine serves them. The dashboard is the visual way to do that — you create an agent, add workflows to it, and wire each workflow up on a canvas.
+
+In this tutorial you'll create an agent, give it a "Hello World" HTTP workflow, and call the endpoint.
 
 <Tip>
-Prefer writing configuration files directly? See the [YAML Quickstart](/quickstart-yaml) for a code-first approach, or learn about [Running Modes](/running-modes) to understand when to use each.
+Prefer configuration files? See [Deploy your first API declaratively](/quickstart-declarative). Both produce the same objects.
 </Tip>
 
-### Prerequisites
+## Prerequisites
 
-Before starting, make sure you have ServFlow Pro running with the dashboard enabled:
+ServFlow Pro running with the dashboard enabled:
 
-```docs/quickstart.mdx#L13-L14
+```bash
 servflow-pro start --config config.toml --dashboard
 ```
 
-<Tip>
-See the [Installation Guide](/installation) if you haven't set up ServFlow Pro yet.
-</Tip>
+If you haven't installed it yet, see [Installation](/installation) — and note that the first time you open the dashboard you'll be asked to complete setup and create an account.
 
-### Step 1: Open the Dashboard
+## What you'll build
 
-Open your browser and navigate to the ServFlow dashboard:
+An agent named `hello-agent` with one workflow that answers `GET /hello-world` with a JSON greeting.
 
-```docs/quickstart.mdx#L24-L25
-http://localhost:3000
+## Step 1: Open the dashboard and sign in
+
+Navigate to:
+
+```
+http://localhost:8080/dashboard
 ```
 
-You'll see the ServFlow builder interface with the **Files Available** panel on the left side.
-
-<Frame>
-  <img src="/images/getting-started/step-1.png" alt="ServFlow Dashboard with Files Available panel" />
-</Frame>
-
-### Step 2: Create a New API Configuration
-
-Click the **+** button in the **Files Available** panel header to create a new API configuration.
-
-<Frame>
-  <img src="/images/getting-started/step-2.png" alt="Create New API Configuration dialog" />
-</Frame>
-
-In the dialog that appears:
-1. Enter a name for your configuration (e.g., `hello-world`)
-2. Click **Create**
-
 <Note>
-Configuration names can only contain letters, numbers, hyphens (-), and underscores (_).
+The dashboard is served under `/dashboard` on the same port as the engine — there is no separate dashboard port.
 </Note>
 
-### Step 3: Configure Your HTTP Entry Point
+Sign in with the account you created during first run. On a brand-new instance you'll be prompted to complete setup and register instead; see [First run](/installation#first-run-create-your-account).
 
-After creating the configuration, you'll see a visual workflow editor with an **Http Request Entry** node automatically created.
+## Step 2: Create an agent
 
-<Frame>
-  <img src="/images/getting-started/step-3.png" alt="Workflow editor with HTTP Request Entry node" />
-</Frame>
+Agents are the top-level object in ServFlow — a workflow always belongs to one. On the landing screen choose **Create New**.
 
-The entry node is pre-configured with:
-- **Method**: GET
-- **ListenPath**: /hello-world (based on your configuration name)
+The **New agent** dialog appears. Fill it in:
 
-Click on the entry node to modify these settings if needed.
+1. **Agent name** — enter `hello-agent`
+2. Under **New**, choose the option to start **from scratch**
 
-### Step 4: Add a Response
+<Tip>
+The same dialog lists **Templates** — prebuilt agents you can start from instead of an empty one. They're the fastest way to see a working multi-workflow agent.
+</Tip>
 
-Click the **+** button below the Http Request Entry node to add a new node.
+Confirm to create the agent. ServFlow then prompts you to add its first workflow.
 
-<Frame>
-  <img src="/images/getting-started/step-4.png" alt="Node type selection dialog" />
-</Frame>
+## Step 3: Add a workflow
 
-A dialog will appear with three options:
-- **Actions** — Perform operations like HTTP requests, transformations, etc.
-- **Branch** — Add conditional logic to your workflow
-- **Responses** — Return a response to the client
+In the workflow dialog:
 
-Select **Responses** to add a response node to your workflow.
+1. **Name** — enter `hello-world`
+2. **Entry type** — choose **API (HTTP)**
+3. **Agent** — leave it set to `hello-agent`
 
-### Step 5: Configure the Response
+The entry type decides how the workflow is reached, and how it is attached to the agent:
 
-Configure your response node with a simple JSON payload:
+| Entry type | Reached by | Attached as |
+|---|---|---|
+| **API (HTTP)** | An inbound HTTP request | Webhook |
+| **Trigger (manual)** | Another workflow calling it | Task |
+| **Scheduled** | A cron schedule | Task |
 
-1. Set **Status Code** to `200`
-2. Add a response body:
+Since this is an HTTP endpoint, **API (HTTP)** attaches it to the agent as a webhook.
 
-```docs/quickstart.mdx#L86-L90
+## Step 4: Configure the entry
+
+The workflow opens on the builder canvas with an HTTP entry node already created, pre-filled from the workflow name:
+
+- **Method** — `GET`
+- **Listen path** — `/hello-world`
+
+Click the entry node to change either. The listen path is the URL the workflow answers on.
+
+## Step 5: Add a response
+
+Click the **+** button below the entry node. You're offered three kinds of step:
+
+- **Actions** — do work: call an AI model, query a database, make an HTTP request
+- **Branch** — route conditionally
+- **Responses** — return something to the caller
+
+Choose **Responses**, then configure it:
+
+1. Set the **status code** to `200`
+2. Set the response body to:
+
+```json
 {
   "message": "Hello, World!",
   "status": "success"
 }
 ```
 
-<Frame>
-  <img src="/images/getting-started/step-5.png" alt="Configured workflow with response" />
-</Frame>
+Make sure the entry node connects to this response node — the connection is what makes it run.
 
-### Step 6: Save Your Configuration
+## Step 6: Save
 
-Click the **Save** button in the top-left corner to save your API configuration.
+Click **Save**. The workflow is stored and served immediately; there's no separate deploy step and no restart.
 
-### Step 7: Test Your API
+## Step 7: Call your endpoint
 
-Your API is now live! Test it using curl:
+The engine owns the root path, so the workflow answers at its listen path directly:
 
-```docs/quickstart.mdx#L102-L103
+```bash
 curl http://localhost:8080/hello-world
 ```
 
-You should receive the response:
-
-```docs/quickstart.mdx#L108-L112
+```json
 {
   "message": "Hello, World!",
   "status": "success"
@@ -120,29 +124,37 @@ You should receive the response:
 ```
 
 <Check>
-**Congratulations!** You've successfully created your first API with ServFlow.
+You've built an agent with a live HTTP endpoint.
 </Check>
 
-## Next Steps
+## What you just created
 
-Now that you've created your first API, explore more features:
+- An **agent** — `hello-agent`, the container that owns this work
+- A **workflow** attached to it as a **webhook**, because it has an HTTP entry
+- Inside that workflow, an **entry** wired to a **response**
+
+Adding an action between the entry and the response is how a workflow starts doing real work — calling a model, reading a database, or hitting an API.
+
+Everything here is also reachable from the CLI: this agent and workflow can be listed, exported, and edited with `servflow-pro resource`.
+
+## Next steps
 
 <CardGroup cols={2}>
 
+<Card title="Deploy declaratively" icon="code" href="/quickstart-declarative">
+  Define the same workflow as a file and deploy it from the CLI.
+</Card>
+
+<Card title="Actions" icon="play" href="/concepts/actions/overview">
+  Add real work to your workflow.
+</Card>
+
+<Card title="Running ServFlow" icon="server" href="/running-modes">
+  Understand what your instance serves and how to deploy it.
+</Card>
+
 <Card title="Secrets Management" icon="key" href="/references/secrets">
-  Securely store API keys and credentials for your workflows.
-</Card>
-
-<Card title="Configuration Reference" icon="gear" href="/references/configuration">
-  Explore all ServFlow configuration options.
-</Card>
-
-<Card title="Local Development" icon="laptop-code" href="/development">
-  Set up your local development environment with tracing and more.
-</Card>
-
-<Card title="Installation" icon="download" href="/installation">
-  Deploy ServFlow to your infrastructure.
+  Store API keys your agent needs.
 </Card>
 
 </CardGroup>

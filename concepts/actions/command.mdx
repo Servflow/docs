@@ -1,6 +1,7 @@
 ---
 title: "Command"
 description: "Execute shell commands and scripts from your ServFlow workflows"
+icon: "terminal"
 ---
 
 The command action allows you to execute shell commands and scripts directly from your workflows. This is useful for system automation, running scripts, processing files, or integrating with command-line tools.
@@ -35,7 +36,7 @@ The command is executed in the system's default shell. You can use pipes, redire
 
 List files in a directory:
 
-```docs/actions/command.mdx
+```yaml
 actions:
   list_files:
     type: command
@@ -49,7 +50,7 @@ actions:
 
 Execute a script file:
 
-```docs/actions/command.mdx
+```yaml
 actions:
   run_backup:
     type: command
@@ -63,7 +64,7 @@ actions:
 
 Use workflow data in commands (with caution):
 
-```docs/actions/command.mdx
+```yaml
 actions:
   process_file:
     type: command
@@ -77,7 +78,7 @@ actions:
 
 Use pipes and shell operators:
 
-```docs/actions/command.mdx
+```yaml
 actions:
   search_logs:
     type: command
@@ -90,7 +91,7 @@ actions:
 
 Use the command output in subsequent actions:
 
-```docs/actions/command.mdx
+```yaml
 actions:
   get_disk_usage:
     type: command
@@ -116,7 +117,7 @@ actions:
 
 Access environment variables in commands:
 
-```docs/actions/command.mdx
+```yaml
 actions:
   deploy:
     type: command
@@ -136,7 +137,7 @@ actions:
 
 ### Unsafe Pattern
 
-```docs/actions/command.mdx
+```yaml
 # DON'T DO THIS - vulnerable to injection
 actions:
   unsafe_command:
@@ -149,7 +150,7 @@ actions:
 
 Validate and sanitize input before use:
 
-```docs/actions/command.mdx
+```yaml
 actions:
   validate_input:
     type: javascript
