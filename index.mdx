@@ -1,86 +1,61 @@
 ---
 title: "Introduction"
-description: "ServFlow is an agent builder — design AI agents and the workflows they run, then serve them from a fast Go engine"
+description: "ServFlow is an agent builder: design AI agents and the workflows they run, then serve them from a fast Go engine"
 icon: "house"
 ---
 
-## What is ServFlow?
+ServFlow is an **agent builder**. You describe an AI agent: what it should do, which models and tools it can use, and how the outside world reaches it. ServFlow runs it for you. There's no glue code to write and no framework to learn: the agent is the product, and a compiled Go engine serves it.
 
-ServFlow is an **agent builder**. You define AI agents — what they know, which tools they can call, and how the outside world reaches them — and ServFlow serves them from a compiled Go engine.
+## The parts of ServFlow
 
-An **agent** is the main object. Each agent owns:
+Most agent projects die in the plumbing: a prompt here, a webhook server there, a cron job somewhere else, and a growing pile of scripts holding them together. ServFlow gives every one of those pieces a home, all created and managed in one place:
 
-- **Workflows** — the units of work it runs, either as inbound HTTP endpoints (*webhooks*) or as internal and scheduled jobs (*tasks*)
-- **A workspace** — files the agent can read and write
-- **Integrations and secrets** — the AI models, databases, and APIs it is allowed to use
+- **[Agents](/concepts/agents)** — the top-level object. An agent has a name, a model, and instructions, and everything below belongs to one.
+- **Workflows** — the work an agent performs, either as HTTP endpoints the world can call (*webhooks*) or as scheduled and internal jobs (*tasks*).
+- **[Tools](/concepts/actions/overview)** — what the agent can decide to do while it works: query a database, hit an API, transform data, run a workflow. The same building blocks compose workflows.
+- **Context retrieval** — the agent pulls in what it needs to know before it responds: search a vector store, look up records in a database, read files from its workspace.
+- **A workspace** — files the agent can read and write, so it has somewhere to keep memories, state, and output.
+- **Integrations and [secrets](/references/secrets)** — the AI models, databases, and APIs the agent is allowed to use, with credentials stored encrypted and out of your configs.
+- **The dashboard and the CLI** — two ways to build the same objects. Design visually on the canvas, or declare agents as JSON or YAML files, deploy them from the CLI, and check them into git.
 
-A workflow is a graph: an **entry** receives a request, **actions** do the work, **conditionals** branch, and **responses** return a result. The same engine that powers an agent's tools also serves plain HTTP APIs, so ServFlow works just as well when you only want an endpoint.
+## Not just one kind of agent
 
-<Card title="Deploy your first API in 5 minutes" icon="rocket" href="/quickstart" horizontal>
-  Pick the dashboard or the declarative path and ship a working endpoint.
-</Card>
+ServFlow doesn't box you into a single shape of agent. Here are some examples of agents you can create:
 
-## Why ServFlow?
+- A conversational agent that answers questions in a chat widget or on Telegram
+- An autonomous agent that reads pull requests and comments on them
+- A scheduled agent that watches data sources and reports what changed
+- A plain HTTP API. The same engine serves ordinary endpoints, so ServFlow works even when no AI is involved
 
-<CardGroup cols={2}>
-  <Card title="Agents as first-class objects" icon="robot">
-    Bundle prompts, tools, workflows, and a workspace under one named agent instead of wiring scripts together.
-  </Card>
-  <Card title="Build visually or declaratively" icon="wand-magic-sparkles">
-    Design in the visual builder, or define agents and workflows as JSON/YAML and deploy them from the CLI.
-  </Card>
-  <Card title="Connect your infrastructure" icon="database">
-    Integrate the databases, vector stores, and APIs you already run — PostgreSQL, MongoDB, and more.
-  </Card>
-  <Card title="Built with Go" icon="bolt">
-    A compiled engine with minimal overhead, so agents and APIs stay fast under real traffic.
-  </Card>
-</CardGroup>
+A workflow is a graph of tools: call a model, query a database, hit an API, branch, transform. Whatever shape your agent takes, it's built from the same pieces.
 
-## How it works
+## What makes it different
 
-1. **Create an agent** — give it a name, and optionally start from a template
-2. **Add workflows** — an HTTP entry for inbound requests, or a trigger entry for internal and scheduled work
-3. **Add actions** — call AI models, query databases, hit external APIs, transform data
-4. **Configure responses** — decide what the workflow returns
-5. **Run it** — locally or on your own infrastructure
+**Agents are first-class, deployable objects.** One agent bundles its prompts, tools, workflows, workspace, and credentials under a single name, so you can look at it, version it, move it, and delete it as one thing.
 
-## Three ways to build
+**It bends to your systems, not the other way around.** Integrations connect agents to the infrastructure you already run: your PostgreSQL, your MongoDB, your vector store, your internal APIs. And because every agent is a plain JSON or YAML config underneath, you can customize any part of it and manage it like the rest of your code.
 
-ServFlow gives you the same engine through three interfaces — mix them freely:
+**It's self-contained.** A single binary serves your agents, the API, and the dashboard, with SQLite for storage. There's no cluster to stand up and no fleet of services to keep alive.
 
-| Approach | Best for | Start here |
-|---|---|---|
-| **Dashboard** | Learning, prototyping, visual debugging | [Deploy with the dashboard](/quickstart-dashboard) |
-| **Declarative (CLI + config files)** | Version control, CI/CD, reproducible deploys | [Deploy declaratively](/quickstart-declarative) |
-| **Headless** | Production, containers, minimal surface | [Running ServFlow](/running-modes) |
+**Local models are first-class.** A provider is just an endpoint and a credential, so you can point your agents at any OpenAI-compatible server: Ollama or LM Studio on your machine, vLLM or LiteLLM on your own hardware. Pair a local model with the lightweight engine and the whole stack runs on one box, with nothing leaving it.
 
-Configurations created in the dashboard are the same objects the CLI reads and writes, so you can prototype visually and then manage the result in code.
+## Light and fast
 
-## Deployment options
+The engine is compiled Go: one process, a low memory footprint, and near-instant startup. It stays fast under real traffic, so your agents' latency comes from the models they call, not from the platform running them. The same binary is comfortable on a laptop, in a container, or on a small VM.
 
-<CardGroup cols={2}>
-  <Card title="Self-hosted" icon="server">
-    Run ServFlow on your own infrastructure for full control over your data and environment.
-  </Card>
-  <Card title="Cloud" icon="cloud">
-    Use ServFlow Cloud for managed infrastructure without maintaining servers yourself.
-  </Card>
-</CardGroup>
+## Monitor your agents
+
+Every run is traced end to end: which model was called, how many tokens it used, which tools it invoked, where the time went, and what failed. Analysing those traces tells you your agents' success rate, not just their uptime: how often runs complete, where they go wrong, and what each one costs.
+
+Traces follow the OpenTelemetry standard, so they work with the observability stack you already have. **ServFlow Cloud** takes this further: it hosts your agents on managed infrastructure and turns those traces into insight you can use to improve them.
 
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Installation" icon="download" href="/installation">
-    Install ServFlow and create your first account.
+  <Card title="Get started" icon="rocket" href="/installation">
+    Install ServFlow, create your account, and deploy your first agent.
   </Card>
-  <Card title="Quickstart" icon="play" href="/quickstart">
-    Deploy your first API with the dashboard or declaratively.
-  </Card>
-  <Card title="Running ServFlow" icon="server" href="/running-modes">
-    Understand what the server serves and how to deploy it.
-  </Card>
-  <Card title="Configuration Reference" icon="gear" href="/references/configuration">
-    Every TOML option and environment variable.
+  <Card title="Core concepts" icon="book" href="/concepts/agents">
+    Understand agents, workflows, and how the pieces fit together.
   </Card>
 </CardGroup>
