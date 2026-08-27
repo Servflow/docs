@@ -23,16 +23,22 @@
             "icon": "flag",
             "pages": [
               "index",
-              "installation",
-              {
-                "group": "Quickstart",
-                "icon": "rocket",
-                "pages": [
-                  "quickstart",
-                  "quickstart-dashboard",
-                  "quickstart-declarative"
-                ]
-              },
+              "installation"
+            ]
+          },
+          {
+            "group": "Quickstart",
+            "icon": "rocket",
+            "pages": [
+              "quickstart",
+              "quickstart-dashboard",
+              "quickstart-declarative"
+            ]
+          },
+          {
+            "group": "Running ServFlow",
+            "icon": "server",
+            "pages": [
               "running-modes",
               "development"
             ]
