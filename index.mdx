@@ -6,19 +6,19 @@ icon: "house"
 
 ServFlow is an **agent builder**. You describe an AI agent: what it should do, which models and tools it can use, and how the outside world reaches it. ServFlow runs it for you. There's no glue code to write and no framework to learn: the agent is the product, and a compiled Go engine serves it.
 
-## The parts of ServFlow
+## How ServFlow works
 
-Most agent projects die in the plumbing: a prompt here, a webhook server there, a cron job somewhere else, and a growing pile of scripts holding them together. ServFlow gives every one of those pieces a home, all created and managed in one place:
+ServFlow is the only system you need to run and manage agents. The plumbing you would otherwise assemble yourself (webhook servers, cron jobs, sandboxed file storage, credential handling) is built in, and everything an agent depends on is created and managed in one place:
 
-- **[Agents](/concepts/agents)** — the top-level object. An agent has a name, a model, and instructions, and everything below belongs to one.
-- **Workflows** — the work an agent performs, either as HTTP endpoints the world can call (*webhooks*) or as scheduled and internal jobs (*tasks*).
-- **[Tools](/concepts/actions/overview)** — what the agent can decide to do while it works: query a database, hit an API, transform data, run a workflow. The same building blocks compose workflows.
-- **Context retrieval** — the agent pulls in what it needs to know before it responds: search a vector store, look up records in a database, read files from its workspace.
-- **A workspace** — files the agent can read and write, so it has somewhere to keep memories, state, and output.
-- **Integrations and [secrets](/references/secrets)** — the AI models, databases, and APIs the agent is allowed to use, with credentials stored encrypted and out of your configs.
-- **The dashboard and the CLI** — two ways to build the same objects. Design visually on the canvas, or declare agents as JSON or YAML files, deploy them from the CLI, and check them into git.
+- **[Agents](/concepts/agents)**: the top-level object. An agent has a name, a model, and instructions, and everything below belongs to one.
+- **Workflows**: the work an agent performs, either as HTTP endpoints the world can call (*webhooks*) or as scheduled and internal jobs (*tasks*).
+- **[Tools](/concepts/actions/overview)**: what the agent can decide to do while it works, such as query a database, hit an API, transform data, or run a workflow. The same building blocks compose workflows.
+- **Context retrieval**: the agent pulls in what it needs to know before it responds, whether by searching a vector store, looking up records in a database, or reading files from its workspace.
+- **A workspace**: files the agent can read and write, so it has somewhere to keep memories, state, and output.
+- **Integrations and [secrets](/references/secrets)**: the AI models, databases, and APIs the agent is allowed to use, with credentials stored encrypted and out of your configs.
+- **The dashboard and the CLI**: two ways to build the same objects. Design visually on the canvas, or declare agents as JSON or YAML files, deploy them from the CLI, and check them into git.
 
-## Not just one kind of agent
+## Example agents
 
 ServFlow doesn't box you into a single shape of agent. Here are some examples of agents you can create:
 
@@ -37,13 +37,11 @@ A workflow is a graph of tools: call a model, query a database, hit an API, bran
 
 **It's self-contained.** A single binary serves your agents, the API, and the dashboard, with SQLite for storage. There's no cluster to stand up and no fleet of services to keep alive.
 
+**It's light and fast.** The engine is compiled Go: one process, a low memory footprint, and near-instant startup. It stays fast under real traffic, so your agents' latency comes from the models they call, not from the platform running them. The same binary is comfortable on a laptop, in a container, or on a small VM.
+
 **Local models are first-class.** A provider is just an endpoint and a credential, so you can point your agents at any OpenAI-compatible server: Ollama or LM Studio on your machine, vLLM or LiteLLM on your own hardware. Pair a local model with the lightweight engine and the whole stack runs on one box, with nothing leaving it.
 
-## Light and fast
-
-The engine is compiled Go: one process, a low memory footprint, and near-instant startup. It stays fast under real traffic, so your agents' latency comes from the models they call, not from the platform running them. The same binary is comfortable on a laptop, in a container, or on a small VM.
-
-## Monitor your agents
+## Monitoring
 
 Every run is traced end to end: which model was called, how many tokens it used, which tools it invoked, where the time went, and what failed. Analysing those traces tells you your agents' success rate, not just their uptime: how often runs complete, where they go wrong, and what each one costs.
 
