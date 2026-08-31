@@ -12,14 +12,14 @@ Vector operations allow you to store and retrieve vector embeddings from vector 
 
 Stores vector embeddings in a vector database along with associated metadata.
 
-### Integration ID
+### Vector Database
 
-The vector database integration to store vectors in.
+The vector store to write to.
 
 | | |
 |---|---|
-| **YAML Key** | `integrationID` |
-| **Type** | string |
+| **YAML Key** | `integration` |
+| **Type** | integration |
 | **Required** | Yes |
 
 ### Vectors
@@ -66,7 +66,7 @@ actions:
   store_embedding:
     type: storevector
     config:
-      integrationID: my_qdrant
+      integration: my_qdrant
       vectors: "{{ .generate_embedding }}"
       fields:
         content: "{{ param \"text\" }}"
@@ -84,14 +84,14 @@ actions:
 
 Retrieves vectors from a vector database for similarity search. Returns the most similar vectors to the provided query vector.
 
-### Integration ID
+### Vector Database
 
-The vector database integration to query.
+The vector store to search.
 
 | | |
 |---|---|
-| **YAML Key** | `integrationID` |
-| **Type** | string |
+| **YAML Key** | `integration` |
+| **Type** | integration |
 | **Required** | Yes |
 
 ### Vector
@@ -125,7 +125,7 @@ actions:
   search_similar:
     type: fetchvectors
     config:
-      integrationID: my_qdrant
+      integration: my_qdrant
       vector: "{{ .query_embedding }}"
       options:
         collection: documents
@@ -147,14 +147,14 @@ actions:
   embed_query:
     type: agent
     config:
-      integrationID: my_openai
+      providerID: 2
       userPrompt: "Generate an embedding for: {{ param \"question\" }}"
     next: action.search_docs
 
   search_docs:
     type: fetchvectors
     config:
-      integrationID: my_qdrant
+      integration: my_qdrant
       vector: "{{ .embed_query }}"
       options:
         collection: knowledge_base
@@ -164,7 +164,7 @@ actions:
   generate_answer:
     type: agent
     config:
-      integrationID: my_openai
+      providerID: 2
       systemPrompt: |
         Answer the user's question using only the provided context.
         Context: {{ .search_docs }}
@@ -181,14 +181,14 @@ actions:
   generate_embedding:
     type: agent
     config:
-      integrationID: my_openai
+      providerID: 2
       userPrompt: "Generate an embedding for: {{ param \"content\" }}"
     next: action.store_document
 
   store_document:
     type: storevector
     config:
-      integrationID: my_qdrant
+      integration: my_qdrant
       vectors: "{{ .generate_embedding }}"
       fields:
         content: "{{ param \"content\" }}"

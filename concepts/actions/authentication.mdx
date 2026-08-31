@@ -12,14 +12,14 @@ Authentication actions help you secure your ServFlow APIs. Use them to validate 
 
 Validates a JWT token and authenticates the user against database records. This action combines token verification with user lookup in a single step.
 
-### Integration ID
+### User Database
 
-The database integration to look up user records.
+The SQL or MongoDB integration holding the user records.
 
 | | |
 |---|---|
-| **YAML Key** | `integrationID` |
-| **Type** | string |
+| **YAML Key** | `integration` |
+| **Type** | integration |
 | **Required** | Yes |
 
 ### Token
@@ -84,7 +84,7 @@ actions:
   auth_user:
     type: authenticate
     config:
-      integrationID: my_database
+      integration: my_database
       token: "{{ header \"Authorization\" | trimPrefix \"Bearer \" }}"
       jwtKey: "{{ secret \"JWT_SECRET\" }}"
       databaseField: id
@@ -270,9 +270,9 @@ actions:
     next: action.create_user
 
   create_user:
-    type: store
+    type: save
     config:
-      integrationID: my_database
+      integration: my_database
       table: users
       fields:
         email: "{{ param \"email\" }}"
@@ -299,9 +299,9 @@ actions:
     next: action.create_user
 
   create_user:
-    type: store
+    type: save
     config:
-      integrationID: my_database
+      integration: my_database
       table: users
       fields:
         email: "{{ param \"email\" }}"
@@ -349,7 +349,7 @@ actions:
   fetch_user_data:
     type: fetch
     config:
-      integrationID: my_database
+      integration: my_database
       table: users
       filters:
         - field: id

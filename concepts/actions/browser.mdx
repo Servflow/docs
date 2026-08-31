@@ -1,0 +1,251 @@
+---
+title: "Browser"
+description: "Drive a headless Chromium browser to navigate, click, and capture pages"
+icon: "window"
+---
+
+Browser actions drive a headless Chromium instance: open a page, click an element, then read the rendered HTML or take a screenshot. Use them for pages that only make sense once JavaScript has run, where an [HTTP request](/concepts/actions/http-requests) would return an empty shell.
+
+<Note>
+All four actions need a `chromium` integration. See [Configuration Reference](/references/configuration) for setup details.
+</Note>
+
+<Warning>
+The integration holds **one** browser session, shared by every action that uses it — across steps and across concurrent requests. `chromium/body`, `chromium/click`, and `chromium/screenshot` all act on whatever page `chromium/navigate` last opened, so keep these steps in order, don't put them in a [parallel](/concepts/actions/flow-control#parallel) group, and expect interference if two requests drive the same integration at once. Give a workflow that needs isolation its own Chromium integration.
+</Warning>
+
+---
+
+## chromium/navigate
+
+Navigates the browser to a URL.
+
+### Browser
+
+The Chromium session to drive.
+
+| | |
+|---|---|
+| **YAML Key** | `integration` |
+| **Type** | integration |
+| **Required** | Yes |
+
+### URL
+
+The address to open.
+
+| | |
+|---|---|
+| **YAML Key** | `url` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Output
+
+`{{ .step_id }}` is an object:
+
+| Path | Type | Description |
+|---|---|---|
+| `success` | boolean | Whether the page was reached |
+| `url` | string | The address that was opened |
+| `message` | string | A sentence describing what happened |
+
+### Example
+
+```yaml
+actions:
+  open_page:
+    type: chromium/navigate
+    config:
+      integration: my_chromium
+      url: "https://example.com/reports/{{ param \"id\" }}"
+    next: action.read_page
+    fail: response.error
+```
+
+---
+
+## chromium/click
+
+Clicks an element on the current page using a CSS selector.
+
+### Browser
+
+The Chromium session to drive.
+
+| | |
+|---|---|
+| **YAML Key** | `integration` |
+| **Type** | integration |
+| **Required** | Yes |
+
+### Selector
+
+The CSS selector of the element to click.
+
+| | |
+|---|---|
+| **YAML Key** | `selector` |
+| **Type** | string |
+| **Required** | Yes |
+
+For example `#submit-button`, `.my-class`, or `button[type='submit']`.
+
+### Output
+
+`{{ .step_id }}` is an object:
+
+| Path | Type | Description |
+|---|---|---|
+| `success` | boolean | Whether the element was clicked |
+| `selector` | string | The selector that was clicked |
+
+### Example
+
+```yaml
+actions:
+  expand_details:
+    type: chromium/click
+    config:
+      integration: my_chromium
+      selector: "button.show-more"
+    next: action.read_page
+```
+
+---
+
+## chromium/body
+
+Gets the rendered body HTML of the current page.
+
+### Browser
+
+The Chromium session to drive.
+
+| | |
+|---|---|
+| **YAML Key** | `integration` |
+| **Type** | integration |
+| **Required** | Yes |
+
+### Output
+
+`{{ .step_id }}` holds the page's rendered HTML.
+
+### Example
+
+```yaml
+actions:
+  read_page:
+    type: chromium/body
+    config:
+      integration: my_chromium
+    next: action.extract
+```
+
+---
+
+## chromium/screenshot
+
+Takes a full-page screenshot and returns it as a PNG.
+
+### Browser
+
+The Chromium session to drive.
+
+| | |
+|---|---|
+| **YAML Key** | `integration` |
+| **Type** | integration |
+| **Required** | Yes |
+
+### Output
+
+`{{ .step_id }}` holds the screenshot as PNG bytes. It is a **file**, not text, so pass it to a step that takes a file — [`download`](/concepts/actions/system#download) to save it, or an agent's `fileUpload` to show it to a model.
+
+### Example
+
+Capture a page and save it to the workspace:
+
+```yaml
+actions:
+  capture:
+    type: chromium/screenshot
+    config:
+      integration: my_chromium
+    next: action.save_shot
+
+  save_shot:
+    type: download
+    config:
+      file:
+        type: action
+        identifier: capture
+      destinationPath: "screenshots"
+      fileName: "{{ param \"id\" }}.png"
+      overwrite: true
+    next: response.success
+```
+
+---
+
+## Common Patterns
+
+### Scrape a JavaScript-Rendered Page
+
+Open the page, expand it, then read the rendered HTML:
+
+```yaml
+actions:
+  open_page:
+    type: chromium/navigate
+    config:
+      integration: my_chromium
+      url: "{{ param \"url\" }}"
+    next: action.expand
+
+  expand:
+    type: chromium/click
+    config:
+      integration: my_chromium
+      selector: "button.show-more"
+    next: action.read_body
+
+  read_body:
+    type: chromium/body
+    config:
+      integration: my_chromium
+    next: action.summarize
+
+  summarize:
+    type: agent
+    config:
+      providerID: 2
+      systemPrompt: "Extract the report's key figures as JSON."
+      userPrompt: "{{ .read_body }}"
+    next: response.summary
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="HTTP Requests" icon="globe" href="/concepts/actions/http-requests">
+  Fetch a page without a browser when JavaScript isn't needed.
+</Card>
+
+<Card title="System" icon="terminal" href="/concepts/actions/system">
+  Save captured files to the workspace.
+</Card>
+
+<Card title="Transformation" icon="wand-magic-sparkles" href="/concepts/actions/transformation">
+  Parse scraped HTML with JavaScript.
+</Card>
+
+<Card title="Actions Overview" icon="play" href="/concepts/actions/overview">
+  Learn the fundamentals of ServFlow actions.
+</Card>
+
+</CardGroup>

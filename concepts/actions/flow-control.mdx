@@ -39,6 +39,57 @@ Setting this to `false` allows all branches to complete even if some fail, usefu
 
 ---
 
+## callworkflow
+
+Runs another workflow and returns its result. The target must be a workflow with a trigger entry — a workflow is reached only by invocation, never by an HTTP request.
+
+### Workflow ID
+
+The `config_id` of the workflow to run. This is fixed at author time, not templated, so the target is known up front.
+
+| | |
+|---|---|
+| **YAML Key** | `workflowID` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Inputs
+
+Values to pass to the target workflow, as a map of input name to template. Each template is resolved against the **calling** workflow's request.
+
+| | |
+|---|---|
+| **YAML Key** | `inputs` |
+| **Type** | map |
+| **Required** | No |
+
+Inside the target workflow, read them with `{{ input "name" }}`.
+
+### Output
+
+`{{ .step_id }}` holds whatever the called workflow returned, parsed as JSON when it is JSON.
+
+<Note>
+A workflow cannot call itself, directly or through a chain. The cycle is caught at runtime.
+</Note>
+
+### Example
+
+```yaml
+actions:
+  enrich:
+    type: callworkflow
+    config:
+      workflowID: lookup-customer
+      inputs:
+        customer_id: "{{ param \"id\" }}"
+        region: "{{ .request_meta.region }}"
+    next: action.build_report
+    fail: response.error
+```
+
+---
+
 ## Examples
 
 ### Fetch Multiple Data Sources
@@ -61,19 +112,19 @@ actions:
   fetch_users:
     type: fetch
     config:
-      integrationID: my_database
+      integration: my_database
       table: users
 
   fetch_orders:
     type: fetch
     config:
-      integrationID: my_database
+      integration: my_database
       table: orders
 
   fetch_products:
     type: fetch
     config:
-      integrationID: my_database
+      integration: my_database
       table: products
 ```
 
@@ -153,7 +204,7 @@ actions:
   process_images:
     type: fetch
     config:
-      integrationID: my_database
+      integration: my_database
       table: images
       filters:
         - field: status
@@ -176,7 +227,7 @@ actions:
   process_documents:
     type: fetch
     config:
-      integrationID: my_database
+      integration: my_database
       table: documents
       filters:
         - field: status
@@ -187,7 +238,7 @@ actions:
   analyze_documents:
     type: agent
     config:
-      integrationID: my_openai
+      providerID: 2
       systemPrompt: "Analyze and summarize each document."
       userPrompt: "{{ jsonout .process_documents }}"
 ```
@@ -211,7 +262,7 @@ actions:
   fetch_required:
     type: fetch
     config:
-      integrationID: my_database
+      integration: my_database
       table: users
       filters:
         - field: id
@@ -220,7 +271,7 @@ actions:
       single: true
 
   fetch_optional_cache:
-    type: memory_fetch
+    type: get_key
     config:
       key: "user_preferences_{{ param \"user_id\" }}"
 

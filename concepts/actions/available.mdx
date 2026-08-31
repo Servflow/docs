@@ -10,23 +10,23 @@ ServFlow provides a comprehensive set of actions to build powerful workflows. Br
 
 ## Data Operations
 
-Actions for reading, writing, updating, and deleting data in databases.
+Actions for reading, writing, and deleting data in databases.
 
 <CardGroup cols={2}>
   <Card title="fetch" href="/concepts/actions/data-operations#fetch">
     Retrieve data from a database table
   </Card>
-  <Card title="store" href="/concepts/actions/data-operations#store">
-    Store a new record in a database table
-  </Card>
-  <Card title="update" href="/concepts/actions/data-operations#update">
-    Update existing records
+  <Card title="save" href="/concepts/actions/data-operations#save">
+    Insert a new record, or update existing ones
   </Card>
   <Card title="delete" href="/concepts/actions/data-operations#delete">
     Delete records from a database table
   </Card>
   <Card title="mongoquery" href="/concepts/actions/data-operations#mongoquery">
     Execute native MongoDB queries
+  </Card>
+  <Card title="firestore" href="/concepts/actions/data-operations#firestore">
+    Store documents in Google Cloud Firestore
   </Card>
 </CardGroup>
 
@@ -98,7 +98,7 @@ Actions for integrating AI models into your workflows.
 
 <CardGroup cols={2}>
   <Card title="agent" href="/concepts/actions/ai-agents#agent">
-    Interact with AI models like GPT
+    Call an AI model, with tools
   </Card>
 </CardGroup>
 
@@ -110,7 +110,64 @@ Actions for controlling workflow execution.
 
 <CardGroup cols={2}>
   <Card title="parallel" href="/concepts/actions/flow-control#parallel">
-    Execute multiple actions simultaneously
+    Execute multiple steps simultaneously
+  </Card>
+  <Card title="callworkflow" href="/concepts/actions/flow-control#callworkflow">
+    Run another workflow and use its result
+  </Card>
+</CardGroup>
+
+---
+
+## GitHub
+
+Actions for reading and commenting on pull requests as a GitHub App.
+
+<CardGroup cols={2}>
+  <Card title="github_fetch" href="/concepts/actions/github#github_fetch">
+    Read PR metadata, diff, or conversation
+  </Card>
+  <Card title="github_post" href="/concepts/actions/github#github_post">
+    Post a comment on a pull request
+  </Card>
+</CardGroup>
+
+---
+
+## Discord
+
+Actions for sending Discord messages and reading server context.
+
+<CardGroup cols={2}>
+  <Card title="discord/sendmessage" href="/concepts/actions/discord#discordsendmessage">
+    Send a message to a channel, thread, or person
+  </Card>
+  <Card title="discord/readmessages" href="/concepts/actions/discord#discordreadmessages">
+    Read a channel's recent history
+  </Card>
+  <Card title="discord/readguild" href="/concepts/actions/discord#discordreadguild">
+    Read server details, channels, roles, or members
+  </Card>
+</CardGroup>
+
+---
+
+## Browser
+
+Actions for driving a headless Chromium browser.
+
+<CardGroup cols={2}>
+  <Card title="chromium/navigate" href="/concepts/actions/browser#chromiumnavigate">
+    Open a URL in the browser
+  </Card>
+  <Card title="chromium/click" href="/concepts/actions/browser#chromiumclick">
+    Click an element by CSS selector
+  </Card>
+  <Card title="chromium/body" href="/concepts/actions/browser#chromiumbody">
+    Read the rendered page HTML
+  </Card>
+  <Card title="chromium/screenshot" href="/concepts/actions/browser#chromiumscreenshot">
+    Capture a full-page screenshot
   </Card>
 </CardGroup>
 
@@ -133,23 +190,26 @@ Actions for sending messages and notifications.
 Actions for system-level operations.
 
 <CardGroup cols={2}>
-  <Card title="command" href="/concepts/actions/command#command">
-    Execute shell commands
+  <Card title="shell" href="/concepts/actions/system#shell">
+    Execute shell scripts
+  </Card>
+  <Card title="download" href="/concepts/actions/system#download">
+    Save a file to the workspace
   </Card>
 </CardGroup>
 
 ---
 
-## Memory
+## Key-Value Storage
 
-Actions for temporary data storage during workflow execution.
+Actions for storing and retrieving values by key.
 
 <CardGroup cols={2}>
-  <Card title="memory_store" href="/concepts/actions/memory#memory-store">
-    Store data in temporary memory
+  <Card title="store_key" href="/concepts/actions/key-value#store_key">
+    Store a value by key
   </Card>
-  <Card title="memory_fetch" href="/concepts/actions/memory#memory-fetch">
-    Retrieve data from temporary memory
+  <Card title="get_key" href="/concepts/actions/key-value#get_key">
+    Retrieve a value by key
   </Card>
 </CardGroup>
 

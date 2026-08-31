@@ -1,0 +1,228 @@
+---
+title: "GitHub"
+description: "Read pull request context and post comments as a GitHub App"
+icon: "github"
+---
+
+GitHub actions read and write pull requests through a configured GitHub App integration. They are how an agent sees a diff, reads the conversation on a pull request, and replies to it.
+
+<Note>
+Both actions need a `github_app` integration. See [Configuration Reference](/references/configuration) for setup details.
+</Note>
+
+---
+
+## github_fetch
+
+Reads pull request context — metadata, the diff, or the conversation — as a GitHub App.
+
+### GitHub App
+
+The GitHub App integration to act as. It carries the App credentials and its installation.
+
+| | |
+|---|---|
+| **YAML Key** | `integration` |
+| **Type** | integration |
+| **Required** | Yes |
+
+### Repo
+
+The repository, as `owner/name`.
+
+| | |
+|---|---|
+| **YAML Key** | `repo` |
+| **Type** | string |
+| **Required** | Yes |
+
+### PR Number
+
+The pull request number to read.
+
+| | |
+|---|---|
+| **YAML Key** | `pr_number` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Resource
+
+Which part of the pull request to read.
+
+| | |
+|---|---|
+| **YAML Key** | `resource` |
+| **Type** | string |
+| **Required** | Yes |
+
+**Allowed values:** `pr_meta`, `pr_diff`, `pr_conversation`
+
+### Output
+
+The output depends on `resource`:
+
+| `resource` | `{{ .step_id }}` holds |
+|---|---|
+| `pr_meta` | The pull request as GitHub returns it — `title`, `body`, `state`, `user.login`, `head.ref`, and the rest of GitHub's own field names |
+| `pr_diff` | The diff, as unified diff text |
+| `pr_conversation` | An object with `issue_comments`, `review_comments`, and `reviews`, each an array as GitHub returns them |
+
+### Example
+
+```yaml
+actions:
+  get_diff:
+    type: github_fetch
+    config:
+      integration: gh-app-main
+      repo: "{{ .github.repo }}"
+      pr_number: "{{ .github.pr_number }}"
+      resource: pr_diff
+    next: action.review
+    fail: response.error
+```
+
+---
+
+## github_post
+
+Posts a comment on a GitHub pull request as a GitHub App.
+
+### GitHub App
+
+The GitHub App integration to act as. It carries the App credentials and its installation.
+
+| | |
+|---|---|
+| **YAML Key** | `integration` |
+| **Type** | integration |
+| **Required** | Yes |
+
+### Repo
+
+The repository, as `owner/name`.
+
+| | |
+|---|---|
+| **YAML Key** | `repo` |
+| **Type** | string |
+| **Required** | Yes |
+
+### PR Number
+
+The pull request number to comment on.
+
+| | |
+|---|---|
+| **YAML Key** | `pr_number` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Body
+
+The comment body, in GitHub-flavored markdown.
+
+| | |
+|---|---|
+| **YAML Key** | `body` |
+| **Type** | text_area |
+| **Required** | Yes |
+
+### Resource
+
+What to post.
+
+| | |
+|---|---|
+| **YAML Key** | `resource` |
+| **Type** | string |
+| **Required** | Yes |
+| **Default** | `issue_comment` |
+
+**Allowed values:** `issue_comment`
+
+### Output
+
+`{{ .step_id }}` holds the comment GitHub created, as GitHub returned it. Its `html_url` addresses the new comment.
+
+### Example
+
+```yaml
+actions:
+  post_review:
+    type: github_post
+    config:
+      integration: gh-app-main
+      repo: "{{ .github.repo }}"
+      pr_number: "{{ .github.pr_number }}"
+      resource: issue_comment
+      body: "{{ .review }}"
+    next: response.success
+    fail: response.error
+```
+
+---
+
+## Common Patterns
+
+### Read the Diff, Then Comment
+
+Fetch a pull request's diff, review it, and post the result:
+
+```yaml
+actions:
+  fetch_diff:
+    type: github_fetch
+    config:
+      integration: gh-app-main
+      repo: "{{ .github.repo }}"
+      pr_number: "{{ .github.pr_number }}"
+      resource: pr_diff
+    next: action.review
+
+  review:
+    type: agent
+    config:
+      providerID: 2
+      systemPrompt: "Review the diff and comment only on what matters."
+      userPrompt: "{{ .fetch_diff }}"
+    next: action.post
+
+  post:
+    type: github_post
+    config:
+      integration: gh-app-main
+      repo: "{{ .github.repo }}"
+      pr_number: "{{ .github.pr_number }}"
+      body: "{{ .review }}"
+    next: response.success
+```
+
+### Give an Agent a Posting Tool
+
+Rather than posting in a fixed step, let the agent decide when to comment by giving it `github_post` as an [action tool](/concepts/actions/ai-agents#action-tools).
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="AI Agents" icon="brain" href="/concepts/actions/ai-agents">
+  Give an agent GitHub actions as tools.
+</Card>
+
+<Card title="Discord" icon="discord" href="/concepts/actions/discord">
+  Read and send Discord messages.
+</Card>
+
+<Card title="HTTP Requests" icon="globe" href="/concepts/actions/http-requests">
+  Call any other API directly.
+</Card>
+
+<Card title="Actions Overview" icon="play" href="/concepts/actions/overview">
+  Learn the fundamentals of ServFlow actions.
+</Card>
+
+</CardGroup>

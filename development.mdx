@@ -1,33 +1,33 @@
 ---
 title: "Setting Up Your Local Environment"
-description: "Download and configure ServFlow Pro for local development"
+description: "Download and configure ServFlow for local development"
 icon: "laptop-code"
 ---
 
-ServFlow Pro is a visual backend engine for building and running APIs. This guide walks you through setting up ServFlow Pro on your local machine for development. By the end, you'll have a fully functional local environment ready to build and test APIs.
+ServFlow is a visual backend engine for building and running APIs. This guide walks you through setting up ServFlow on your local machine for development. By the end, you'll have a fully functional local environment ready to build and test APIs.
 
 <Tip>
-ServFlow Pro runs in two modes: **Dashboard Mode** (with `--dashboard`) for visual development, and **Headless Mode** (without `--dashboard`) for running YAML configurations directly. This guide focuses on Dashboard Mode for local development. See [Running Modes](/running-modes) to learn more.
+ServFlow runs in two modes: **Dashboard Mode** (with `--dashboard`) for visual development, and **Headless Mode** (without `--dashboard`) for running YAML configurations directly. This guide focuses on Dashboard Mode for local development. See [Running Modes](/running-modes) to learn more.
 </Tip>
 
 ## Prerequisites
 
-- **Docker** (recommended) or a downloaded ServFlow Pro binary
+- **Docker** (recommended) or a downloaded ServFlow binary
 - A terminal or command-line interface
 
 ## Download Options
 
 ### Using Docker (Recommended)
 
-Pull the official ServFlow Pro Docker image:
+Pull the official ServFlow Docker image:
 
 ```bash
-docker pull servflow/servflow-pro
+docker pull servflow/servflowai
 ```
 
 ### Using the Binary
 
-Download pre-built binaries from the [Releases](https://github.com/Servflow/servflow-pro/releases) page.
+Download pre-built binaries from the [Releases](https://github.com/Servflow/servflowai/releases) page.
 
 Available platforms:
 - **Linux** (x86_64, arm64)
@@ -35,15 +35,15 @@ Available platforms:
 
 ```bash
 # Download and extract (example for Linux x86_64)
-tar -xzf servflow-pro_Linux_x86_64.tar.gz
+tar -xzf servflowai_Linux_x86_64.tar.gz
 
 # Make executable
-chmod +x servflow-pro
+chmod +x servflowai
 ```
 
 ## Configuration Setup
 
-ServFlow Pro uses a TOML configuration file. Create a `config.toml` file in your working directory:
+ServFlow uses a TOML configuration file. Create a `config.toml` file in your working directory:
 
 ```toml
 [server]
@@ -68,7 +68,7 @@ The `config_folder` is the only required configuration. ServFlow will use sensib
 
 ## Port Configuration
 
-ServFlow Pro runs two servers:
+ServFlow runs two servers:
 
 | Server | Default Port | Purpose |
 |--------|--------------|---------|
@@ -148,7 +148,7 @@ If SQLite is not configured, ServFlow falls back to file-based storage. This is 
 
 ## Optional: Tracing with OpenTelemetry
 
-ServFlow Pro supports distributed tracing via OpenTelemetry, which helps you debug and monitor API workflows.
+ServFlow supports distributed tracing via OpenTelemetry, which helps you debug and monitor API workflows.
 
 ### Setting Up a Local Collector
 
@@ -186,25 +186,25 @@ export SERVFLOW_TRACING_COLLECTOR_ENDPOINT=http://localhost:4318
 
 Once configured, you can view traces at `http://localhost:16686`.
 
-## Running ServFlow Pro
+## Running ServFlow
 
 ### With Docker
 
 ```bash
 docker run -d \
-  --name servflow-pro \
+  --name servflowai \
   -p 8080:8080 \
   -p 3000:3000 \
   -v $(pwd)/config.toml:/app/config.toml \
   -v $(pwd)/data:/app/data \
   -v $(pwd)/configs:/app/configs \
-  servflow/servflow-pro start --config /app/config.toml --dashboard
+  servflow/servflowai start --config /app/config.toml --dashboard
 ```
 
 ### With the Binary
 
 ```bash
-./servflow-pro start --config config.toml --dashboard
+./servflowai start --config config.toml --dashboard
 ```
 
 ### Command Line Options
@@ -236,7 +236,7 @@ http://localhost:8080/dashboard
 The dashboard is served under `/dashboard` on the same port as the engine. On a fresh instance you'll be asked to complete setup and create an account before the builder appears — see [First run](/installation#first-run-create-your-account).
 
 <Check>
-**You're all set!** Your local ServFlow Pro environment is configured and running.
+**You're all set!** Your local ServFlow environment is configured and running.
 </Check>
 
 ## Next Steps

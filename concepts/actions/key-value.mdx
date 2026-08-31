@@ -1,20 +1,24 @@
 ---
-title: "Memory"
-description: "Store and retrieve temporary data in memory for caching and workflow state"
-icon: "memory"
+title: "Key-Value Storage"
+description: "Store and retrieve values by key for caching and workflow state"
+icon: "database"
 ---
 
-Memory actions allow you to store and retrieve data in temporary memory storage. This is useful for caching frequently accessed data, passing state between workflow executions, and implementing cache-aside patterns.
+Key-value actions store and retrieve values by key. This is useful for caching frequently accessed data, passing state between workflow executions, and implementing cache-aside patterns.
 
 <Note>
-Memory storage persists across workflow executions but is cleared when the server restarts. For persistent storage, use [Data Operations](/concepts/actions/data-operations).
+This storage is **persistent** — values survive a server restart. It is a simple key-value store, not a replacement for a database: for structured, queryable data use [Data Operations](/concepts/actions/data-operations).
+</Note>
+
+<Note>
+This is unrelated to an agent's `accessMemory` setting, which gives an agent file tools over its workspace. See [AI Agents](/concepts/actions/ai-agents#access-memory).
 </Note>
 
 ---
 
-## memory_store
+## store_key
 
-Stores data in temporary memory using a key-value pattern.
+Stores a key-value pair in persistent storage.
 
 ### Key
 
@@ -30,29 +34,33 @@ The unique identifier for storing the data. Use template syntax to create dynami
 Include unique identifiers in your keys to avoid collisions. For example: `user_{{ param "user_id" }}` or `cache_{{ .request_hash }}`.
 </Tip>
 
-### Contents
+### Value
 
 The data to store. Can be any value, including JSON objects.
 
 | | |
 |---|---|
-| **YAML Key** | `contents` |
+| **YAML Key** | `value` |
 | **Type** | string |
 | **Required** | Yes |
 
 Use `{{ jsonout .action_result }}` to store complex objects from previous actions.
 
+### Output
+
+`{{ .step_id }}` holds the value that was stored.
+
 ### Example
 
-Store a user object in memory:
+Store a user object:
 
 ```yaml
 actions:
   cache_user:
-    type: memory_store
+    type: store_key
     config:
       key: "user_{{ param \"user_id\" }}"
-      contents: "{{ jsonout .fetch_user }}"
+      value: "{{ jsonout .fetch_user }}"
     next: response.success
 ```
 
@@ -61,28 +69,43 @@ Store a computed value:
 ```yaml
 actions:
   store_token:
-    type: memory_store
+    type: store_key
     config:
       key: "auth_token_{{ .user.id }}"
-      contents: "{{ .generate_token }}"
+      value: "{{ .generate_token }}"
     next: action.use_token
 ```
 
 ---
 
-## memory_fetch
+## get_key
 
-Retrieves data from temporary memory storage using a key.
+Retrieves a value from persistent storage by key.
 
 ### Key
 
-The key to look up in memory storage.
+The key to look up.
 
 | | |
 |---|---|
 | **YAML Key** | `key` |
 | **Type** | string |
 | **Required** | Yes |
+
+### Fail If Empty
+
+Whether to fail the step when the key is not set. When `false`, a missing key yields an empty result and the workflow continues.
+
+| | |
+|---|---|
+| **YAML Key** | `failIfEmpty` |
+| **Type** | boolean |
+| **Required** | No |
+| **Default** | `false` |
+
+### Output
+
+`{{ .step_id }}` holds the stored value, or is empty when the key is not set.
 
 ### Example
 
@@ -91,13 +114,24 @@ Retrieve a cached user:
 ```yaml
 actions:
   get_cached_user:
-    type: memory_fetch
+    type: get_key
     config:
       key: "user_{{ param \"user_id\" }}"
     next: conditional.cache_hit
 ```
 
-The fetched value is available via `{{ .get_cached_user }}`. If the key doesn't exist, the result will be empty.
+Require the key to exist:
+
+```yaml
+actions:
+  load_config:
+    type: get_key
+    config:
+      key: "app_config"
+      failIfEmpty: true
+    next: action.apply_config
+    fail: response.not_configured
+```
 
 ---
 
@@ -105,12 +139,12 @@ The fetched value is available via `{{ .get_cached_user }}`. If the key doesn't 
 
 ### Cache-Aside Pattern
 
-Check the cache first, fetch from database if not found, then update the cache:
+Check the cache first, fetch from the database if not found, then update the cache:
 
 ```yaml
 actions:
   check_cache:
-    type: memory_fetch
+    type: get_key
     config:
       key: "data_{{ param \"id\" }}"
     next: conditional.is_cached
@@ -125,7 +159,7 @@ actions:
   fetch_from_db:
     type: fetch
     config:
-      integrationID: my_database
+      integration: my_database
       table: data
       filters:
         - field: id
@@ -135,10 +169,10 @@ actions:
     next: action.update_cache
 
   update_cache:
-    type: memory_store
+    type: store_key
     config:
       key: "data_{{ param \"id\" }}"
-      contents: "{{ jsonout .fetch_from_db }}"
+      value: "{{ jsonout .fetch_from_db }}"
     next: response.success
 
 responses:
@@ -162,10 +196,10 @@ Store and retrieve user session data:
 ```yaml
 actions:
   store_session:
-    type: memory_store
+    type: store_key
     config:
       key: "session_{{ param \"session_id\" }}"
-      contents: |
+      value: |
         {
           "user_id": "{{ .authenticated_user.id }}",
           "login_time": "{{ now }}",
@@ -177,7 +211,7 @@ actions:
 ```yaml
 actions:
   get_session:
-    type: memory_fetch
+    type: get_key
     config:
       key: "session_{{ param \"session_id\" }}"
     next: conditional.session_valid
@@ -196,7 +230,7 @@ Track request counts for rate limiting:
 ```yaml
 actions:
   get_request_count:
-    type: memory_fetch
+    type: get_key
     config:
       key: "rate_{{ param \"api_key\" }}"
     next: action.increment_count
@@ -212,10 +246,10 @@ actions:
     next: action.store_count
 
   store_count:
-    type: memory_store
+    type: store_key
     config:
       key: "rate_{{ param \"api_key\" }}"
-      contents: "{{ .increment_count }}"
+      value: "{{ .increment_count }}"
     next: conditional.check_limit
 
 conditionals:
@@ -241,10 +275,10 @@ actions:
     next: action.store_reset_token
 
   store_reset_token:
-    type: memory_store
+    type: store_key
     config:
       key: "reset_{{ .generate_reset_token }}"
-      contents: |
+      value: |
         {
           "user_id": "{{ .fetch_user.id }}",
           "email": "{{ .fetch_user.email }}",
@@ -256,7 +290,7 @@ actions:
 ```yaml
 actions:
   validate_reset_token:
-    type: memory_fetch
+    type: get_key
     config:
       key: "reset_{{ param \"token\" }}"
     next: conditional.token_valid
@@ -273,7 +307,7 @@ conditionals:
 ## Best Practices
 
 <Tip>
-**Key Naming**: Use consistent key naming conventions with prefixes to organize your cached data. For example: `user_`, `session_`, `cache_`, `rate_`.
+**Key Naming**: Use consistent key naming conventions with prefixes to organize your data. For example: `user_`, `session_`, `cache_`, `rate_`.
 </Tip>
 
 <Note>
@@ -281,7 +315,7 @@ conditionals:
 </Note>
 
 <Warning>
-**No TTL**: Memory storage doesn't support automatic expiration. Implement your own expiration logic by storing timestamps and checking them during retrieval.
+**No TTL**: This store doesn't support automatic expiration. Implement your own expiration logic by storing timestamps and checking them during retrieval.
 </Warning>
 
 ---
@@ -291,7 +325,7 @@ conditionals:
 <CardGroup cols={2}>
 
 <Card title="Data Operations" icon="database" href="/concepts/actions/data-operations">
-  Use persistent database storage for long-term data.
+  Use a database for structured, queryable data.
 </Card>
 
 <Card title="Transformation" icon="wand-magic-sparkles" href="/concepts/actions/transformation">
