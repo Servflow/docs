@@ -1,0 +1,329 @@
+---
+title: "System"
+description: "Run shell scripts and save files from your ServFlow workflows"
+icon: "terminal"
+---
+
+System actions let a workflow reach the machine it runs on: run a shell script, or save a file that arrived with the request or was produced by an earlier step.
+
+<Warning>
+Be cautious when using user input in scripts. Always validate and sanitize inputs to prevent command injection attacks.
+</Warning>
+
+---
+
+## shell
+
+Executes a shell script with full shell interpreter support — conditionals, pipes, redirects, and loops.
+
+### Script
+
+The script to execute.
+
+| | |
+|---|---|
+| **YAML Key** | `script` |
+| **Type** | string |
+| **Required** | Yes |
+
+The script is passed to the interpreter with `-c`, so it can be a single command or a multi-line script.
+
+### Shell
+
+The interpreter to run the script with.
+
+| | |
+|---|---|
+| **YAML Key** | `shell` |
+| **Type** | string |
+| **Required** | No |
+| **Default** | `sh` |
+| **Values** | `sh`, `bash`, `zsh` |
+
+### Working Directory
+
+You do not configure one. When the config has a workspace, the script runs pinned to that workspace's root, so relative paths and any files the script creates stay inside it.
+
+<Note>
+A workspace that is not backed by the local filesystem has no directory to run in, and the `shell` action is rejected for it.
+</Note>
+
+### Output
+
+`{{ .step_id }}` holds everything the script wrote, on **both** standard output and standard error.
+
+<Warning>
+A script that exits non-zero does **not** fail the step. Its failure is reported in the output as `Script failed: …` and the workflow continues down `next`. Routing a `shell` step to `fail:` for a non-zero exit will not work — check the output instead.
+</Warning>
+
+---
+
+## Examples
+
+### Basic Script
+
+List files in a directory:
+
+```yaml
+actions:
+  list_files:
+    type: shell
+    config:
+      script: "ls -la /data"
+    next: response.success
+```
+
+### Run a Script File
+
+```yaml
+actions:
+  run_backup:
+    type: shell
+    config:
+      script: "/scripts/backup.sh"
+    next: response.success
+```
+
+### Multi-line Script with bash
+
+```yaml
+actions:
+  check_health:
+    type: shell
+    config:
+      shell: bash
+      script: |
+        set -euo pipefail
+        if curl -sf http://localhost:8080/health > /dev/null; then
+          echo "healthy"
+        else
+          echo "unhealthy"
+        fi
+    next: conditional.is_healthy
+```
+
+### Script with Dynamic Values
+
+Use workflow data in scripts (with caution):
+
+```yaml
+actions:
+  process_file:
+    type: shell
+    config:
+      script: "python /scripts/process.py --file {{ .uploaded_file.path }}"
+    next: action.store_result
+```
+
+### Chained Commands
+
+Use pipes and shell operators:
+
+```yaml
+actions:
+  search_logs:
+    type: shell
+    config:
+      script: "cat /var/log/app.log | grep ERROR | tail -20"
+    next: response.errors
+```
+
+### Process Script Output
+
+Use the output in subsequent actions:
+
+```yaml
+actions:
+  get_disk_usage:
+    type: shell
+    config:
+      script: "df -h / | tail -1 | awk '{print $5}'"
+    next: action.check_threshold
+
+  check_threshold:
+    type: javascript
+    config:
+      script: |
+        function servflowRun(vars) {
+          const usage = parseInt(vars.get_disk_usage.replace('%', ''));
+          return {
+            usage: usage,
+            alert: usage > 80
+          };
+        }
+    next: conditional.should_alert
+```
+
+### Environment Variables
+
+```yaml
+actions:
+  deploy:
+    type: shell
+    config:
+      script: "AWS_PROFILE=production /scripts/deploy.sh {{ param \"version\" }}"
+    next: response.deployed
+```
+
+---
+
+## Security Considerations
+
+<Note>
+**Never directly interpolate user input into scripts.** This can lead to command injection vulnerabilities.
+</Note>
+
+### Unsafe Pattern
+
+```yaml
+# DON'T DO THIS - vulnerable to injection
+actions:
+  unsafe_script:
+    type: shell
+    config:
+      script: "echo {{ param \"user_input\" }}"
+```
+
+### Safer Pattern
+
+Validate and sanitize input before use:
+
+```yaml
+actions:
+  validate_input:
+    type: javascript
+    config:
+      script: |
+        function servflowRun(vars) {
+          const input = vars.request_filename || '';
+          // Only allow alphanumeric characters and underscores
+          const sanitized = input.replace(/[^a-zA-Z0-9_]/g, '');
+          return sanitized;
+        }
+    next: action.safe_script
+
+  safe_script:
+    type: shell
+    config:
+      script: "cat /data/{{ .validate_input }}.txt"
+    next: response.content
+```
+
+---
+
+## download
+
+Saves a file from the request or from an earlier action's output to a path in the workspace.
+
+### File
+
+Which file to save. This is an object, not a template string: it names where the file comes from.
+
+| | |
+|---|---|
+| **YAML Key** | `file` |
+| **Type** | object |
+| **Required** | Yes |
+
+| Sub-field | Description |
+|---|---|
+| `type` | `request` for a file uploaded with the request, `action` for a file produced by an earlier step, or `storage` for a file already in the workspace |
+| `identifier` | The form field name for `request`, the step id for `action`, or the workspace path for `storage` |
+
+Steps that produce a file include [`chromium/screenshot`](/concepts/actions/browser#chromiumscreenshot).
+
+### Destination Path
+
+The directory to write the file into, relative to the workspace.
+
+| | |
+|---|---|
+| **YAML Key** | `destinationPath` |
+| **Type** | string |
+| **Required** | Yes |
+
+### File Name
+
+The name to save the file as. Defaults to the file's own name.
+
+| | |
+|---|---|
+| **YAML Key** | `fileName` |
+| **Type** | string |
+| **Required** | No |
+
+### Overwrite
+
+Whether to replace a file that already exists at the destination.
+
+| | |
+|---|---|
+| **YAML Key** | `overwrite` |
+| **Type** | boolean |
+| **Required** | No |
+| **Default** | `false` |
+
+### Output
+
+`{{ .step_id }}` holds the path the file was written to, relative to the workspace.
+
+### Example
+
+Save a file uploaded in the `report` form field, then process it:
+
+```yaml
+actions:
+  save_upload:
+    type: download
+    config:
+      file:
+        type: request
+        identifier: report
+      destinationPath: "uploads"
+      fileName: "{{ param \"user_id\" }}.csv"
+      overwrite: true
+    next: action.process
+
+  process:
+    type: shell
+    config:
+      script: "python /scripts/import.py --file {{ .save_upload }}"
+    next: response.done
+```
+
+---
+
+## Common Use Cases
+
+| Use Case | Example |
+|----------|---------|
+| File operations | `cp`, `mv`, `rm`, `mkdir` |
+| Data processing | `awk`, `sed`, `grep`, `jq` |
+| System information | `df`, `free`, `uptime` |
+| Running scripts | `python script.py`, `node script.js`, `bash script.sh` |
+| Git operations | `git pull`, `git log` |
+| Container management | `docker ps`, `docker exec` |
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Key-Value Storage" icon="database" href="/concepts/actions/key-value">
+  Cache script results for reuse.
+</Card>
+
+<Card title="Transformation" icon="wand-magic-sparkles" href="/concepts/actions/transformation">
+  Process script output with JavaScript.
+</Card>
+
+<Card title="Flow Control" icon="code-branch" href="/concepts/actions/flow-control">
+  Run multiple steps in parallel.
+</Card>
+
+<Card title="Actions Overview" icon="play" href="/concepts/actions/overview">
+  Learn the fundamentals of ServFlow actions.
+</Card>
+
+</CardGroup>

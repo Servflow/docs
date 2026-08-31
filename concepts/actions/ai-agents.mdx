@@ -4,7 +4,7 @@ description: "Integrate AI models into your workflows with the agent action"
 icon: "brain"
 ---
 
-The agent action allows you to interact with AI models like OpenAI's GPT to process queries, generate content, and execute tool functions. Agents can be enhanced with tools that give them the ability to call other actions in your workflow or external services via MCP.
+The agent action interacts with an AI model to process queries, generate content, and execute tools. It is configured with a stored **LLM provider** — OpenAI, Claude, Qwen, or a model router — and can be given tools that let it run workflows, delegate to other agents, run a single action, or reach an external service over MCP.
 
 ---
 
@@ -12,15 +12,29 @@ The agent action allows you to interact with AI models like OpenAI's GPT to proc
 
 Interacts with AI models to process queries and optionally execute tool functions.
 
-### Integration ID
+### Provider ID
 
-The AI integration to use (e.g., OpenAI).
+The stored LLM provider instance to call.
 
 | | |
 |---|---|
-| **YAML Key** | `integrationID` |
-| **Type** | string |
+| **YAML Key** | `providerID` |
+| **Type** | llm_provider |
 | **Required** | Yes |
+
+<Note>
+An LLM is **not** an integration. Providers (`openai`, `claude`, `qwen`, and model routers) live in their own registry and are referenced by the numeric id of a stored provider instance — not by an integration name. A provider instance carries the credential, the endpoint, and the model, so pointing two agents at different models means two provider instances.
+</Note>
+
+### Name
+
+Labels this agent in traces. It has no effect on what the model is asked.
+
+| | |
+|---|---|
+| **YAML Key** | `name` |
+| **Type** | string |
+| **Required** | No |
 
 ### System Prompt
 
@@ -42,9 +56,24 @@ The user's message or query to send to the agent.
 | **Type** | string |
 | **Required** | No |
 
+### Access Memory
+
+Gives the agent the built-in workspace file tools — `read_file`, `write_file`, and `list_files` — over the files in its config's workspace, on top of whatever `toolConfigs` names.
+
+| | |
+|---|---|
+| **YAML Key** | `accessMemory` |
+| **Type** | boolean |
+| **Required** | No |
+| **Default** | `false` |
+
+<Tip>
+Defining your own tool called `read_file` replaces the built-in one rather than colliding with it.
+</Tip>
+
 ### Tool Configurations
 
-An array of tool configurations that give the agent additional capabilities. Tools can be MCP endpoints or workflow actions.
+An array of tool configurations that give the agent additional capabilities. See [Tool Configuration](#tool-configuration) for details.
 
 | | |
 |---|---|
@@ -52,38 +81,28 @@ An array of tool configurations that give the agent additional capabilities. Too
 | **Type** | array |
 | **Required** | No |
 
-See [Tool Configuration](#tool-configuration) for details.
-
-### Conversation ID
-
-An identifier for maintaining conversation context across multiple interactions.
-
-| | |
-|---|---|
-| **YAML Key** | `conversationID` |
-| **Type** | string |
-| **Required** | No |
-
-### Return Last Message
-
-When enabled, returns only the final message instead of the full conversation history.
-
-| | |
-|---|---|
-| **YAML Key** | `returnLastMessage` |
-| **Type** | boolean |
-| **Required** | No |
-| **Default** | `false` |
-
 ### File Upload
 
-Configuration for file inputs to the agent.
+A file to send to the model. Like [`download`](/concepts/actions/system#download), this names where the file comes from rather than being a template string.
 
 | | |
 |---|---|
 | **YAML Key** | `fileUpload` |
 | **Type** | object |
 | **Required** | No |
+
+| Sub-field | Description |
+|---|---|
+| `type` | `request`, `action`, or `storage` |
+| `identifier` | The form field name, the step id, or the workspace path |
+
+### Output
+
+`{{ .step_id }}` holds the agent's final reply, as text.
+
+<Note>
+There is no `returnLastMessage` setting and no `conversationID` setting. The output is always the final reply, and conversation threading is owned by the run rather than configured per step.
+</Note>
 
 ---
 
@@ -98,7 +117,7 @@ actions:
   ask_ai:
     type: agent
     config:
-      integrationID: my_openai
+      providerID: 2
       systemPrompt: "You are a helpful assistant that provides concise answers."
       userPrompt: "{{ param \"question\" }}"
     next: response.answer
@@ -114,7 +133,7 @@ actions:
   analyze_sentiment:
     type: agent
     config:
-      integrationID: my_openai
+      providerID: 2
       systemPrompt: |
         Analyze the sentiment of the provided text.
         Respond with a JSON object containing:
@@ -122,42 +141,54 @@ actions:
         - confidence: a number between 0 and 1
         - keywords: an array of relevant keywords
       userPrompt: "{{ param \"text\" }}"
-      returnLastMessage: true
     next: response.analysis
 ```
 
-### Conversational Agent
+### Agent With Workspace Files
 
-Maintain conversation context across requests:
+Let the agent read and write files in its workspace:
 
 ```yaml
 actions:
-  chat:
+  research:
     type: agent
     config:
-      integrationID: my_openai
-      systemPrompt: "You are a friendly customer support agent for an e-commerce store."
-      userPrompt: "{{ param \"message\" }}"
-      conversationID: "{{ param \"session_id\" }}"
-    next: response.reply
+      providerID: 2
+      accessMemory: true
+      systemPrompt: |
+        You are a research assistant. Read notes.md for prior findings,
+        and append anything new you learn to it.
+      userPrompt: "{{ param \"question\" }}"
+    next: response.answer
 ```
 
 ---
 
 ## Tool Configuration
 
-Tools extend an agent's capabilities by allowing it to perform actions during its reasoning process. There are two types of tools:
+Tools extend an agent's capabilities by letting it perform actions during its reasoning process. There are four types: `mcp`, `workflow`, `agent`, and `action`.
+
+### Common Tool Fields
+
+Every tool carries these, whatever its type:
+
+| Field | Description |
+|-------|-------------|
+| `type` | `mcp`, `workflow`, `agent`, or `action` |
+| `name` | The tool name the model calls. Required for `workflow`, `agent`, and `action` tools |
+| `description` | What the tool does — this is what the model reads to decide when to use it |
+| `params` | Array of parameter names the model fills in when it calls the tool |
 
 ### MCP Tools
 
-Connect to external services using the Model Context Protocol (MCP):
+Connect to external services using the Model Context Protocol (MCP). An MCP server supplies its own tool names and descriptions, so `name` and `description` are not used here.
 
 ```yaml
 actions:
   db_agent:
     type: agent
     config:
-      integrationID: my_openai
+      providerID: 2
       systemPrompt: |
         You are a database assistant. Use the provided tools to query data.
         Never expose sensitive information like passwords.
@@ -166,7 +197,7 @@ actions:
         - type: mcp
           mcpConfig:
             endpoint: "https://mcp.example.com/mcp"
-            tools:
+            toolsList:
               - query_database
               - list_tables
     next: response.result
@@ -177,54 +208,109 @@ actions:
 | Field | Description |
 |-------|-------------|
 | `endpoint` | The MCP server endpoint URL |
-| `tools` | Array of tool names to make available to the agent |
+| `toolsList` | Tool names to make available to the agent. Omit to offer everything the server lists |
+| `headers` | Headers to send to the MCP server, for example an authorization header |
 
 ### Workflow Tools
 
-Allow the agent to execute other actions in your workflow:
+Run a stored workflow when the model calls the tool. The workflow runs as its own request.
 
 ```yaml
 actions:
   agent_with_db:
     type: agent
     config:
-      integrationID: my_openai
-      systemPrompt: "You can query the database using the provided tool."
+      providerID: 2
+      systemPrompt: "You can look up users using the provided tool."
       userPrompt: "{{ param \"query\" }}"
       toolConfigs:
         - type: workflow
+          name: get_user
+          description: "Get user details by ID"
+          params:
+            - user_id
           workflowConfig:
-            name: search_users
-            description: "Search for users by email or name"
-            params:
-              - filter
-              - projection
-            returnValue: "{{ jsonout .query_db }}"
-            start: action.query_db
+            id: lookup-user
+            values:
+              tenant: "{{ param \"tenant\" }}"
     next: response.result
-
-  query_db:
-    type: mongoquery
-    config:
-      integrationID: my_mongodb
-      collection: users
-      filterQuery: "{{ tool_param \"filter\" | stringescape }}"
-      projection: "{{ tool_param \"projection\" | stringescape }}"
 ```
 
 #### Workflow Config Fields
 
 | Field | Description |
 |-------|-------------|
-| `name` | A unique name for the tool |
-| `description` | Description of what the tool does (helps the AI decide when to use it) |
-| `params` | Array of parameter names the tool accepts |
-| `returnValue` | Template for the value returned to the agent |
-| `start` | The action to execute when this tool is called |
+| `id` | The `config_id` of the workflow to run. Required |
+| `values` | Inputs the author pins, as templates resolved against the calling request. Applied after the model's params, so a pinned value cannot be overridden by the model |
 
 <Tip>
-Use `tool_param` to access parameters passed by the agent to your workflow tool.
+Inside the workflow, read the inputs the tool passed with `{{ input "user_id" }}`. The workflow's result is what the tool reports back to the model.
 </Tip>
+
+### Agent Tools
+
+Delegate to another agent defined in the same config. The target agent's own `userPrompt` plus the model-supplied input define what it is asked, so there is no per-tool prompt.
+
+```yaml
+toolConfigs:
+  - type: agent
+    name: summarize
+    description: "Summarize a long document into three bullet points"
+    params:
+      - document
+    agentConfig:
+      id: summarizer
+```
+
+#### Agent Config Fields
+
+| Field | Description |
+|-------|-------------|
+| `id` | The id of another agent node in the same config. Required |
+
+The tool reports whatever the target agent replied.
+
+### Action Tools
+
+Embed a single action in a tool. The action is not part of the graph — the tool builds and runs it when the model calls, and the tool result is whatever the action returned.
+
+Each field of the action is either **fixed by you** (`raw`) or **filled by the model** (`param`).
+
+```yaml
+toolConfigs:
+  - type: action
+    name: post_comment
+    description: "Post a comment on the pull request"
+    params:
+      - body
+    actionConfig:
+      type: github_post
+      config:
+        integration:
+          type: raw
+          value: gh-app-main
+        repo:
+          type: raw
+          value: "{{ .github.repo }}"
+        pr_number:
+          type: raw
+          value: "{{ .github.pr_number }}"
+        body:
+          type: param
+          value: body
+```
+
+#### Action Config Fields
+
+| Field | Description |
+|-------|-------------|
+| `type` | An action type, for example `http` or `github_post`. Must be a registered action |
+| `config` | The action's fields, each as `{type, value}` |
+
+| Field kind | `type` | `value` means |
+|---|---|---|
+| Author-fixed | `raw` | The value itself — a template, resolved per call. A boolean field must hold a real `true`/`false`, not the string |
+| Model-filled | `param` | The name of the tool parameter the model fills in |
 
 ---
 
@@ -239,7 +325,7 @@ actions:
   search_knowledge:
     type: fetchvectors
     config:
-      integrationID: my_qdrant
+      integration: my_qdrant
       vector: "{{ .query_embedding }}"
       options:
         collection: knowledge_base
@@ -249,11 +335,11 @@ actions:
   answer_with_context:
     type: agent
     config:
-      integrationID: my_openai
+      providerID: 2
       systemPrompt: |
         Answer the user's question using only the provided context.
         If the context doesn't contain relevant information, say so.
-        
+
         Context:
         {{ range .search_knowledge }}
         - {{ .content }}
@@ -264,57 +350,34 @@ actions:
 
 ### Multi-Tool Agent
 
-An agent with multiple workflow tools:
+An agent with several workflow tools:
 
 ```yaml
 actions:
   smart_assistant:
     type: agent
     config:
-      integrationID: my_openai
+      providerID: 2
       systemPrompt: |
         You are an assistant that can help with user management.
-        Use the provided tools to look up, create, or update users.
+        Use the provided tools to look up or list users.
       userPrompt: "{{ param \"request\" }}"
       toolConfigs:
         - type: workflow
+          name: get_user
+          description: "Get user details by ID"
+          params:
+            - user_id
           workflowConfig:
-            name: get_user
-            description: "Get user details by ID"
-            params:
-              - user_id
-            returnValue: "{{ jsonout .fetch_user }}"
-            start: action.fetch_user
+            id: lookup-user
         - type: workflow
+          name: list_users
+          description: "List all users, optionally filtered by status"
+          params:
+            - status
           workflowConfig:
-            name: list_users
-            description: "List all users with optional filters"
-            params:
-              - status
-            returnValue: "{{ jsonout .list_users }}"
-            start: action.list_users
+            id: list-users
     next: response.result
-
-  fetch_user:
-    type: fetch
-    config:
-      integrationID: my_database
-      table: users
-      filters:
-        - field: id
-          operator: eq
-          value: "{{ tool_param \"user_id\" }}"
-      single: true
-
-  list_users:
-    type: fetch
-    config:
-      integrationID: my_database
-      table: users
-      filters:
-        - field: status
-          operator: eq
-          value: "{{ tool_param \"status\" }}"
 ```
 
 ### Content Generation
@@ -326,7 +389,7 @@ actions:
   generate_email:
     type: agent
     config:
-      integrationID: my_openai
+      providerID: 2
       systemPrompt: |
         You are a professional email writer. Generate emails that are:
         - Clear and concise
@@ -336,7 +399,6 @@ actions:
         Write an email about: {{ param "topic" }}
         Recipient: {{ param "recipient_name" }}
         Tone: {{ param "tone" }}
-      returnLastMessage: true
     next: action.send_email
 ```
 

@@ -31,7 +31,7 @@ The `--dashboard` flag is the main deployment choice. It changes what is *mounte
 ### With the dashboard
 
 ```bash
-servflow-pro start --config config.toml --dashboard
+servflowai start --config config.toml --dashboard
 ```
 
 Mounts the visual builder and the management API. This is the mode for building: creating agents, wiring workflows, managing secrets and integrations, and debugging visually.
@@ -39,7 +39,7 @@ Mounts the visual builder and the management API. This is the mode for building:
 ### Without the dashboard (headless)
 
 ```bash
-servflow-pro start --config config.toml
+servflowai start --config config.toml
 ```
 
 Serves only your workflows. Nothing else is exposed, which makes it the usual choice for production: a smaller surface, no UI assets, and no management API reachable from outside.

@@ -1,0 +1,367 @@
+---
+title: "Discord"
+description: "Send Discord messages and read channel history and server details"
+icon: "discord"
+---
+
+Discord actions send messages and read context — a channel's recent history, or the server's own channels, roles, and members — through a configured Discord integration.
+
+<Note>
+All three actions need a `discord` integration. See [Configuration Reference](/references/configuration) for setup details.
+</Note>
+
+---
+
+## discord/sendmessage
+
+Sends a message to a Discord channel, thread, or person.
+
+### Discord Bot
+
+The Discord integration to act as. It carries the bot token and names the server.
+
+| | |
+|---|---|
+| **YAML Key** | `integration` |
+| **Type** | integration |
+| **Required** | Yes |
+
+### Content
+
+The message to send.
+
+| | |
+|---|---|
+| **YAML Key** | `content` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Channel ID
+
+The channel to post to.
+
+| | |
+|---|---|
+| **YAML Key** | `channel_id` |
+| **Type** | string |
+| **Required** | No |
+
+### User ID
+
+Send a direct message to this person instead of posting to a channel.
+
+| | |
+|---|---|
+| **YAML Key** | `user_id` |
+| **Type** | string |
+| **Required** | No |
+
+### Thread ID
+
+Send to an existing thread.
+
+| | |
+|---|---|
+| **YAML Key** | `thread_id` |
+| **Type** | string |
+| **Required** | No |
+
+### Create Thread
+
+Start a new thread for this message.
+
+| | |
+|---|---|
+| **YAML Key** | `create_thread` |
+| **Type** | boolean |
+| **Required** | No |
+| **Default** | `false` |
+
+### Thread Name
+
+The name for the new thread. Required when `create_thread` is `true`.
+
+| | |
+|---|---|
+| **YAML Key** | `thread_name` |
+| **Type** | string |
+| **Required** | No |
+
+### Reply To
+
+The id of a message to reply to.
+
+| | |
+|---|---|
+| **YAML Key** | `reply_to` |
+| **Type** | string |
+| **Required** | No |
+
+### Mentions
+
+Who this message is allowed to notify.
+
+| | |
+|---|---|
+| **YAML Key** | `mentions` |
+| **Type** | string |
+| **Required** | No |
+| **Default** | `none` |
+
+**Allowed values:** `none`, `reply`, `users`, `roles`, `everyone`
+
+<Tip>
+The default of `none` means text like `@here` in the content renders but notifies nobody. Widen it only as far as you need.
+</Tip>
+
+### Split
+
+Post text longer than Discord's 2000-character limit as several messages instead of failing.
+
+| | |
+|---|---|
+| **YAML Key** | `split` |
+| **Type** | boolean |
+| **Required** | No |
+| **Default** | `true` |
+
+### Output
+
+`{{ .step_id }}` is an object:
+
+| Path | Type | Description |
+|---|---|---|
+| `message_id` | string | The id of the message that was sent |
+| `channel_id` | string | The channel it was sent to |
+| `thread_id` | string | The thread it was sent to, when it was sent to one |
+| `message_ids` | array | Every part the message was posted as, in order, when splitting broke it up |
+| `link` | string | The URL that opens the first message in Discord |
+
+### Example
+
+Reply in a channel:
+
+```yaml
+actions:
+  reply:
+    type: discord/sendmessage
+    config:
+      integration: my_discord
+      channel_id: "{{ .discord.channel_id }}"
+      reply_to: "{{ .discord.message_id }}"
+      mentions: reply
+      content: "{{ .answer }}"
+    next: response.success
+```
+
+Send a direct message:
+
+```yaml
+actions:
+  notify_user:
+    type: discord/sendmessage
+    config:
+      integration: my_discord
+      user_id: "{{ .discord.author_id }}"
+      content: "Your report is ready."
+    next: response.success
+```
+
+---
+
+## discord/readmessages
+
+Reads a channel's recent history as a transcript an agent can read.
+
+### Discord Bot
+
+The Discord integration to act as. It carries the bot token and names the server.
+
+| | |
+|---|---|
+| **YAML Key** | `integration` |
+| **Type** | integration |
+| **Required** | Yes |
+
+### Channel ID
+
+The channel to read.
+
+| | |
+|---|---|
+| **YAML Key** | `channel_id` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Limit
+
+How many messages to read, from 1 to 100.
+
+| | |
+|---|---|
+| **YAML Key** | `limit` |
+| **Type** | string |
+| **Required** | No |
+| **Default** | `50` |
+
+### Before / After / Around
+
+Read relative to a message id: what came before it, what came after it, or what surrounds it.
+
+| | |
+|---|---|
+| **YAML Keys** | `before`, `after`, `around` |
+| **Type** | string |
+| **Required** | No |
+
+### Output
+
+`{{ .step_id }}` is an object:
+
+| Path | Type | Description |
+|---|---|---|
+| `transcript` | string | The history rendered as text an agent can read |
+| `messages` | array | One object per message, oldest first, each with `id`, `author_id`, `username`, `display_name`, `is_bot`, `content`, `timestamp`, `reply_to_id`, `reply_to_author`, and `reply_to_text` |
+| `oldest_id` | string | The oldest message read, for a later call's `before` cursor. Empty when the channel returned nothing |
+| `newest_id` | string | The newest message read, for a later call's `after` cursor. Empty when the channel returned nothing |
+
+### Example
+
+```yaml
+actions:
+  read_history:
+    type: discord/readmessages
+    config:
+      integration: my_discord
+      channel_id: "{{ .discord.channel_id }}"
+      limit: "30"
+      before: "{{ .discord.message_id }}"
+    next: action.answer
+```
+
+<Tip>
+Pass `transcript` straight into an agent's `userPrompt` — it is already formatted for a model to read.
+</Tip>
+
+---
+
+## discord/readguild
+
+Reads the integration's Discord server: its details, channels, roles, or members.
+
+### Discord Bot
+
+The Discord integration to act as. It carries the bot token and names the server.
+
+| | |
+|---|---|
+| **YAML Key** | `integration` |
+| **Type** | integration |
+| **Required** | Yes |
+
+### Resource
+
+What to read about the server.
+
+| | |
+|---|---|
+| **YAML Key** | `resource` |
+| **Type** | string |
+| **Required** | Yes |
+
+**Allowed values:** `guild`, `channels`, `roles`, `member`, `member_search`, `members`
+
+### User ID
+
+The member to look up. Required for the `member` resource.
+
+| | |
+|---|---|
+| **YAML Key** | `user_id` |
+| **Type** | string |
+| **Required** | No |
+
+### Query
+
+The start of a username or nickname. Required for `member_search`.
+
+| | |
+|---|---|
+| **YAML Key** | `query` |
+| **Type** | string |
+| **Required** | No |
+
+### Limit
+
+How many members to return: 1 to 1000 for `member_search`, 1 to 5000 for `members`.
+
+| | |
+|---|---|
+| **YAML Key** | `limit` |
+| **Type** | string |
+| **Required** | No |
+| **Default** | `10` |
+
+### Output
+
+Every resource returns a `summary` string — the result rendered as text a prompt can read — alongside structured fields. What else is present depends on `resource`:
+
+| `resource` | Also holds |
+|---|---|
+| `guild` | `id`, `name`, `description`, `owner_id`, `member_count`, `online_count`, `role_count`, `emoji_count`, `preferred_locale`, `features` |
+| `channels` | `channels` (each with `id`, `name`, `type`, `topic`, `nsfw`, `category`, `category_id`) and `threads` (each with `id`, `name`, `parent_id`, `parent_name`, `archived`) |
+| `roles` | `roles`, each with `id`, `name`, `color`, `position`, `mentionable`, `hoist`, `member_count` |
+| `member` | `found`, plus `id`, `username`, `display_name`, `nick`, `is_bot`, `roles`, `joined_at`, `boosting_since`, `timed_out_until`, `pending`. Everything after `found` is absent when it is `false` |
+| `member_search` | `members` (same shape as `member`) and `count` |
+| `members` | `members`, `count`, and `truncated` — whether the limit stopped the read before the roster ran out |
+
+### Example
+
+Look up who sent a message:
+
+```yaml
+actions:
+  who_asked:
+    type: discord/readguild
+    config:
+      integration: my_discord
+      resource: member
+      user_id: "{{ .discord.author_id }}"
+    next: action.answer
+```
+
+List the server's channels:
+
+```yaml
+actions:
+  list_channels:
+    type: discord/readguild
+    config:
+      integration: my_discord
+      resource: channels
+    next: action.answer
+```
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="AI Agents" icon="brain" href="/concepts/actions/ai-agents">
+  Give an agent Discord actions as tools.
+</Card>
+
+<Card title="GitHub" icon="github" href="/concepts/actions/github">
+  Read and comment on pull requests.
+</Card>
+
+<Card title="Communication" icon="envelope" href="/concepts/actions/communication">
+  Send email instead.
+</Card>
+
+<Card title="Actions Overview" icon="play" href="/concepts/actions/overview">
+  Learn the fundamentals of ServFlow actions.
+</Card>
+
+</CardGroup>

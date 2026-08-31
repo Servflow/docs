@@ -16,14 +16,14 @@ Before using data operations, ensure you have a database integration configured.
 
 Retrieves data from a database table using filters.
 
-### Integration ID
+### Database Integration
 
-The database integration to query against.
+The SQL or MongoDB integration to read from.
 
 | | |
 |---|---|
-| **YAML Key** | `integrationID` |
-| **Type** | string |
+| **YAML Key** | `integration` |
+| **Type** | integration |
 | **Required** | Yes |
 
 ### Table
@@ -59,7 +59,7 @@ Return a single result object instead of an array.
 
 ### Fail If Empty
 
-Treat no results as a failure, routing to the `fail` step.
+Treat no results as a failure, routing to the `fail` step. Note the default is `true`: unless you set this to `false`, a query that matches nothing fails the step.
 
 | | |
 |---|---|
@@ -68,6 +68,20 @@ Treat no results as a failure, routing to the `fail` step.
 | **Required** | No |
 | **Default** | `true` |
 
+### Datasource Options
+
+Additional datasource-specific options.
+
+| | |
+|---|---|
+| **YAML Key** | `datasourceOptions` |
+| **Type** | map |
+| **Required** | No |
+
+### Output
+
+`{{ .step_id }}` holds the rows the query matched, with the table's own column names — one row when `single` is set, otherwise a list.
+
 ### Example
 
 ```yaml
@@ -75,7 +89,7 @@ actions:
   get_user:
     type: fetch
     config:
-      integrationID: my_database
+      integration: my_database
       table: users
       filters:
         - field: email
@@ -89,23 +103,27 @@ actions:
 
 ---
 
-## store
+## save
 
-Stores a new record in a database table.
+Inserts a new record, or updates existing records, in a database table.
 
-### Integration ID
+<Note>
+`save` is one action for both operations. When `filters` are provided, it **updates** every record they match. When `filters` are absent, it **inserts** a new record.
+</Note>
 
-The database integration to store data in.
+### Database Integration
+
+The SQL or MongoDB integration to write to.
 
 | | |
 |---|---|
-| **YAML Key** | `integrationID` |
-| **Type** | string |
+| **YAML Key** | `integration` |
+| **Type** | integration |
 | **Required** | Yes |
 
 ### Table
 
-The database table or collection name to insert into.
+The database table or collection name to write to.
 
 | | |
 |---|---|
@@ -115,13 +133,23 @@ The database table or collection name to insert into.
 
 ### Fields
 
-Data fields to store as key-value pairs.
+The data to write, as key-value pairs.
 
 | | |
 |---|---|
 | **YAML Key** | `fields` |
 | **Type** | map |
 | **Required** | Yes |
+
+### Filters
+
+Filters identifying which records to update. Omit them to insert instead. See [Filter Syntax](#filter-syntax) for available operators.
+
+| | |
+|---|---|
+| **YAML Key** | `filters` |
+| **Type** | map |
+| **Required** | No |
 
 ### Datasource Options
 
@@ -133,14 +161,24 @@ Additional datasource-specific options.
 | **Type** | map |
 | **Required** | No |
 
-### Example
+### Output
+
+`{{ .step_id }}` is an object with one field:
+
+| Path | Type | Description |
+|---|---|---|
+| `id` | string | The id of the saved record |
+
+### Insert Example
+
+With no `filters`, `save` inserts:
 
 ```yaml
 actions:
   create_user:
-    type: store
+    type: save
     config:
-      integrationID: my_database
+      integration: my_database
       table: users
       fields:
         email: "{{ param \"email\" }}"
@@ -152,73 +190,19 @@ actions:
 ```
 
 <Tip>
-If no `id` field is provided, a UUID will be automatically generated.
+If no `id` field is provided, a UUID is generated automatically. Read it back with `{{ .create_user.id }}`.
 </Tip>
 
----
+### Update Example
 
-## update
-
-Updates existing records in a database table.
-
-### Integration ID
-
-The database integration containing the records.
-
-| | |
-|---|---|
-| **YAML Key** | `integrationID` |
-| **Type** | string |
-| **Required** | Yes |
-
-### Table
-
-The database table or collection name to update.
-
-| | |
-|---|---|
-| **YAML Key** | `table` |
-| **Type** | string |
-| **Required** | Yes |
-
-### Filters
-
-Filters to identify which records to update. See [Filter Syntax](#filter-syntax) for available operators.
-
-| | |
-|---|---|
-| **YAML Key** | `filters` |
-| **Type** | array |
-| **Required** | Yes |
-
-### Fields
-
-Fields to update with their new values.
-
-| | |
-|---|---|
-| **YAML Key** | `fields` |
-| **Type** | map |
-| **Required** | Yes |
-
-### Datasource Options
-
-Additional datasource-specific options.
-
-| | |
-|---|---|
-| **YAML Key** | `datasourceOptions` |
-| **Type** | map |
-| **Required** | No |
-
-### Example
+With `filters`, `save` updates the records they match:
 
 ```yaml
 actions:
   update_user:
-    type: update
+    type: save
     config:
-      integrationID: my_database
+      integration: my_database
       table: users
       filters:
         - field: id
@@ -237,14 +221,14 @@ actions:
 
 Deletes records from a database table.
 
-### Integration ID
+### Database Integration
 
-The database integration containing the records.
+The SQL or MongoDB integration to delete from.
 
 | | |
 |---|---|
-| **YAML Key** | `integrationID` |
-| **Type** | string |
+| **YAML Key** | `integration` |
+| **Type** | integration |
 | **Required** | Yes |
 
 ### Table
@@ -284,7 +268,7 @@ actions:
   delete_user:
     type: delete
     config:
-      integrationID: my_database
+      integration: my_database
       table: users
       filters:
         - field: id
@@ -300,14 +284,14 @@ actions:
 
 Executes native MongoDB queries with filter and projection support.
 
-### Integration ID
+### MongoDB Integration
 
-The MongoDB integration to query against.
+The MongoDB integration to query.
 
 | | |
 |---|---|
-| **YAML Key** | `integrationID` |
-| **Type** | string |
+| **YAML Key** | `integration` |
+| **Type** | integration |
 | **Required** | Yes |
 
 ### Collection
@@ -358,7 +342,7 @@ actions:
   query_users:
     type: mongoquery
     config:
-      integrationID: my_mongodb
+      integration: my_mongodb
       collection: users
       filterQuery: '{"status": "active", "age": {"$gte": 18}}'
       projection: '{"name": 1, "email": 1, "_id": 0}'
@@ -373,7 +357,7 @@ actions:
   search_users:
     type: mongoquery
     config:
-      integrationID: my_mongodb
+      integration: my_mongodb
       collection: users
       filterQuery: '{"email": "{{ param "email" | stringescape }}"}'
     next: response.success
@@ -382,6 +366,76 @@ actions:
 <Tip>
 Use the `stringescape` template function when inserting user input into JSON queries to prevent injection attacks.
 </Tip>
+
+---
+
+## firestore
+
+Stores documents in Google Cloud Firestore. Unlike the other data actions, it does not use an integration — it is configured with a service account directly.
+
+### Project ID
+
+The Google Cloud project that owns the Firestore database.
+
+| | |
+|---|---|
+| **YAML Key** | `projectID` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Collection ID
+
+The Firestore collection to write the document into.
+
+| | |
+|---|---|
+| **YAML Key** | `collectionID` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Document Template
+
+The document to write, as JSON. Use template syntax to fill in values.
+
+| | |
+|---|---|
+| **YAML Key** | `documentTemplate` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Service Account
+
+The Google service account credentials JSON. Use a [secret](/references/secrets) rather than inlining it.
+
+| | |
+|---|---|
+| **YAML Key** | `serviceAccount` |
+| **Type** | string |
+| **Required** | Yes |
+
+### Output
+
+`{{ .step_id }}` holds the document that was written, as the JSON text it was sent as.
+
+### Example
+
+```yaml
+actions:
+  record_event:
+    type: firestore
+    config:
+      projectID: my-gcp-project
+      collectionID: events
+      serviceAccount: "{{ secret \"gcp_service_account\" }}"
+      documentTemplate: |
+        {
+          "user_id": "{{ param \"user_id\" }}",
+          "event": "{{ param \"event\" }}",
+          "recorded_at": "{{ now }}"
+        }
+    next: response.success
+    fail: response.error
+```
 
 ---
 

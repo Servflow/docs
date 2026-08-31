@@ -1,10 +1,10 @@
 ---
 title: "Configuration Reference"
-description: "Every TOML option and environment variable for a ServFlow Pro instance"
+description: "Every TOML option and environment variable for a ServFlow instance"
 icon: "gear"
 ---
 
-ServFlow is an agent builder: you define AI agents and the workflows they run, and a Go engine serves them. The instance itself — ports, storage, authentication, tracing — is configured with a single TOML file passed to `servflow-pro start --config`.
+ServFlow is an agent builder: you define AI agents and the workflows they run, and a Go engine serves them. The instance itself — ports, storage, authentication, tracing — is configured with a single TOML file passed to `servflowai start --config`.
 
 This page is the complete reference for that file. For installing the binary see [Installation](/installation); for what an agent *is*, see [Agents](/concepts/agents).
 
@@ -24,7 +24,7 @@ config_folder = "./configs"
 Start the instance with:
 
 ```bash
-servflow-pro start --config config.toml
+servflowai start --config config.toml
 ```
 
 ## `[server]`
@@ -99,7 +99,7 @@ OpenTelemetry tracing for debugging workflow and agent runs.
 ```toml
 [tracing]
 enabled = false
-service_name = "servflow-pro"
+service_name = "servflowai"
 org_id = ""
 collector_endpoint = ""
 ```
@@ -131,7 +131,7 @@ mode = "local"
 
 [tracing]
 enabled = false
-service_name = "servflow-pro"
+service_name = "servflowai"
 org_id = ""
 collector_endpoint = ""
 ```
@@ -147,7 +147,7 @@ docker run -d \
   -e SERVFLOW_SQLITE_PATH=/data/servflow.db \
   -e SERVFLOW_AUTH_MODE=local \
   -v $(pwd)/config.toml:/data/config.toml \
-  servflow/servflow-pro start --config /data/config.toml --dashboard
+  servflow/servflowai start --config /data/config.toml --dashboard
 ```
 
 ## Viewing the active configuration
@@ -155,7 +155,7 @@ docker run -d \
 To see the settings an instance actually resolved, including defaults and environment overrides:
 
 ```bash
-servflow-pro resource settings view --config config.toml
+servflowai resource settings view --config config.toml
 ```
 
 ## Next steps

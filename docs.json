@@ -65,9 +65,12 @@
                       "concepts/actions/transformation",
                       "concepts/actions/ai-agents",
                       "concepts/actions/flow-control",
+                      "concepts/actions/github",
+                      "concepts/actions/discord",
+                      "concepts/actions/browser",
                       "concepts/actions/communication",
-                      "concepts/actions/command",
-                      "concepts/actions/memory",
+                      "concepts/actions/system",
+                      "concepts/actions/key-value",
                       "concepts/actions/binance"
                     ]
                   }

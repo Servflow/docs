@@ -60,21 +60,21 @@ A workflow also has a numeric store id, assigned when it is created. That one is
 
 ## Managing agents from the CLI
 
-Everything the dashboard does is available from `servflow-pro resource`:
+Everything the dashboard does is available from `servflowai resource`:
 
 ```bash
 # list agents
-servflow-pro resource agent list
+servflowai resource agent list
 
 # create one from a body with a name and optional description
-echo '{"name":"support-agent"}' | servflow-pro resource agent create -f -
+echo '{"name":"support-agent"}' | servflowai resource agent create -f -
 
 # attach a workflow, by its human-readable config id
-servflow-pro resource agent add-config <agentId> \
+servflowai resource agent add-config <agentId> \
   --config-id order-sync --config-type task
 
 # inspect what an agent now owns
-servflow-pro resource agent get <agentId>
+servflowai resource agent get <agentId>
 ```
 
 `--config-type` accepts **`webhook`** or **`task`** — attach HTTP-entry workflows as webhooks and everything else as tasks. Use `remove-config` to detach.

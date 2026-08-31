@@ -1,10 +1,10 @@
 ---
 title: "Installation"
-description: "Install ServFlow Pro, start the server, and create your first account"
+description: "Install ServFlow, start the server, and create your first account"
 icon: "download"
 ---
 
-ServFlow is an agent builder: you define AI agents and the workflows they run, and a Go engine serves them. This guide installs the `servflow-pro` binary, starts an instance, and walks through the first-run account setup.
+ServFlow is an agent builder: you define AI agents and the workflows they run, and a Go engine serves them. This guide installs the `servflowai` binary, starts an instance, and walks through the first-run account setup.
 
 <Tip>
 Setting up a local environment with tracing and debugging? See [Local Environment Setup](/development).
@@ -19,11 +19,11 @@ Setting up a local environment with tracing and debugging? See [Local Environmen
 
 ```bash
 # Homebrew (macOS/Linux)
-brew install Servflow/servflow/servflow-pro
-servflow-pro start --config config.toml --dashboard
+brew install Servflow/servflow/servflowai
+servflowai start --config config.toml --dashboard
 
 # Or Docker
-docker run -p 8080:8080 servflow/servflow-pro
+docker run -p 8080:8080 servflow/servflowai
 ```
 
 Then open **`http://localhost:8080/dashboard`** and create your account.
@@ -37,60 +37,60 @@ One port serves everything. The engine owns the root path, and `--dashboard` mou
 ### Homebrew (macOS / Linux)
 
 ```bash
-brew install Servflow/servflow/servflow-pro
-servflow-pro --version
+brew install Servflow/servflow/servflowai
+servflowai --version
 ```
 
 ### npm
 
 ```bash
-npm install -g servflow-pro
-servflow-pro --version
+npm install -g servflowai
+servflowai --version
 ```
 
 ### Docker
 
 ```bash
-docker pull servflow/servflow-pro:latest
+docker pull servflow/servflowai:latest
 ```
 
 Run with default configuration:
 
 ```bash
-docker run -p 8080:8080 servflow/servflow-pro
+docker run -p 8080:8080 servflow/servflowai
 ```
 
 Run with a custom configuration and persistent storage:
 
 ```bash
 docker run -d \
-  --name servflow-pro \
+  --name servflowai \
   -p 8080:8080 \
   -v $(pwd)/config.toml:/data/config.toml \
   -v $(pwd)/configs:/data/configs \
   -v $(pwd)/data:/data \
-  servflow/servflow-pro
+  servflow/servflowai
 ```
 
 This exposes port **8080** for the engine, the API, and the dashboard, and mounts your configuration and data directories so agents survive restarts.
 
 ### Binary downloads
 
-Download pre-built binaries from the [Releases](https://github.com/Servflow/servflow-pro/releases) page. Available for **Linux** (x86_64, arm64) and **macOS** (x86_64, arm64).
+Download pre-built binaries from the [Releases](https://github.com/Servflow/servflowai/releases) page. Available for **Linux** (x86_64, arm64) and **macOS** (x86_64, arm64).
 
 ```bash
-tar -xzf servflow-pro_Linux_x86_64.tar.gz
-chmod +x servflow-pro
-./servflow-pro start --config config.toml --dashboard
+tar -xzf servflowai_Linux_x86_64.tar.gz
+chmod +x servflowai
+./servflowai start --config config.toml --dashboard
 ```
 
 ### From source
 
 ```bash
-git clone https://github.com/Servflow/servflow-pro.git
-cd servflow-pro
-go build -o servflow-pro
-./servflow-pro start --config config.toml --dashboard
+git clone https://github.com/Servflow/servflowai.git
+cd servflowai
+go build -o servflowai
+./servflowai start --config config.toml --dashboard
 ```
 
 <Note>
@@ -123,7 +123,7 @@ See the [Configuration Reference](/references/configuration) for every option.
 ## Start the server
 
 ```bash
-servflow-pro start --config config.toml --dashboard
+servflowai start --config config.toml --dashboard
 ```
 
 | Flag | Description |
@@ -178,7 +178,7 @@ mode = "none"
 With the server running, create an agent and its first workflow in the dashboard, or check the CLI can reach your store:
 
 ```bash
-servflow-pro resource config list --config config.toml
+servflowai resource config list --config config.toml
 ```
 
 ## Next steps
