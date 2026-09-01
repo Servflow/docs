@@ -115,8 +115,6 @@ actions:
       headers:
         Authorization: "Bearer {{ secret \"API_TOKEN\" }}"
         Accept: application/json
-    next: response.success
-    fail: response.api_error
 ```
 
 ### POST Request
@@ -139,8 +137,6 @@ actions:
         metadata:
           created_by: "{{ .authenticated_user.id }}"
       expectedResponseCode: "201"
-    next: response.created
-    fail: response.create_failed
 ```
 
 ### Extract Field from Response
@@ -182,8 +178,6 @@ actions:
         order_id: "{{ .order.id }}"
         total: "{{ .order.total }}"
         timestamp: "{{ now }}"
-    next: response.success
-    fail: response.webhook_failed
 ```
 
 ### Chaining API Calls
@@ -210,7 +204,6 @@ actions:
       method: GET
       headers:
         Authorization: "Bearer {{ .authenticate }}"
-    next: response.success
 ```
 
 ---

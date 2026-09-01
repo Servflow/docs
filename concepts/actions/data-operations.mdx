@@ -97,8 +97,6 @@ actions:
           value: "{{ param \"email\" }}"
       single: true
       failIfEmpty: true
-    next: response.success
-    fail: response.not_found
 ```
 
 ---
@@ -185,8 +183,6 @@ actions:
         name: "{{ param \"name\" }}"
         password: "{{ .hash_password }}"
         created_at: "{{ now }}"
-    next: response.created
-    fail: response.error
 ```
 
 <Tip>
@@ -211,8 +207,6 @@ actions:
       fields:
         name: "{{ param \"name\" }}"
         updated_at: "{{ now }}"
-    next: response.success
-    fail: response.error
 ```
 
 ---
@@ -274,8 +268,6 @@ actions:
         - field: id
           operator: eq
           value: "{{ param \"user_id\" }}"
-    next: response.success
-    fail: response.error
 ```
 
 ---
@@ -347,7 +339,6 @@ actions:
       filterQuery: '{"status": "active", "age": {"$gte": 18}}'
       projection: '{"name": 1, "email": 1, "_id": 0}'
       failIfEmpty: false
-    next: response.success
 ```
 
 **Dynamic filter example:**
@@ -360,7 +351,6 @@ actions:
       integration: my_mongodb
       collection: users
       filterQuery: '{"email": "{{ param "email" | stringescape }}"}'
-    next: response.success
 ```
 
 <Tip>
@@ -433,8 +423,6 @@ actions:
           "event": "{{ param \"event\" }}",
           "recorded_at": "{{ now }}"
         }
-    next: response.success
-    fail: response.error
 ```
 
 ---

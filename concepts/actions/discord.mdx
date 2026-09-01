@@ -151,7 +151,6 @@ actions:
       reply_to: "{{ .discord.message_id }}"
       mentions: reply
       content: "{{ .answer }}"
-    next: response.success
 ```
 
 Send a direct message:
@@ -164,7 +163,6 @@ actions:
       integration: my_discord
       user_id: "{{ .discord.author_id }}"
       content: "Your report is ready."
-    next: response.success
 ```
 
 ---

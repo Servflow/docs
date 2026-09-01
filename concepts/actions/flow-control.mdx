@@ -85,7 +85,6 @@ actions:
         customer_id: "{{ param \"id\" }}"
         region: "{{ .request_meta.region }}"
     next: action.build_report
-    fail: response.error
 ```
 
 ---
@@ -106,8 +105,6 @@ actions:
         - action.fetch_orders
         - action.fetch_products
       stopOnFailure: false
-    next: response.combined_data
-    fail: response.partial_error
 
   fetch_users:
     type: fetch
@@ -184,7 +181,6 @@ actions:
             stocks: vars.get_stocks
           };
         }
-    next: response.dashboard
 ```
 
 ### Parallel with Chained Actions
@@ -199,7 +195,6 @@ actions:
       steps:
         - action.process_images
         - action.process_documents
-    next: response.complete
 
   process_images:
     type: fetch
@@ -292,7 +287,6 @@ actions:
             analytics: vars.fetch_optional_analytics || null
           };
         }
-    next: response.success
 ```
 
 ---

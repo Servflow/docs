@@ -61,7 +61,6 @@ actions:
     config:
       key: "user_{{ param \"user_id\" }}"
       value: "{{ jsonout .fetch_user }}"
-    next: response.success
 ```
 
 Store a computed value:
@@ -130,7 +129,6 @@ actions:
       key: "app_config"
       failIfEmpty: true
     next: action.apply_config
-    fail: response.not_configured
 ```
 
 ---
@@ -152,7 +150,6 @@ actions:
 conditionals:
   is_cached:
     expression: "{{ notempty .check_cache \"\" }}"
-    onTrue: response.from_cache
     onFalse: action.fetch_from_db
 
 actions:
@@ -173,20 +170,6 @@ actions:
     config:
       key: "data_{{ param \"id\" }}"
       value: "{{ jsonout .fetch_from_db }}"
-    next: response.success
-
-responses:
-  from_cache:
-    statusCode: 200
-    body:
-      source: "cache"
-      data: "{{ .check_cache }}"
-
-  success:
-    statusCode: 200
-    body:
-      source: "database"
-      data: "{{ .fetch_from_db }}"
 ```
 
 ### Session Storage
@@ -205,7 +188,6 @@ actions:
           "login_time": "{{ now }}",
           "preferences": {{ jsonout .user_preferences }}
         }
-    next: response.session_created
 ```
 
 ```yaml
@@ -220,7 +202,6 @@ conditionals:
   session_valid:
     expression: "{{ notempty .get_session \"\" }}"
     onTrue: action.process_request
-    onFalse: response.session_expired
 ```
 
 ### Rate Limiting Counter
@@ -256,7 +237,6 @@ conditionals:
   check_limit:
     expression: "{{ lt .increment_count 100 }}"
     onTrue: action.process_request
-    onFalse: response.rate_limited
 ```
 
 ### Temporary Token Storage
@@ -299,7 +279,6 @@ conditionals:
   token_valid:
     expression: "{{ notempty .validate_reset_token \"\" }}"
     onTrue: action.allow_password_reset
-    onFalse: response.invalid_token
 ```
 
 ---

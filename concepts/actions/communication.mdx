@@ -154,8 +154,6 @@ actions:
         serverPort: "587"
         username: "{{ secret \"SMTP_USER\" }}"
         password: "{{ secret \"SMTP_PASS\" }}"
-    next: response.success
-    fail: response.email_error
 ```
 
 ### Password Reset Email
@@ -200,7 +198,6 @@ actions:
         serverPort: "{{ secret \"SMTP_PORT\" }}"
         username: "{{ secret \"SMTP_USER\" }}"
         password: "{{ secret \"SMTP_PASS\" }}"
-    next: response.success
 ```
 
 ### Order Confirmation Email
@@ -243,7 +240,6 @@ actions:
         serverPort: "587"
         username: "{{ secret \"SMTP_USER\" }}"
         password: "{{ secret \"SMTP_PASS\" }}"
-    next: response.confirmation_sent
 ```
 
 ### Alert Notification
@@ -278,8 +274,6 @@ actions:
         serverPort: "587"
         username: "{{ secret \"SMTP_USER\" }}"
         password: "{{ secret \"SMTP_PASS\" }}"
-    next: response.alert_sent
-    fail: response.alert_failed
 ```
 
 ### HTML Email
@@ -327,7 +321,6 @@ actions:
         serverPort: "587"
         username: "{{ secret \"SMTP_USER\" }}"
         password: "{{ secret \"SMTP_PASS\" }}"
-    next: response.sent
 ```
 
 ---

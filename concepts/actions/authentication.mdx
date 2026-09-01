@@ -91,7 +91,6 @@ actions:
       collection: users
       failOnAuthError: true
     next: action.get_user_data
-    fail: response.unauthorized
 ```
 
 The authenticated user data is available in subsequent actions via `{{ .auth_user }}`.
@@ -190,7 +189,6 @@ actions:
         role: user
         iss: my_app
         exp: "{{ now | date_modify \"+24h\" | unixEpoch }}"
-    next: response.success
 ```
 
 ### Decode Example
@@ -207,7 +205,6 @@ actions:
       key: "{{ secret \"JWT_SECRET\" }}"
       failOnValidationError: true
     next: action.get_user
-    fail: response.unauthorized
 ```
 
 The decoded token claims are available via `{{ .verify_token }}`.
@@ -224,8 +221,6 @@ actions:
       mode: decode
       field: "{{ param \"token\" }}"
       jwksURL: "https://auth.example.com/.well-known/jwks.json"
-    next: response.valid
-    fail: response.invalid_token
 ```
 
 ---
@@ -278,7 +273,6 @@ actions:
         email: "{{ param \"email\" }}"
         password: "{{ .hash_password }}"
         created_at: "{{ now }}"
-    next: response.created
 ```
 
 ---
@@ -318,17 +312,6 @@ actions:
       key: "{{ secret \"JWT_SECRET\" }}"
       claims:
         role: user
-    next: response.success
-
-responses:
-  success:
-    statusCode: 201
-    body:
-      message: "User created successfully"
-      token: "{{ .generate_token }}"
-      user:
-        id: "{{ .create_user.id }}"
-        email: "{{ .create_user.email }}"
 ```
 
 ### Protected Endpoint
@@ -344,7 +327,6 @@ actions:
       field: "{{ header \"Authorization\" | trimPrefix \"Bearer \" }}"
       key: "{{ secret \"JWT_SECRET\" }}"
     next: action.fetch_user_data
-    fail: response.unauthorized
 
   fetch_user_data:
     type: fetch
@@ -356,13 +338,6 @@ actions:
           operator: eq
           value: "{{ .verify_auth.sub }}"
       single: true
-    next: response.success
-
-responses:
-  unauthorized:
-    statusCode: 401
-    body:
-      error: "Invalid or expired token"
 ```
 
 ---

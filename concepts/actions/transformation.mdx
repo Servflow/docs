@@ -54,7 +54,6 @@ actions:
             email: user.email.toLowerCase()
           }));
         }
-    next: response.success
 ```
 
 ### Complex Calculations
@@ -79,7 +78,6 @@ actions:
             itemCount: items.length
           };
         }
-    next: response.cart_summary
 ```
 
 ### Data Validation
@@ -142,7 +140,6 @@ actions:
           // Get top 10
           return completed.slice(0, 10);
         }
-    next: response.recent_orders
 ```
 
 ---
@@ -184,7 +181,6 @@ actions:
     type: static
     config:
       return: "Hello, {{ param \"firstName\" }} {{ param \"lastName\" }}!"
-    next: response.greeting
 ```
 
 ### Prepare Data

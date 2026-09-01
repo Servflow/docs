@@ -60,7 +60,6 @@ actions:
       integration: my_chromium
       url: "https://example.com/reports/{{ param \"id\" }}"
     next: action.read_page
-    fail: response.error
 ```
 
 ---
@@ -184,7 +183,6 @@ actions:
       destinationPath: "screenshots"
       fileName: "{{ param \"id\" }}.png"
       overwrite: true
-    next: response.success
 ```
 
 ---
@@ -223,7 +221,6 @@ actions:
       providerID: 2
       systemPrompt: "Extract the report's key figures as JSON."
       userPrompt: "{{ .read_body }}"
-    next: response.summary
 ```
 
 ---

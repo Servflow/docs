@@ -70,7 +70,6 @@ actions:
     type: shell
     config:
       script: "ls -la /data"
-    next: response.success
 ```
 
 ### Run a Script File
@@ -81,7 +80,6 @@ actions:
     type: shell
     config:
       script: "/scripts/backup.sh"
-    next: response.success
 ```
 
 ### Multi-line Script with bash
@@ -125,7 +123,6 @@ actions:
     type: shell
     config:
       script: "cat /var/log/app.log | grep ERROR | tail -20"
-    next: response.errors
 ```
 
 ### Process Script Output
@@ -162,7 +159,6 @@ actions:
     type: shell
     config:
       script: "AWS_PROFILE=production /scripts/deploy.sh {{ param \"version\" }}"
-    next: response.deployed
 ```
 
 ---
@@ -206,7 +202,6 @@ actions:
     type: shell
     config:
       script: "cat /data/{{ .validate_input }}.txt"
-    next: response.content
 ```
 
 ---
@@ -288,7 +283,6 @@ actions:
     type: shell
     config:
       script: "python /scripts/import.py --file {{ .save_upload }}"
-    next: response.done
 ```
 
 ---

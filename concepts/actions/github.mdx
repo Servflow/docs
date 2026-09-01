@@ -80,7 +80,6 @@ actions:
       pr_number: "{{ .github.pr_number }}"
       resource: pr_diff
     next: action.review
-    fail: response.error
 ```
 
 ---
@@ -158,8 +157,6 @@ actions:
       pr_number: "{{ .github.pr_number }}"
       resource: issue_comment
       body: "{{ .review }}"
-    next: response.success
-    fail: response.error
 ```
 
 ---
@@ -196,7 +193,6 @@ actions:
       repo: "{{ .github.repo }}"
       pr_number: "{{ .github.pr_number }}"
       body: "{{ .review }}"
-    next: response.success
 ```
 
 ### Give an Agent a Posting Tool

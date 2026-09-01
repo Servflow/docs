@@ -60,7 +60,6 @@ actions:
       integration: my_binance
       symbol: BTCUSDT
       price_type: current
-    next: response.price
 
   get_24hr_stats:
     type: binance/getprice
@@ -68,7 +67,6 @@ actions:
       integration: my_binance
       symbol: ETHUSDT
       price_type: 24hr
-    next: response.stats
 ```
 
 ### Response
@@ -142,14 +140,12 @@ actions:
     config:
       integration: my_binance
       symbol: BTC
-    next: response.balance
 
   get_multiple_balances:
     type: binance/accountbalance
     config:
       integration: my_binance
       symbol: "BTC,ETH,USDT"
-    next: response.balances
 
   get_futures_balance:
     type: binance/accountbalance
@@ -157,7 +153,6 @@ actions:
       integration: my_binance
       symbol: USDT
       futures: true
-    next: response.futures_balance
 ```
 
 ### Response
@@ -305,8 +300,6 @@ actions:
       side: BUY
       type: MARKET
       quote_order_qty: "100"
-    next: response.order_placed
-    fail: response.order_failed
 
   limit_sell:
     type: binance/spotorder
@@ -318,7 +311,6 @@ actions:
       quantity: "0.001"
       price: "50000"
       time_in_force: GTC
-    next: response.order_placed
 
   stop_loss:
     type: binance/spotorder
@@ -329,7 +321,6 @@ actions:
       type: STOP_LOSS
       quantity: "0.001"
       stop_price: "40000"
-    next: response.stop_set
 ```
 
 ### Response
@@ -474,8 +465,6 @@ actions:
       quantity: "0.01"
       leverage: 10
       position_side: LONG
-    next: response.position_opened
-    fail: response.order_failed
 
   close_position:
     type: binance/futuresorder
@@ -487,7 +476,6 @@ actions:
       quantity: "0.01"
       position_side: LONG
       reduce_only: true
-    next: response.position_closed
 
   limit_short:
     type: binance/futuresorder
@@ -500,7 +488,6 @@ actions:
       price: "3000"
       leverage: 5
       position_side: SHORT
-    next: response.order_placed
 ```
 
 ### Response
@@ -586,13 +573,11 @@ actions:
       symbol: "BTCUSDT,ETHUSDT,BNBUSDT"
       interval: "1d"
       period: 7
-    next: response.price_changes
 
 conditionals:
   significant_change:
     expression: "{{ gt .check_btc_change.differencePercent 5 }}"
     onTrue: action.send_alert
-    onFalse: response.no_alert
 ```
 
 ### Response
@@ -688,7 +673,6 @@ actions:
       integration: my_binance
       symbol: BTCUSDT
       infoType: orders
-    next: response.orders
 
   get_specific_order:
     type: binance/tradeinfo
@@ -696,7 +680,6 @@ actions:
       integration: my_binance
       symbol: BTCUSDT
       orderID: "{{ param \"order_id\" }}"
-    next: response.order_details
 
   get_futures_positions:
     type: binance/tradeinfo
@@ -705,7 +688,6 @@ actions:
       symbol: BTCUSDT
       futures: true
       infoType: positions
-    next: response.positions
 
   get_all_futures_orders:
     type: binance/tradeinfo
@@ -713,7 +695,6 @@ actions:
       integration: my_binance
       futures: true
       infoType: orders
-    next: response.all_orders
 ```
 
 ---
@@ -739,7 +720,6 @@ conditionals:
   price_dropped:
     expression: "{{ lt .check_price.differencePercent -3 }}"
     onTrue: action.send_alert
-    onFalse: response.no_alert
 
 actions:
   send_alert:
@@ -757,7 +737,6 @@ actions:
         serverPort: "587"
         username: "{{ secret \"SMTP_USER\" }}"
         password: "{{ secret \"SMTP_PASS\" }}"
-    next: response.alert_sent
 ```
 
 ### Dollar-Cost Averaging Bot
@@ -777,7 +756,6 @@ conditionals:
   has_funds:
     expression: "{{ gt .check_balance.balance 100 }}"
     onTrue: action.place_buy
-    onFalse: response.insufficient_funds
 
 actions:
   place_buy:
@@ -788,8 +766,6 @@ actions:
       side: BUY
       type: MARKET
       quote_order_qty: "100"
-    next: response.order_placed
-    fail: response.order_failed
 ```
 
 ---

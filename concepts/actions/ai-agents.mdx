@@ -120,8 +120,6 @@ actions:
       providerID: 2
       systemPrompt: "You are a helpful assistant that provides concise answers."
       userPrompt: "{{ param \"question\" }}"
-    next: response.answer
-    fail: response.error
 ```
 
 ### Structured Response
@@ -141,7 +139,6 @@ actions:
         - confidence: a number between 0 and 1
         - keywords: an array of relevant keywords
       userPrompt: "{{ param \"text\" }}"
-    next: response.analysis
 ```
 
 ### Agent With Workspace Files
@@ -159,7 +156,6 @@ actions:
         You are a research assistant. Read notes.md for prior findings,
         and append anything new you learn to it.
       userPrompt: "{{ param \"question\" }}"
-    next: response.answer
 ```
 
 ---
@@ -200,7 +196,6 @@ actions:
             toolsList:
               - query_database
               - list_tables
-    next: response.result
 ```
 
 #### MCP Config Fields
@@ -233,7 +228,6 @@ actions:
             id: lookup-user
             values:
               tenant: "{{ param \"tenant\" }}"
-    next: response.result
 ```
 
 #### Workflow Config Fields
@@ -345,7 +339,6 @@ actions:
         - {{ .content }}
         {{ end }}
       userPrompt: "{{ param \"question\" }}"
-    next: response.answer
 ```
 
 ### Multi-Tool Agent
@@ -377,7 +370,6 @@ actions:
             - status
           workflowConfig:
             id: list-users
-    next: response.result
 ```
 
 ### Content Generation

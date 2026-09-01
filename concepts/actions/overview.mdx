@@ -4,7 +4,7 @@ description: "Understanding actions — the building blocks of ServFlow workflow
 icon: "play"
 ---
 
-Actions are the core building blocks of ServFlow workflows. They perform discrete operations such as fetching data from a database, calling external APIs, running AI agents, or transforming values. Every workflow consists of an entry point, one or more actions, and a response.
+Actions are the core building blocks of ServFlow workflows. They perform discrete operations such as fetching data from a database, calling external APIs, running AI agents, or transforming values. Every workflow consists of an entry point and one or more actions.
 
 ---
 
@@ -55,7 +55,7 @@ Actions have output handles for defining the flow:
 - **Fail** — Routes when an error occurs
 - **Tools** — Additional outputs for specific action types (e.g., AI Agent tools)
 
-Drag connections from these handles to other actions, conditionals, or response nodes.
+Drag connections from these handles to other actions or conditionals.
 
 ---
 
@@ -78,7 +78,6 @@ actions:
     config:
       # type-specific configuration
     next: action.next_step
-    fail: response.error
 ```
 
 ### Common Fields
@@ -96,7 +95,8 @@ Use the `next` and `fail` fields to define execution paths. The routing syntax f
 
 - `action.other_action` — Route to another action
 - `conditional.check_value` — Route to a conditional branch
-- `response.success` — Route to a response
+
+Leave `next` unset to end the workflow there.
 
 ```yaml
 actions:
@@ -118,7 +118,6 @@ actions:
       recipientEmail: "{{ .get_user.email }}"
       subject: "Welcome!"
       content: "Hello {{ .get_user.name }}, welcome to our platform."
-    next: response.success
 ```
 
 ---
@@ -133,10 +132,6 @@ actions:
 
 <Card title="Conditionals" icon="code-branch" href="/references/concepts/conditionals">
   Add branching logic to your workflows.
-</Card>
-
-<Card title="Responses" icon="reply" href="/references/concepts/responses">
-  Define how your workflow returns data.
 </Card>
 
 <Card title="Dynamic Content" icon="wand-magic-sparkles" href="/references/concepts/dynamic-content">

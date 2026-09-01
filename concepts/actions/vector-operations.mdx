@@ -74,8 +74,6 @@ actions:
         timestamp: "{{ now }}"
       options:
         collection: documents
-    next: response.success
-    fail: response.error
 ```
 
 ---
@@ -130,8 +128,6 @@ actions:
       options:
         collection: documents
         limit: 10
-    next: response.results
-    fail: response.error
 ```
 
 ---
@@ -169,7 +165,6 @@ actions:
         Answer the user's question using only the provided context.
         Context: {{ .search_docs }}
       userPrompt: "{{ param \"question\" }}"
-    next: response.answer
 ```
 
 ### Document Ingestion
@@ -196,7 +191,6 @@ actions:
         category: "{{ param \"category\" }}"
       options:
         collection: documents
-    next: response.stored
 ```
 
 ---

@@ -171,7 +171,6 @@ conditionals:
   conditional_id:
     expression: "{{ eq .status \"active\" }}"
     onTrue: action.process_active
-    onFalse: response.inactive
     type: template
 ```
 
@@ -193,7 +192,8 @@ The `onTrue` and `onFalse` fields use the standard step reference syntax:
 
 - `action.action_id` — Route to an action
 - `conditional.conditional_id` — Route to another conditional
-- `response.response_id` — Route to a response
+
+Leave a branch unset to end the workflow when it is taken.
 
 ### Template Conditionals
 
@@ -205,7 +205,6 @@ conditionals:
     type: template
     expression: "{{ eq .user.role \"admin\" }}"
     onTrue: action.admin_action
-    onFalse: response.forbidden
 ```
 
 ### Structured Conditionals
@@ -224,7 +223,6 @@ conditionals:
           function: notempty
           title: Password
     onTrue: action.create_user
-    onFalse: response.validation_error
 ```
 
 **Logic structure:**
@@ -254,7 +252,6 @@ conditionals:
         (notempty (param "password") "Password" true)
       }}
     onTrue: action.create_user
-    onFalse: response.validation_error
 ```
 
 **Checking if Data Exists:**
@@ -263,7 +260,6 @@ conditionals:
 conditionals:
   user_exists:
     expression: "{{ gt (len .fetch_user) 0 }}"
-    onTrue: response.user_already_exists
     onFalse: action.create_user
 ```
 
@@ -278,7 +274,6 @@ conditionals:
         (eq .user.role "moderator")
       }}
     onTrue: action.privileged_action
-    onFalse: response.forbidden
 ```
 
 **Password Verification:**
@@ -288,14 +283,15 @@ conditionals:
   verify_password:
     expression: "{{ bcrypt (param \"password\") .user.password \"Password\" }}"
     onTrue: action.generate_token
-    onFalse: response.invalid_credentials
 ```
 
 ---
 
 ## Validation Error Collection
 
-When validation functions like `notempty`, `email`, and `bcrypt` include a title parameter, validation errors are automatically collected. Access these errors in responses using the `.errors` variable.
+When validation functions like `notempty`, `email`, and `bcrypt` include a title
+parameter, validation errors are collected automatically. Any later step can read
+them with the `.errors` variable.
 
 ```yaml
 conditionals:
@@ -307,26 +303,20 @@ conditionals:
         (notempty (param "password") "Password" true)
       }}
     onTrue: action.create_user
-    onFalse: response.validation_error
+    onFalse: action.report_errors
 
-responses:
-  validation_error:
-    code: 400
-    responseObject:
-      fields:
-        success:
-          value: "false"
-        errors:
-          value: "{{ .errors }}"
+actions:
+  report_errors:
+    type: static
+    config:
+      return: "{{ jsonout .errors }}"
 ```
 
-This returns a response like:
+`.errors` holds one message per failed check, using the titles given to the
+validation functions:
 
 ```json
-{
-  "success": false,
-  "errors": ["Email is required", "Password is required"]
-}
+["Email is required", "Password is required"]
 ```
 
 ---
