@@ -1,204 +1,181 @@
 ---
-title: "Installation"
-description: "Install ServFlow, start the server, and create your first account"
+title: "Install ServFlow"
+description: "Get a running ServFlow instance, either hosted at app.servflow.io or installed on your own machine"
 icon: "download"
 ---
 
-ServFlow is an agent builder: you define AI agents and the workflows they run, and a Go engine serves them. This guide installs the `servflowai` binary, starts an instance, and walks through the first-run account setup.
+This guide gets you a running ServFlow instance with a signed-in dashboard. Pick one of two paths: the hosted cloud, where ServFlow runs the instance for you, or a self-hosted instance on a machine you manage.
 
-<Tip>
-Setting up a local environment with tracing and debugging? See [Local Environment Setup](/development).
-</Tip>
-
-## Prerequisites
-
-- A terminal
-- One of: Docker, Homebrew, npm, or Go — depending on the method you pick
-
-## Quick start
-
-```bash
-# Homebrew (macOS/Linux)
-brew install Servflow/servflow/servflowai
-servflowai start --config config.toml --dashboard
-
-# Or Docker
-docker run -p 8080:8080 servflow/servflowai
-```
-
-Then open **`http://localhost:8080/dashboard`** and create your account.
-
-<Note>
-One port serves everything. The engine owns the root path, and `--dashboard` mounts the builder UI under `/dashboard` on that same port. Earlier versions used a separate port for the dashboard; they no longer do.
-</Note>
-
-## Installation methods
-
-### Homebrew (macOS / Linux)
-
-```bash
-brew install Servflow/servflow/servflowai
-servflowai --version
-```
-
-### npm
-
-```bash
-npm install -g servflowai
-servflowai --version
-```
-
-### Docker
-
-```bash
-docker pull servflow/servflowai:latest
-```
-
-Run with default configuration:
-
-```bash
-docker run -p 8080:8080 servflow/servflowai
-```
-
-Run with a custom configuration and persistent storage:
-
-```bash
-docker run -d \
-  --name servflowai \
-  -p 8080:8080 \
-  -v $(pwd)/config.toml:/data/config.toml \
-  -v $(pwd)/configs:/data/configs \
-  -v $(pwd)/data:/data \
-  servflow/servflowai
-```
-
-This exposes port **8080** for the engine, the API, and the dashboard, and mounts your configuration and data directories so agents survive restarts.
-
-### Binary downloads
-
-Download pre-built binaries from the [Releases](https://github.com/Servflow/servflowai/releases) page. Available for **Linux** (x86_64, arm64) and **macOS** (x86_64, arm64).
-
-```bash
-tar -xzf servflowai_Linux_x86_64.tar.gz
-chmod +x servflowai
-./servflowai start --config config.toml --dashboard
-```
-
-### From source
-
-```bash
-git clone https://github.com/Servflow/servflowai.git
-cd servflowai
-go build -o servflowai
-./servflowai start --config config.toml --dashboard
-```
-
-<Note>
-Building from source requires Go 1.21 or later.
-</Note>
-
-## Create a configuration file
-
-ServFlow reads a TOML file. Only `server.config_folder` is required:
-
-```toml
-[server]
-port = "8080"
-config_folder = "./configs"
-env = "production"
-
-[sqlite]
-path = "./data/servflow.db"
-master_key = "your-secure-master-key"
-```
-
-<Warning>
-Never commit `master_key` to version control. Set it with the `SERVFLOW_SQLITE_MASTER_KEY` environment variable in production.
-</Warning>
-
-SQLite stores agents, workflow configs, secrets, integrations, and user accounts. Running without it falls back to file-based storage and disables secrets management, OAuth integrations, and the account system.
-
-See the [Configuration Reference](/references/configuration) for every option.
-
-## Start the server
-
-```bash
-servflowai start --config config.toml --dashboard
-```
-
-| Flag | Description |
+| | Choose it when |
 |---|---|
-| `--config`, `-c` | Path to the TOML configuration file. Defaults to `~/.servflow/config.toml` |
-| `--dashboard` | Mount the visual builder under `/dashboard` |
-| `--import-configs` | Import workflow configs from the config folder into SQLite. Requires `--dashboard` |
+| [Cloud](#cloud) | You want nothing to install or maintain. |
+| [Self-hosted](#self-hosted) | You want your data on your own machine, or your agents need to reach services on a private network. |
 
-Without `--dashboard`, only the engine and API run — see [Running ServFlow](/running-modes).
-
-## First run: create your account
-
-The dashboard is gated by default (`authentication.mode = "local"`). On a fresh instance with no accounts yet:
+## Cloud
 
 <Steps>
 
+<Step title="Create an account">
+Go to [app.servflow.io](https://app.servflow.io) and sign up.
+</Step>
+
+<Step title="Create a deployment">
+Choose a slug for your deployment. The slug names your instance, so pick something you are happy to keep. ServFlow provisions the instance in the background, which takes a few moments.
+</Step>
+
 <Step title="Open the dashboard">
-Navigate to `http://localhost:8080/dashboard`.
-</Step>
-
-<Step title="Complete setup">
-A first-run setup wizard collects instance settings — your workspaces directory and whether to enable tracing. These are written to your `config.toml`.
-
-<Note>
-Setup settings are read once at startup, so ServFlow asks you to **restart the server** after saving them.
-</Note>
-</Step>
-
-<Step title="Create the first account">
-Register with an email and a password of at least **8 characters**. The first account is created without authentication to bootstrap the instance; afterwards, creating more accounts requires being signed in.
-</Step>
-
-<Step title="Sign in">
-Use those credentials on the sign-in screen. Sessions are opaque tokens stored in the database, so they survive restarts.
+When the deployment shows as running, open it. You are signed in and ready to build.
 </Step>
 
 </Steps>
 
-<Warning>
-Setup and first-account registration are only available while **no account exists**. Once one does, both are closed off.
-</Warning>
+Next, follow the [Quickstart](/quickstart) to build your first agent.
 
-To disable the gate entirely on a trusted local machine, set `mode = "none"`:
+## Self-hosted
 
-```toml
-[authentication]
-mode = "none"
-```
+### Before you begin
 
-## Verify the installation
+- 100 MB of free RAM. ServFlow is a single Go binary with an embedded dashboard and a SQLite database.
+- A supported platform: Linux or macOS on x86_64 or arm64, or any host that runs Docker.
+- Outbound network access to the LLM providers your agents use.
 
-With the server running, create an agent and its first workflow in the dashboard, or check the CLI can reach your store:
+### Get a working configuration
+
+ServFlow reads a TOML configuration file. You do not need to write one. The first time you run `servflowai start` without a `--config` flag, it writes a complete default configuration to `~/.servflow/config.toml` and starts with it. The database lands in `~/.servflow/data/` and the server listens on port `8080`.
+
+To see the configuration an instance is using, run:
 
 ```bash
-servflowai resource config list --config config.toml
+servflowai resource settings view
 ```
 
-## Next steps
+The Docker image seeds its own configuration into `/data` on first boot, so the same applies there. For what each key means, see the [Configuration reference](/references/configuration).
+
+### Install with Docker
+
+1. Start the container with the port published and a volume mounted at `/data`:
+
+   ```bash
+   docker run -d \
+     --name servflowai \
+     -p 8080:8080 \
+     -v servflowai-data:/data \
+     servflow/servflowai:latest
+   ```
+
+   The image starts the server with the dashboard enabled. The volume holds the configuration file and the database, so keep it across upgrades.
+
+2. Open `http://localhost:8080/dashboard`. The first-run setup screen appears.
+
+### Install the binary
+
+1. Download the archive for your platform from the [Releases](https://github.com/Servflow/servflowai/releases) page. Archives are named by platform, for example `servflowai_Linux_x86_64.tar.gz` or `servflowai_Darwin_arm64.tar.gz`.
+
+2. Extract it and move the binary onto your `PATH`:
+
+   ```bash
+   tar -xzf servflowai_Linux_x86_64.tar.gz
+   sudo mv servflowai /usr/local/bin/
+   ```
+
+3. Start the server with the dashboard enabled:
+
+   ```bash
+   servflowai start --dashboard
+   ```
+
+   The log prints `servflowai started`.
+
+4. Open `http://localhost:8080/dashboard`. The first-run setup screen appears.
+
+### Install with npm
+
+The npm package downloads the same binary for your platform. It supports macOS and Linux on x86_64 and arm64.
+
+1. Install the package globally:
+
+   ```bash
+   npm install -g servflowai
+   ```
+
+2. Start the server with the dashboard enabled:
+
+   ```bash
+   servflowai start --dashboard
+   ```
+
+   The log prints `servflowai started`.
+
+3. Open `http://localhost:8080/dashboard`. The first-run setup screen appears.
+
+### Create the first account
+
+The dashboard requires an account. On a fresh instance the setup and registration screens are open until the first account exists, then they close.
+
+<Steps>
+
+<Step title="Set up your instance">
+Choose a workspace directory and whether to enable tracing. Optional: paste a ServFlow authentication token to connect the instance to servflow.io for trace export and AI assist. Your answers are written to the configuration file.
+</Step>
+
+<Step title="Create your account">
+Enter an email address and a password of at least 8 characters. This creates the first account. Creating further accounts requires being signed in.
+</Step>
+
+<Step title="Restart the server">
+Stop the running process and start it again. The settings from step 1 are read when the server starts. With Docker, run `docker restart servflowai`.
+</Step>
+
+<Step title="Sign in">
+Open the dashboard again and sign in with your credentials. The dashboard opens on the agents page.
+</Step>
+
+</Steps>
+
+To run without the account gate on a trusted local machine, set `mode = "none"` under `[authentication]` in the configuration file.
+
+### Verify
+
+From the terminal, list the agents in the store. On a fresh instance the list is empty and the command exits without error:
+
+```bash
+servflowai resource agent list
+```
+
+If you use Docker, run it inside the container:
+
+```bash
+docker exec servflowai servflowai resource agent list --config /data/config.toml
+```
+
+### Run it properly
+
+For an instance that outlives a first try:
+
+- **Encrypt secrets at rest.** Set `master_key` under `[sqlite]`, and set it through the `SERVFLOW_SQLITE_MASTER_KEY` environment variable rather than the file. See [Secrets](/references/secrets).
+- **Back up the database.** The SQLite file holds your agents, integrations, secrets, and accounts.
+- **Do not expose the server directly.** Put it behind a reverse proxy with TLS. The management endpoint at `/api/mcp` is unauthenticated in `local` mode, so keep the instance off the public internet.
+- **Run it as a service.** Use a Docker restart policy, or a systemd unit for the binary, so it comes back after a reboot.
+- **Pin a version.** Use a tagged image or package version rather than `latest`.
+
+## Related
 
 <CardGroup cols={2}>
 
 <Card title="Quickstart" icon="rocket" href="/quickstart">
-  Deploy your first API with the dashboard or declaratively.
+  Build your first agent with the dashboard or declaratively.
 </Card>
 
-<Card title="Configuration Reference" icon="gear" href="/references/configuration">
-  Every TOML option and environment variable.
+<Card title="Configuration reference" icon="gear" href="/references/configuration">
+  Every TOML key and environment variable.
 </Card>
 
 <Card title="Running ServFlow" icon="server" href="/running-modes">
-  What the server serves, and how to deploy it.
+  What the server serves and how to deploy it.
 </Card>
 
-<Card title="Secrets Management" icon="key" href="/references/secrets">
-  Store API keys and credentials securely.
+<Card title="Local environment setup" icon="code" href="/development">
+  Tracing and debugging for development.
 </Card>
 
 </CardGroup>
