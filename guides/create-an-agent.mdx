@@ -1,0 +1,255 @@
+---
+title: "Create an agent"
+description: "Build an agent in the dashboard, from the New Agent page to a reply over HTTP, or create one from a config file with the CLI or MCP"
+icon: "robot"
+---
+
+This guide creates an agent that answers an HTTP request. It walks the dashboard from the **New Agent** page to a `curl` call that returns the model's reply, then shows the same job done from a config file. Use it when you have a running instance and want your first agent, or a new one.
+
+The example is a two-stage pipeline named Question answerer. The first stage answers a question sent in a JSON body and the second rewrites the answer as one paragraph.
+
+## Before you begin
+
+- A running instance with the dashboard open. See [Install ServFlow](/installation).
+- An LLM provider. In the sidebar under **Configure**, open **Providers** and add one if the list is empty. A sub-agent without a provider cannot run.
+
+## Create an agent in the UI
+
+### Create the agent
+
+<Steps>
+
+<Step title="Open the Agents page and click New Agent">
+In the sidebar under **Build**, open **Agents**. Click **New Agent** in the top right. The New Agent page opens.
+
+<Frame>
+  <img src="/images/guides/create-an-agent/01-agents-list.png" alt="The Agents page with the New Agent button in the top right" />
+</Frame>
+</Step>
+
+<Step title="Choose Start from scratch">
+Under **How to start**, choose **Start from scratch**. The **Name and description** section appears below it.
+
+<Frame>
+  <img src="/images/guides/create-an-agent/02-how-to-start.png" alt="The How to start section with three cards: Start from scratch, Use a template, Import a config" />
+</Frame>
+
+**Use a template** installs a ready-made agent. **Import a config** takes a config you already have. Both leave you in the same editor as the rest of this guide.
+</Step>
+
+<Step title="Name the agent and choose an architecture">
+Enter a **Name**, for example `Question answerer`. The **Architecture** section appears.
+
+Choose **Sequential pipeline** and set **Pipeline stages** to `2 sub-agents`. Each section keeps a summary of your answer on its right edge, so you can change an earlier choice at any point.
+
+<Frame>
+  <img src="/images/guides/create-an-agent/04-architecture.png" alt="The New Agent page with the name filled in and Sequential pipeline selected" />
+</Frame>
+
+| Arrangement | What it scaffolds |
+|---|---|
+| Sequential pipeline | Sub-agents run in a chain. Each one's reply feeds the next. |
+| Supervisor / router | A coordinator sub-agent routes work to specialists and collects results. |
+| Parallel fan-out | One entry sub-agent calls several workers, then hands off to an aggregator. |
+</Step>
+
+<Step title="Click Create Agent">
+Click **Create Agent**. The editor opens on a canvas with four nodes from top to bottom: the entry, labelled **Manual trigger**, the sub-agents **Analyze request** and **Compose response**, and **Final response**. The agent is saved, and its id, `question-answerer`, is derived from the name.
+
+<Frame>
+  <img src="/images/guides/create-an-agent/05-editor.png" alt="The editor canvas showing the entry, two sub-agent nodes, and the final response" />
+</Frame>
+</Step>
+
+</Steps>
+
+### Set the entry
+
+The entry decides how a run starts. A new agent starts as a trigger that runs by hand or on a schedule. To make it answer HTTP requests:
+
+<Steps>
+
+<Step title="Open the entry panel">
+Click the **Manual trigger** node. The **Entry** panel opens on the right.
+</Step>
+
+<Step title="Choose the webhook entry type">
+Under **Entry type**, choose **Webhook — a plain HTTP request starts the agent**. A **Path** field appears.
+</Step>
+
+<Step title="Enter a path">
+Enter `/ask`. The entry node on the canvas relabels to `/ask`. The agent answers `POST` requests on that path.
+
+<Frame>
+  <img src="/images/guides/create-an-agent/07-entry-webhook.png" alt="The Entry panel set to Webhook with the path /ask" />
+</Frame>
+</Step>
+
+</Steps>
+
+The other entry types connect the agent to GitHub, Telegram, or Discord, and each has its own fields. See [Entry handlers](/references/entry-handlers).
+
+### Configure the sub-agents
+
+<Steps>
+
+<Step title="Open the first sub-agent">
+Click the **Analyze request** node. Its panel opens.
+</Step>
+
+<Step title="Choose a provider">
+Under **Provider**, choose your provider. The panel confirms with "Calls" and the provider's name.
+</Step>
+
+<Step title="Write the prompts">
+Under **Instructions**, enter a **System prompt**:
+
+```
+Answer the question you are given. Be brief and accurate.
+```
+
+Enter a **User prompt** that reads the request body:
+
+```
+{{ body "question" }}
+```
+
+The `body` function reads a field from a JSON request body.
+
+<Frame>
+  <img src="/images/guides/create-an-agent/09-subagent-filled.png" alt="The Analyze request panel with a provider chosen and both prompts filled in" />
+</Frame>
+</Step>
+
+<Step title="Configure the second sub-agent">
+Click the **Compose response** node. Choose the same provider and enter a **System prompt**:
+
+```
+Rewrite the answer you receive as one clear paragraph.
+```
+
+Leave its **User prompt** empty. In a pipeline, a stage receives the previous stage's reply.
+</Step>
+
+<Step title="Save">
+Click **Save** in the top bar. The button reads **Saved**, and the running server picks up the agent without a restart.
+</Step>
+
+</Steps>
+
+### Verify
+
+Test the agent from the editor first:
+
+<Steps>
+
+<Step title="Click Run">
+Click **Run** in the top bar. The run dialog asks for a **Request body**.
+</Step>
+
+<Step title="Enter a request body and run">
+Enter the body and click **Run**:
+
+```json
+{ "question": "What is a webhook?" }
+```
+
+<Frame>
+  <img src="/images/guides/create-an-agent/12-run-dialog.png" alt="The Run dialog with a JSON request body entered" />
+</Frame>
+</Step>
+
+<Step title="Read the result">
+The **Run** panel shows **Completed**, a log of each sub-agent's turn, and a **Final response** block with the reply, the duration, and the conversation thread id. **New payload** runs it again with a different body.
+
+<Frame>
+  <img src="/images/guides/create-an-agent/13-run-result.png" alt="The Run panel showing a completed run and the final response" />
+</Frame>
+</Step>
+
+</Steps>
+
+Then call it from outside. The response body is the agent's reply:
+
+```bash
+curl -X POST http://localhost:8080/ask \
+  -H 'Content-Type: application/json' \
+  -d '{"question": "What is a webhook?"}'
+```
+
+The `body` function only reads requests sent with `Content-Type: application/json`.
+
+## Create an agent from the CLI or MCP
+
+If you keep agents in files, describe the agent in a JSON or YAML document and create it with the `resource` CLI or the management MCP server. Both write to the same store the dashboard uses, and a running server picks up the change without a restart.
+
+### CLI
+
+The `agent` noun of the `resource` command covers the whole lifecycle. It talks to the SQLite store directly, so it works with no server running.
+
+```bash
+servflowai resource agent schema                 # JSON Schema for the config document
+servflowai resource agent create -f agent.yaml --dry-run
+servflowai resource agent create -f agent.yaml
+servflowai resource agent list
+servflowai resource agent get <config_id>
+servflowai resource agent update <config_id> -f agent.yaml
+servflowai resource agent enable <config_id>
+servflowai resource agent disable <config_id>
+servflowai resource agent delete <config_id>
+```
+
+- The body is a stored agent: a `name`, an optional `config_id`, and the config document under `config`. A missing `config_id` is derived from the name.
+- `-f -` reads the body from stdin.
+- `--dry-run` validates and prints the result without writing.
+- `--set key=value` overlays one field by dotted path. Repeat it for more.
+- `--reload` is on by default and signals a running server to reload.
+
+The agent from the first section, reduced to one sub-agent, looks like this. Replace `providerID` with an id from `servflowai resource provider list`.
+
+```yaml
+name: Question answerer
+config:
+  entry:
+    type: handler
+    handlerConfig:
+      path: /ask
+    start: agent.answer
+  agents:
+    answer:
+      name: Answerer
+      providerID: 2
+      systemPrompt: Answer the question you are given. Be brief and accurate.
+      userPrompt: '{{ body "question" }}'
+      next: end
+```
+
+### MCP
+
+The management server at `/api/mcp` exposes the same operations to an AI client. The tools for agents are `config_schema`, `config_example`, `validate_config`, `create_config`, `update_config`, `list_configs`, `get_config`, `delete_config`, and `set_config_enabled`. `config_schema` and `config_example` take a `kind` argument that defaults to `agent`. A config has to name a real provider and, for a handler entry, a real integration, so `list_providers` and `list_integrations` come first.
+
+In `local` and `none` authentication modes the MCP endpoint is unauthenticated. Anyone who can reach it can administer the instance, so keep it off the public internet.
+
+For the shape of the config document, run `servflowai resource agent schema` and see [Agents](/concepts/agents).
+
+## Related
+
+<CardGroup cols={2}>
+
+<Card title="Entry handlers" icon="right-to-bracket" href="/references/entry-handlers">
+  Every entry type, its fields, and the variables it injects.
+</Card>
+
+<Card title="Agents" icon="robot" href="/concepts/agents">
+  What an agent is made of: entry, sub-agents, and context groups.
+</Card>
+
+<Card title="Dynamic content" icon="code" href="/references/concepts/dynamic-content">
+  Template functions such as `body`, `param`, and `secret`.
+</Card>
+
+<Card title="Install ServFlow" icon="download" href="/installation">
+  Get a running instance if you do not have one yet.
+</Card>
+
+</CardGroup>
