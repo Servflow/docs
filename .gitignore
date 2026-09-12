@@ -1,0 +1,16 @@
+# Planning documents are kept locally, not published. See plans/README.md.
+plans/*
+!plans/README.md
+
+# Local tooling
+.claude/
+.vscode/
+.idea/
+
+# Mintlify
+.mintlify/
+.mint/
+node_modules/
+
+# macOS
+.DS_Store
