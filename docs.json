@@ -31,17 +31,9 @@
             "icon": "book-open",
             "pages": [
               "guides/create-an-agent",
-              "quickstart",
-              "quickstart-dashboard",
-              "quickstart-declarative"
-            ]
-          },
-          {
-            "group": "Running ServFlow",
-            "icon": "server",
-            "pages": [
-              "running-modes",
-              "development"
+              "guides/add-a-tool",
+              "guides/add-an-integration",
+              "guides/connect-an-agent-to-discord"
             ]
           },
           {
@@ -49,6 +41,7 @@
             "icon": "lightbulb",
             "pages": [
               "concepts/agents",
+              "concepts/entries",
               {
                 "group": "Actions",
                 "icon": "bolt",
@@ -87,6 +80,8 @@
             "pages": [
               "references/configuration",
               "references/entry-handlers",
+              "references/integrations",
+              "references/tools",
               "references/secrets"
             ]
           }
@@ -120,7 +115,7 @@
     "primary": {
       "type": "button",
       "label": "Get Started",
-      "href": "https://servflow.mintlify.app/quickstart"
+      "href": "https://servflow.mintlify.app/guides/create-an-agent"
     }
   },
   "contextual": {
