@@ -4,11 +4,11 @@ description: "Every way an agent can be started: the entry types, each handler's
 icon: "right-to-bracket"
 ---
 
-An agent's entry decides how a run starts. This page lists every entry type, the configuration fields of each entry handler, and the variables a handler makes available to prompts. Values are taken from the running binary; `servflowai resource handler describe --all` prints the same catalog.
+An agent's entries decide how a run starts. This page lists every entry type, the configuration fields of each entry handler, and the variables a handler makes available to prompts. Values are taken from the running binary; `servflowai resource handler describe --all` prints the same catalog.
 
 ## Entry types
 
-| Dashboard label | `entry.type` | `handlerConfig.type` | Needs a path | Replies to |
+| Dashboard label | `type` | `handlerConfig.type` | Needs a path | Replies to |
 |---|---|---|---|---|
 | Trigger — run manually or on a schedule | `trigger` | — | No | Nobody. The reply is logged. |
 | Webhook — a plain HTTP request starts the agent | `handler` | empty | Yes | The HTTP caller. |
@@ -22,25 +22,37 @@ A trigger entry has one field.
 
 | Key | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `cron` | string | No | empty | Cron expression with an optional seconds field, or a descriptor such as `@hourly`. Empty means the agent only runs when started by hand. |
+| `cron` | string | No | empty | Cron expression with six fields, seconds first, such as `0 0 9 * * 1-5` for 09:00 on weekdays, or a descriptor such as `@hourly` or `@every 5m`. Empty means the agent runs only when started by hand or handed a task. |
 
 ### Webhook
 
-A webhook entry answers `POST` requests on its path. The method is fixed. No handler wraps the request, so nothing is authenticated and nothing is read from it in advance. Prompts read the request with the `body`, `param`, and `header` template functions. `body` reads a field from a JSON body and requires `Content-Type: application/json`. The response body is the agent's final reply.
+A webhook entry answers `POST` requests on its path. The method is fixed. No handler wraps the request, so nothing is authenticated and nothing is read from it in advance. Prompts read the request with the `body`, `param`, and `header` template functions. `body` reads a field from a JSON body and requires `Content-Type: application/json`.
+
+| Response | When |
+|---|---|
+| `200`, with the agent's final reply as `text/plain` | The agent said something. |
+| `204`, with no body | The run finished and the agent said nothing. |
+| `500` | The run failed. |
+
+Every response carries an `X-Conversation-Id` header naming the conversation thread the run used. A request that sends the same header continues that thread, so the agent remembers the earlier requests. A request without it starts a new thread.
 
 ## Entry handlers
 
-An entry handler wraps the whole run. On the way in it authenticates the delivery and parses it into variables. On the way out it delivers the agent's reply to the sender. Each handler needs an integration of a specific type, created before the agent.
+An entry handler receives from one outside service and delivers the agent's reply to it. Each handler needs an integration of a specific type, created before the agent. For what a handler does and why, see [Entries and entry handlers](/concepts/entries).
 
 Variables are read in a prompt as `{{ .<namespace>.<key> }}`, for example `{{ .github.comment_body }}`.
 
-A handler marked as a listener dials its sender and holds the connection open. It has no path.
+A handler marked as a listener dials its sender and holds the connection open. It has no path, and needs no address the sender can reach.
+
+A handler's configuration is resolved once, when the agent loads. The only template function it can use is `secret`, and it cannot read the request. A changed secret takes effect the next time the agent loads.
 
 ### github_webhook
 
 Runs on a delivery from a GitHub App: an issue or pull request comment, a review comment, a push. The agent's answer is posted back to the pull request or issue that started the run when `respond_to` says so.
 
 Namespace: `github`. Needs a path. Integration type: `github_app`.
+
+A delivery is answered `202` at once, and the run continues after the response. Each delivery runs in a conversation thread of its own. A delivery that the filters refuse, or that comes from an installation other than the integration's, is answered `202` with `{"status":"ignored"}` and starts no run.
 
 **Configuration**
 
@@ -50,7 +62,7 @@ Namespace: `github`. Needs a path. Integration type: `github_app`.
 | `events` | Events | string list | No | every event the App is subscribed to | `X-GitHub-Event` names this entry accepts, such as `issue_comment`, `pull_request`, `pull_request_review_comment`, `issues`, `push`. |
 | `actions` | Actions | string list | No | any action | Delivery actions this entry accepts, such as `opened`, `created`, `synchronize`. |
 | `trigger_text` | Trigger text | string | No | the App's own handle | What a comment has to say to be talking to this agent. Set it to be summoned by something other than the App's name, such as `/review`. |
-| `respond_to` | Respond to | string list | No | never posts; the answer only reaches the log | Which kinds of delivery get the agent's answer posted back. Values: `pull_request`, `issue`. |
+| `respond_to` | Respond to. **Reply on** in the dashboard | string list | No | never posts; the answer only reaches the log | Which kinds of delivery get the agent's answer posted back. Values: `pull_request`, `issue`. |
 | `update_pr_comment` | Update the previous comment | boolean | No | `false` | Edit the comment this config last left on the pull request instead of posting another one underneath it. |
 
 **Variables**
@@ -77,6 +89,8 @@ Namespace: `github`. Needs a path. Integration type: `github_app`.
 Runs on a message delivered by the Telegram Bot API, and sends the agent's answer back to the chat it came from. Each chat keeps its own conversation thread.
 
 Namespace: `telegram`. Needs a path. Integration type: `telegram_bot`.
+
+Each chat has one conversation thread, so the agent remembers earlier messages in that chat.
 
 **Configuration**
 
@@ -119,6 +133,8 @@ Holds a websocket open to Discord and runs on the messages it hears, answering i
 
 Namespace: `discord`. No path. Integration type: `discord`.
 
+Each channel has one conversation thread, and a Discord thread counts as a channel of its own.
+
 **Configuration**
 
 | Key | Label | Type | Required | Default | Description |
@@ -156,39 +172,49 @@ Namespace: `discord`. No path. Integration type: `discord`.
 | `reply_to_author` | string | Who wrote the message this one replies to. |
 | `message_link` | string | A link to the message. |
 
-## Declaring an entry in a config
+## Declaring entries in a config
 
-In an agent config, the entry is the `entry` object. `start` names the first sub-agent or context group to run.
+In an agent config, `entries` is a list with at least one entry. In each entry, `start` names the first sub-agent or context group to run.
 
 ```yaml
-entry:
-  type: handler
-  handlerConfig:
-    type: github_webhook
-    path: /hooks/pull-request
-    config:
-      integration: my-github-app
-      events: [pull_request]
-      actions: [opened, synchronize]
-      respond_to: [pull_request]
-  start: agent.review
+entries:
+  - type: handler
+    handlerConfig:
+      type: github_webhook
+      path: /hooks/pull-request
+      config:
+        integration: my-github-app
+        events: [pull_request]
+        actions: [opened, synchronize]
+        respond_to: [pull_request]
+    start: agent.review
 ```
 
 A webhook entry leaves `handlerConfig.type` empty and `config` out. A trigger entry replaces `handlerConfig` with `trigger`:
 
 ```yaml
-entry:
-  type: trigger
-  trigger:
-    cron: "0 9 * * 1-5"
-  start: agent.digest
+entries:
+  - type: trigger
+    trigger:
+      cron: "0 0 9 * * 1-5"
+    start: agent.digest
 ```
+
+A config with more than one entry has to pass three rules.
+
+| Rule | Message when it is broken |
+|---|---|
+| At most one trigger entry. | `a config can have only one trigger entry` |
+| At most one entry for each handler type, and at most one webhook entry. | `a config can have only one "<name>" handler entry` |
+| No two entries on the same path. | `entries "<name>" and "<name>" both answer on path "<path>"` |
+
+An entry's name is `trigger` for a trigger, the handler's type for an entry handler, and `default` for a webhook. Traces and test runs use it to say which entry a run came in through.
 
 ## Related
 
 <CardGroup cols={2}>
 
-<Card title="Create an agent" icon="robot" href="/guides/create-an-agent">
+<Card title="Creating your first agent" icon="robot" href="/guides/create-an-agent">
   Set the entry in the dashboard while building an agent.
 </Card>
 
