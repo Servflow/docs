@@ -1,0 +1,158 @@
+---
+title: "Integrations"
+description: "Every integration type: its configuration fields, what uses it, and how an integration is identified and stored"
+icon: "puzzle-piece"
+---
+
+An integration is a stored set of third-party credentials, such as a bot token or a database connection string, that actions, entry handlers, and MCP tools look up by id. This page lists every integration type, its fields, and what uses it. Values are taken from the running binary; `servflowai resource integration describe --all` prints the same catalog.
+
+## Identity and storage
+
+- **Id.** Every integration has an id, such as `discord` or `github-app`. Configs reference the integration by this id. The id cannot be changed after the integration is created.
+- **Field values.** Each field holds either a literal value or a reference to a stored [secret](/references/secrets). A literal is stored in the integration's config as typed. A secret reference keeps the value in Secrets, so it never appears in the config.
+- **Encryption.** When `master_key` is set under `[sqlite]`, integration config is encrypted at rest. See the [Configuration reference](/references/configuration).
+- **Guided setup.** In the dashboard, `discord`, `github_app`, and `notion_mcp` open a guided setup. Every other type opens a form with one input per field. To add one in the dashboard, see [Add an integration](/guides/add-an-integration).
+
+## Types
+
+| Type | Name | Guided setup | Used by |
+|---|---|---|---|
+| [`binance`](#binance) | Binance | No | `binance/*` actions |
+| [`chromium`](#chromium) | Chromium | No | `chromium/*` actions |
+| [`discord`](#discord) | Discord | Yes | `discord/*` actions, `discord_gateway` entry |
+| [`github_app`](#github_app) | GitHub App | Yes | `github_fetch` and `github_post` actions, `github_webhook` entry |
+| [`mongo`](#mongo) | MongoDB | No | `fetch`, `delete`, `authenticate`, and `mongoquery` actions |
+| [`notion_mcp`](#notion_mcp) | Notion | Yes | MCP server tools |
+| [`qdrant`](#qdrant) | Qdrant | No | `storevector` and `fetchvectors` actions |
+| [`sql`](#sql) | SQL Database | No | `fetch`, `delete`, and `authenticate` actions |
+| [`telegram_bot`](#telegram_bot) | Telegram Bot | No | `telegram_webhook` entry |
+
+### binance
+
+Binance cryptocurrency exchange integration for trading operations.
+
+| Key | Label | Type | Required | Default |
+|---|---|---|---|---|
+| `api_key` | API Key | password | Yes | — |
+| `secret_key` | Secret Key | password | Yes | — |
+| `testnet` | Testnet | boolean | No | `false` |
+| `timeout` | Timeout (seconds) | number | No | `30` |
+
+### chromium
+
+Chromium browser automation integration for web scraping and testing.
+
+| Key | Label | Type | Required | Default |
+|---|---|---|---|---|
+| `headless` | Headless Mode | boolean | No | `true` |
+| `timeout` | Timeout (seconds) | number | No | `30` |
+
+### discord
+
+A Discord bot for one server. It reads that server, and sends messages anywhere it can. To run an agent as a Discord bot, see [Connect an agent to Discord](/guides/connect-an-agent-to-discord).
+
+| Key | Label | Type | Required | Default |
+|---|---|---|---|---|
+| `bot_token` | Bot Token | password | Yes | — |
+| `guild_id` | Server | string | Yes | — |
+
+### github_app
+
+A GitHub App's credentials. The GitHub actions mint installation tokens with them, and the App's deliveries are signed with its webhook secret.
+
+| Key | Label | Type | Required | Default |
+|---|---|---|---|---|
+| `base_url` | Base URL | string | No | `https://api.github.com` |
+| `client_id` | Client ID | string | Yes | — |
+| `installation_id` | Installation ID | string | Yes | — |
+| `pem` | Private Key (PEM) | password | Yes | — |
+| `webhook_secret` | Webhook Secret | password | Yes | — |
+
+### mongo
+
+MongoDB database integration for document storage and retrieval.
+
+| Key | Label | Type | Required | Default |
+|---|---|---|---|---|
+| `connectionString` | Connection String | password | Yes | — |
+| `dbName` | Database Name | string | Yes | — |
+
+### notion_mcp
+
+A Notion workspace connected through Notion's MCP server. It has no fields. The dashboard connects it through Notion's OAuth sign-in, and an MCP server tool sends its token.
+
+### qdrant
+
+Qdrant vector database for similarity search and vector storage.
+
+| Key | Label | Type | Required | Default |
+|---|---|---|---|---|
+| `url` | URL | string | Yes | — |
+
+### sql
+
+SQL database integration supporting PostgreSQL and MySQL.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `connectionString` | Connection String | password | Yes | — | — |
+| `type` | Database Type | select | Yes | — | `postgres`, `mysql` |
+
+### telegram_bot
+
+A Telegram bot: the token BotFather issued, and the secret its webhook is registered with.
+
+| Key | Label | Type | Required | Default |
+|---|---|---|---|---|
+| `secret_token` | Webhook Secret Token | password | Yes | — |
+| `token` | Bot Token | password | Yes | — |
+
+## Managing integrations outside the dashboard
+
+### CLI
+
+The `integration` noun of the `resource` command manages stored integrations. `list` never includes config.
+
+| Command | What it does |
+|---|---|
+| `servflowai resource integration list` | Lists integrations, without config. |
+| `servflowai resource integration get <integrationId>` | Gets one integration. |
+| `servflowai resource integration create -f <file>` | Creates an integration. |
+| `servflowai resource integration update <integrationId> -f <file>` | Replaces an integration's type and config. |
+| `servflowai resource integration delete <integrationId>` | Deletes an integration. |
+| `servflowai resource integration types` | Lists the integration types. |
+| `servflowai resource integration describe [type...]` | Describes types and their fields. Pass `--all` for every type. |
+
+{/* TODO: confirm the stored config shape once the integration create investigation lands. */}
+
+The body names the id, the type, and the config as a JSON string. Each field in the config is an object holding either a `value` or a `secret`:
+
+```json
+{
+  "integrationId": "vectors",
+  "type": "qdrant",
+  "config": "{\"url\": {\"value\": \"http://localhost:6333\"}}"
+}
+```
+
+### MCP
+
+The management server at `/api/mcp` exposes `list_integrations`, `get_integration`, `create_integration`, `update_integration`, `delete_integration`, `list_integration_types`, and `describe_integration_type`.
+
+## Related
+
+<CardGroup cols={2}>
+
+<Card title="Connect an agent to Discord" icon="discord" href="/guides/connect-an-agent-to-discord">
+  Add a Discord integration and run an agent as a bot.
+</Card>
+
+<Card title="Entry handlers" icon="right-to-bracket" href="/references/entry-handlers">
+  The entries that take an integration, and their fields.
+</Card>
+
+<Card title="Secrets" icon="key" href="/references/secrets">
+  Store a credential once and reference it from an integration.
+</Card>
+
+</CardGroup>

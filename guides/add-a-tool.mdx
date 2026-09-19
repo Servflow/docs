@@ -1,0 +1,229 @@
+---
+title: "Add a tool to an agent"
+description: "Give a sub-agent something to call during a run: attach an action as a tool, choose what the model fills in, test it from the editor, and guard it"
+icon: "wrench"
+---
+
+This guide attaches a tool to a sub-agent, so the model can call it during a run. It covers choosing which inputs the model supplies, testing the tool from the editor, and adding a guard that decides when the tool may run. Use it when an agent has to look something up or act on something, and its prompt alone is not enough.
+
+The example is a tool named `github_repo` that looks a repository up on the GitHub API. The model supplies the repository name and nothing else.
+
+## Before you begin
+
+- An agent that answers a webhook and has a provider. See [Creating your first agent](/guides/create-an-agent). The screenshots show an agent named Repo lookup that answers on `/repo`.
+- For the example, an instance that can reach `api.github.com`. The request needs no credentials.
+
+## Attach an action tool
+
+<Steps>
+
+<Step title="Open the sub-agent's Tools section">
+Open the agent in the editor and click the sub-agent that needs the tool. In its panel, scroll to the **Tools** section. With nothing attached, it reads "No tools — it answers from the prompt alone."
+
+<Frame>
+  <img src="/images/guides/add-a-tool/01-tools-section.png" alt="A sub-agent panel with an empty Tools section and the Add a tool select" />
+</Frame>
+</Step>
+
+<Step title="Choose Run action">
+Under **Add a tool…**, choose **Run action…**. A row appears in the section, and the **Configure Run action** dialog opens. The dialog has three sections, listed on its left edge: **Tool**, **Action**, and **Guards**.
+</Step>
+
+<Step title="Name the tool and say when to use it">
+In the **Tool** section, enter a **Display name**, for example `github_repo`. The model calls the tool by this name, so use letters, digits, and underscores.
+
+Under **When to use**, describe the situation the tool is for. The model reads this to decide whether to call it:
+
+```
+When the user asks about a GitHub repository, such as its description, stars, or default branch.
+```
+
+<Frame>
+  <img src="/images/guides/add-a-tool/02-dialog-tool.png" alt="The Configure Run action dialog with the Display name and When to use fields filled in" />
+</Frame>
+</Step>
+
+<Step title="Choose the action">
+In the **Action** section, under **Action**, choose **HTTP Request**. The action's fields appear below it. Each field holds a value you set, and most have a **Let the model set this** link under them.
+</Step>
+
+<Step title="Set the fields and the model's input">
+Leave **HTTP Method** at `GET`. Under **URL**, enter the address with the model's input in the place it belongs:
+
+```
+https://api.github.com/repos/{{ tool_param "repo" }}
+```
+
+The `tool_param` function reads an input the model sends when it calls the tool. With the rest of the URL fixed, the model chooses a repository and cannot point the request at another host.
+
+<Frame>
+  <img src="/images/guides/add-a-tool/03-dialog-action.png" alt="The Action section with HTTP Request chosen and a URL that contains a tool_param call" />
+</Frame>
+
+Scroll to **Additional inputs** and enter `repo`. The section's summary line now reads "HTTP Request · sends repo", which is everything the model sends when it calls this tool.
+
+<Frame>
+  <img src="/images/guides/add-a-tool/04-dialog-additional.png" alt="The Additional inputs field holding repo, above the Guards section" />
+</Frame>
+
+To hand a whole field to the model instead, click **Let the model set this** under it. The field then holds the name of the input, and **Set a fixed value instead** switches it back.
+</Step>
+
+<Step title="Save the tool">
+Click **Save tool**. The row in the **Tools** section reads `github_repo`, with `http` under it, and the tool appears on the canvas beside the sub-agent. The gear on the row opens the dialog again, and the trash icon removes the tool.
+
+<Frame>
+  <img src="/images/guides/add-a-tool/05-tools-row.png" alt="The Tools section listing github_repo, and the tool shown on the canvas next to the sub-agent" />
+</Frame>
+</Step>
+
+<Step title="Tell the model about the tool">
+In the same panel, set the sub-agent's **System prompt** so the model knows to use the tool:
+
+```
+Answer questions about GitHub repositories. Use the github_repo tool to look a repository up, and answer from what it returns.
+```
+
+Click **Save** in the top bar. The button reads **Saved**.
+</Step>
+
+</Steps>
+
+## Verify
+
+<Steps>
+
+<Step title="Run the agent from the editor">
+Click **Run** in the top bar. Enter a **Request body** that needs the tool, and click **Run**:
+
+```json
+{ "question": "What is the Servflow/servflow repository about?" }
+```
+
+<Frame>
+  <img src="/images/guides/add-a-tool/06-run-dialog.png" alt="The Run dialog with a question about a GitHub repository as the request body" />
+</Frame>
+</Step>
+
+<Step title="Read the log">
+The **Run** panel shows **Completed**. Its **Log** lists "attempting to execute tool", then "finished request" from the HTTP action, then "successfully executed tool". The **Final response** answers from what GitHub returned.
+
+<Frame>
+  <img src="/images/guides/add-a-tool/07-run-result.png" alt="The Run panel with log lines for the tool call and a final response describing the repository" />
+</Frame>
+
+If the log has no tool lines, the model answered without the tool. See [If the tool is not called](#if-the-tool-is-not-called).
+</Step>
+
+<Step title="Call the agent from outside">
+Send the same question to the agent's path:
+
+```bash
+curl -X POST http://localhost:8080/repo \
+  -H 'Content-Type: application/json' \
+  -d '{"question": "What is the Servflow/servflow repository about?"}'
+```
+
+The response body is the agent's reply.
+</Step>
+
+</Steps>
+
+## Add a guard
+
+A guard is a condition on the request that started the run. When it does not pass, the tool call is refused, whatever the model sent. This example allows the lookup only for requests that carry `"plan": "pro"`.
+
+<Steps>
+
+<Step title="Open the Guards section">
+In the **Tools** section, click the gear on the `github_repo` row. In the dialog, click **Guards** on the left edge, then click **Add guard**.
+</Step>
+
+<Step title="Name the guard and write its condition">
+Enter a **Guard name**, for example `pro_plan_only`. The name appears in traces, and in what the model is told when a call is refused.
+
+Under **Allow the call when**, enter a template that renders `true` when the call is allowed:
+
+```
+{{ eq (body "plan") "pro" }}
+```
+
+The section's summary reads "1 condition must pass", and **Guards** on the left edge shows a count of 1.
+
+<Frame>
+  <img src="/images/guides/add-a-tool/08-dialog-guards.png" alt="The Guards section with a guard named pro_plan_only and its condition" />
+</Frame>
+</Step>
+
+<Step title="Save and test the refusal">
+Click **Save tool**, then **Save**. Click **Run** and send the earlier request body, which has no `plan` field. The log reads "condition evaluated to false", then "tool call denied by guard", and the model answers without the repository data.
+
+<Frame>
+  <img src="/images/guides/add-a-tool/09-run-denied.png" alt="The Run panel with log lines showing the tool call denied by the guard" />
+</Frame>
+
+Click **New payload** and add `"plan": "pro"` to the body. The tool runs as before.
+</Step>
+
+</Steps>
+
+## Attach another type of tool
+
+**Add a tool…** lists three more types. Each opens the same dialog with a different middle section. For every field, see the [Tools reference](/references/tools).
+
+### MCP server
+
+To offer the tools of a Model Context Protocol server, choose **MCP server…**. In the **Server** section, enter the **Server endpoint**. If the server needs a token, choose where it comes from under **Access token**: an **Integration** connected through OAuth, a **Secret**, or a pasted **Token**. Click **Load tools** and select the **Allowed tools**. **Save tool** stays disabled until at least one tool is selected.
+
+<Frame>
+  <img src="/images/guides/add-a-tool/10-dialog-mcp.png" alt="The Configure MCP server dialog with the Server endpoint, Access token, and Allowed tools fields" />
+</Frame>
+
+### Call sub-agent
+
+To let one sub-agent call another in the same agent, choose **Call sub-agent…**. Under **Sub-agent**, choose the sub-agent to call. The **Display name** takes that sub-agent's name. The called sub-agent's reply is what comes back.
+
+<Frame>
+  <img src="/images/guides/add-a-tool/11-dialog-subagent.png" alt="The Configure Call sub-agent dialog with a sub-agent chosen" />
+</Frame>
+
+### Agent Task Tool
+
+To hand a task to another stored agent, choose **Agent Task Tool…**. Under **Agent**, choose an enabled agent that is entered by a trigger. When the model calls the tool it writes one instruction, which the other agent reads as `{{ input "instruction" }}`. The tool returns as soon as the task has started, and nothing the other agent says comes back.
+
+<Frame>
+  <img src="/images/guides/add-a-tool/12-dialog-agent-task.png" alt="The Configure Agent Task Tool dialog with an agent chosen" />
+</Frame>
+
+### Built-in file tools
+
+Every sub-agent already has `read_file`, `write_file`, and `list_files`, with nothing to attach. They work in the folder chosen under **Workspace** in the panel's **Memory** section. See [Built-in tools](/references/tools#built-in-tools).
+
+## If the tool is not called
+
+- **The model did not choose it.** Make **When to use** specific, and name the tool in the sub-agent's **System prompt**.
+- **A guard refused it.** The log reads "tool call denied by guard". Check the request against the guard's condition.
+- **The model sent a value the field does not accept.** A select field that the model fills must receive one of its listed values.
+- **An MCP server lists no tools.** The server is asked with the access token you entered, so it lists nothing until the token is right. Correct the token and click **Refresh**.
+
+## Related
+
+<CardGroup cols={2}>
+
+<Card title="Tools reference" icon="wrench" href="/references/tools">
+  Every tool type, its fields, the rules a config has to pass, and the built-in file tools.
+</Card>
+
+<Card title="Dynamic content" icon="code" href="/references/concepts/dynamic-content">
+  Template functions such as `tool_param`, `body`, and `header`.
+</Card>
+
+<Card title="Available actions" icon="table-list" href="/concepts/actions/available">
+  The actions a tool can run.
+</Card>
+
+<Card title="Creating your first agent" icon="robot" href="/guides/create-an-agent">
+  Build the agent this guide adds a tool to.
+</Card>
+
+</CardGroup>

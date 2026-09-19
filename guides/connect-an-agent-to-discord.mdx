@@ -1,0 +1,169 @@
+---
+title: "Connect an agent to Discord"
+description: "Run an agent as a Discord bot: create the bot, add it as an integration, and set the agent's entry to answer messages in your server"
+icon: "discord"
+---
+
+This guide turns an existing agent into a Discord bot that replies when someone mentions it in your server. It covers creating the bot in Discord, adding it to ServFlow as an integration, and setting the agent's entry. The bot holds a connection open to Discord, so the agent needs no public URL and works behind NAT.
+
+## Before you begin
+
+- A running instance with an LLM provider. See [Install ServFlow](/installation).
+- An agent to connect. See [Creating your first agent](/guides/create-an-agent).
+- A Discord account with permission to add bots to the server you want the agent in.
+
+## Create the bot in Discord
+
+These steps happen in the [Discord Developer Portal](https://discord.com/developers/applications), not in ServFlow.
+
+1. Create an application, then open its **Bot** page and copy the bot's token. You paste it into ServFlow in the next section.
+2. On the same page, under **Privileged Gateway Intents**, turn on the **Message Content** intent. Discord refuses the connection when a bot asks for an intent it has not been granted, so the agent does not start without it.
+3. Open **OAuth2 > URL Generator**. Select the `bot` scope, then the **View Channels**, **Send Messages**, **Send Messages in Threads**, and **Read Message History** permissions.
+4. Open the generated URL and add the bot to your server.
+
+## Add the Discord integration
+
+<Steps>
+
+<Step title="Open Integrations">
+In the sidebar under **Configure**, open **Integrations** and click **New Integration**.
+
+<Frame>
+  <img src="/images/guides/connect-an-agent-to-discord/01-integrations.png" alt="The Integrations page with the New Integration button" />
+</Frame>
+</Step>
+
+<Step title="Choose Discord">
+Choose **Discord**, which is marked **Guided setup**. The **Connect Discord** dialog opens.
+
+<Frame>
+  <img src="/images/guides/connect-an-agent-to-discord/02-type-picker.png" alt="The New Integration dialog listing integration types, with Discord marked Guided setup" />
+</Frame>
+</Step>
+
+<Step title="Enter an id and the bot token">
+Enter an **Id**, for example `discord`. Agents reference the integration by this id, and it cannot be changed later.
+
+Under **Bot Token**, choose a stored secret that holds the token, or choose **+ New secret…** to store it now. To paste the token into the integration instead, choose **Enter a value directly…**. A secret keeps the token out of the integration's config. See [Secrets](/references/secrets).
+
+Click **Next**.
+
+<Frame>
+  <img src="/images/guides/connect-an-agent-to-discord/03-discord-token.png" alt="The Connect Discord dialog with the Id field and the Bot Token secret picker" />
+</Frame>
+</Step>
+
+<Step title="Choose the server">
+ServFlow asks Discord which servers the bot has been added to and lists them. Select your server. If it is not listed, enter its **Server id** directly.
+
+If the bot is in no server yet, the dialog says so. Go back to the invitation step in Discord, then enter the server id.
+</Step>
+
+<Step title="Add the integration">
+Click **Add integration**. The integration appears in the list on the Integrations page, with the type **Discord**.
+</Step>
+
+</Steps>
+
+## Set the agent's entry to Discord
+
+<Steps>
+
+<Step title="Open the entry panel">
+Open the agent in the editor and click the entry node at the top of the canvas. The **Entry** panel opens.
+</Step>
+
+<Step title="Choose Discord bot">
+Under **Entry type**, choose **Discord bot**. The entry node relabels to **Discord bot**. A Discord entry has no path.
+</Step>
+
+<Step title="Choose the bot">
+Under **Bot**, choose the integration you added.
+
+Optional: under **Super user**, enter one person's Discord user id or `@username`. Every run then tells the prompt whether that person sent the message, so the agent can take instructions from them alone. A user id is safer, because a username can change.
+
+<Frame>
+  <img src="/images/guides/connect-an-agent-to-discord/04-entry-discord.png" alt="The Entry panel set to Discord bot with a Discord integration chosen under Bot" />
+</Frame>
+</Step>
+
+<Step title="Decide when the agent runs and how it replies">
+Under **Runs when**, choose the **Places** the agent answers in. The default is everywhere the bot can see. Keep **Require mention** set to **Only when the bot is mentioned**, so the agent answers people addressing it rather than every message in the channel. A direct message never needs a mention.
+
+Under **Replies**, keep **Show "typing…"** so people see the agent working until the reply arrives.
+
+<Frame>
+  <img src="/images/guides/connect-an-agent-to-discord/05-entry-runs-when.png" alt="The Runs when and Replies sections of the Discord entry" />
+</Frame>
+
+Optional: **Advanced settings** narrows the agent to specific servers, channels, or `!` commands, and decides whether it answers other bots. For every field, see [Entry handlers](/references/entry-handlers#discord_gateway).
+</Step>
+
+</Steps>
+
+## Read the message in the prompt
+
+Click the agent's first sub-agent and set its **User prompt** to the message text:
+
+```
+{{ .discord.content }}
+```
+
+The bot's own mention is stripped from the message before the agent reads it. The entry also provides the sender's name, the channel, and whether the sender is the super user. For the full list, see [the Discord entry's variables](/references/entry-handlers#discord_gateway).
+
+<Frame>
+  <img src="/images/guides/connect-an-agent-to-discord/06-subagent-prompt.png" alt="A sub-agent panel with the user prompt set to the Discord message content" />
+</Frame>
+
+## Verify
+
+<Steps>
+
+<Step title="Test in the editor">
+Click **Run**. For a Discord entry, the dialog asks for what a message would provide instead of a request body: the **Message**, the **Place**, the channel and server ids, and the sender. Enter a message and click **Run**. Nothing is sent to Discord, and the run panel shows the agent's reply.
+
+<Frame>
+  <img src="/images/guides/connect-an-agent-to-discord/07-run-dialog.png" alt="The Run dialog for a Discord entry, asking for the message, place, and sender" />
+</Frame>
+</Step>
+
+<Step title="Save">
+Click **Save**. The running server picks up the change without a restart. The agent must be enabled to connect. If it is not, run `servflowai resource agent enable <config_id>`.
+</Step>
+
+<Step title="Mention the bot in Discord">
+In a channel the bot can see, mention the bot with a question. The bot shows typing, then replies to your message.
+</Step>
+
+</Steps>
+
+## If the bot does not answer
+
+- **The Message Content intent is off.** Discord refuses the connection, so the agent never starts. Turn it on in the Developer Portal.
+- **The bot is not in the server.** Open the invitation URL from the Developer Portal again.
+- **The message did not mention the bot.** With **Require mention** on, messages that do not mention the bot are ignored.
+- **The channel is not allowed.** Check **Places** and **Advanced settings**.
+- **Another agent uses the same bot.** Agents on one bot share a single connection to Discord. Each sees every message the bot can see and decides for itself whether to answer, so narrow each agent to its own channels or commands.
+- **The agent is disabled.** Run `servflowai resource agent enable <config_id>`.
+
+## Related
+
+<CardGroup cols={2}>
+
+<Card title="Entry handlers" icon="right-to-bracket" href="/references/entry-handlers#discord_gateway">
+  Every field and variable of the Discord entry.
+</Card>
+
+<Card title="Integrations" icon="puzzle-piece" href="/references/integrations#discord">
+  The Discord integration's fields and what uses it.
+</Card>
+
+<Card title="Discord actions" icon="discord" href="/concepts/actions/discord">
+  Send messages and read channel history from an agent's steps.
+</Card>
+
+<Card title="Creating your first agent" icon="robot" href="/guides/create-an-agent">
+  Build the agent this guide connects.
+</Card>
+
+</CardGroup>
