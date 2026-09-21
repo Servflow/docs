@@ -19,7 +19,7 @@
         "tab": "Guides",
         "groups": [
           {
-            "group": "Getting Started",
+            "group": "Getting started",
             "icon": "flag",
             "pages": [
               "index",
@@ -33,6 +33,9 @@
               "guides/create-an-agent",
               "guides/add-a-tool",
               "guides/add-an-integration",
+              "guides/manage-llm-providers",
+              "guides/set-up-memory-and-file-access",
+              "guides/call-other-agents",
               "guides/connect-an-agent-to-discord"
             ]
           },
@@ -42,13 +45,34 @@
             "pages": [
               "concepts/agents",
               "concepts/entries",
+              "concepts/guard-rails",
+              "concepts/context-fetching",
+              "concepts/workspaces-and-files",
+              "concepts/providers",
+              "concepts/secrets",
+              "concepts/integrations",
+              "concepts/dynamic-content"
+            ]
+          },
+          {
+            "group": "References",
+            "icon": "book",
+            "pages": [
+              "references/configuration",
+              "references/entry-handlers",
+              "references/tools",
+              "references/dynamic-content",
+              "references/integrations",
+              "references/providers",
+              "references/secrets",
+              "references/concepts/conditionals",
               {
                 "group": "Actions",
                 "icon": "bolt",
                 "pages": [
                   "concepts/actions/overview",
                   {
-                    "group": "Available Actions",
+                    "group": "Available actions",
                     "icon": "table-list",
                     "pages": [
                       "concepts/actions/available",
@@ -69,20 +93,7 @@
                     ]
                   }
                 ]
-              },
-              "references/concepts/conditionals",
-              "references/concepts/dynamic-content"
-            ]
-          },
-          {
-            "group": "References",
-            "icon": "book",
-            "pages": [
-              "references/configuration",
-              "references/entry-handlers",
-              "references/integrations",
-              "references/tools",
-              "references/secrets"
+              }
             ]
           }
         ]
@@ -94,13 +105,19 @@
             "group": "Tutorials",
             "icon": "graduation-cap",
             "pages": [
-              "tutorials/telegram-binance-bot"
+              "tutorials/discord-community-mod-agent"
             ]
           }
         ]
       }
     ]
   },
+  "redirects": [
+    {
+      "source": "/references/concepts/dynamic-content",
+      "destination": "/concepts/dynamic-content"
+    }
+  ],
   "logo": {
     "light": "/logo/logo-new.svg",
     "dark": "/logo/logo-white.svg"

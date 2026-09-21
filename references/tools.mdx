@@ -121,7 +121,7 @@ A guard is a condition checked before every call of the tool it is on. It is eva
 | Key | Dashboard label | Type | Required | Description |
 |---|---|---|---|---|
 | `name` | Guard name | string | No | Names the guard in traces and in the refusal the model receives. An unnamed guard is named `<tool name>/<position>`, counting from 0. |
-| `expression` | Allow the call when | string | One of `expression` or `structure` | A template that has to render `true`, such as `{{ eq (body "plan") "pro" }}`. See [Dynamic content](/references/concepts/dynamic-content). |
+| `expression` | Allow the call when | string | One of `expression` or `structure` | A template that has to render `true`, such as `{{ eq (body "plan") "pro" }}`. See [Dynamic content](/references/dynamic-content). |
 | `structure` | not editable in the dashboard | list of condition groups | One of `expression` or `structure` | The structured form of a condition. Conditions in a group are joined with AND, and groups with OR. See [Conditionals](/references/concepts/conditionals). The dashboard lists a structured guard and keeps it as it is. |
 | `onTrue`, `onFalse` | none | string | Must be empty | A guard decides whether the tool runs. It does not route to a step. |
 
@@ -179,7 +179,7 @@ A config is checked when it is created or updated, in the dashboard, the CLI, an
   The actions an action tool can run.
 </Card>
 
-<Card title="Dynamic content" icon="code" href="/references/concepts/dynamic-content">
+<Card title="Dynamic content" icon="code" href="/references/dynamic-content">
   Template functions such as `tool_param`, `body`, and `header`.
 </Card>
 

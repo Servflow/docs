@@ -1,0 +1,116 @@
+---
+title: "Build a Discord community mod agent"
+description: "Put an AI helper in your own Discord server that answers when mentioned, looks things up, and keeps notes you give it"
+icon: "discord"
+---
+
+In this tutorial you put an AI helper into a Discord server you own. When someone mentions it, it answers. It can look up members and channels, search and send messages, and keep a notes file that it changes only when you ask.
+
+You start from a ready-made template, so the bot is answering within a few steps. Then you teach it a rule and watch it remember.
+
+## Before you begin
+
+- A ServFlow instance with the dashboard open. Any instance works, including one on your own computer, because ServFlow connects out to Discord and Discord does not need to reach it. See [Install ServFlow](/installation).
+- A Discord account, and a server you own. Create a new server for this tutorial.
+- A provider. See [Manage LLM providers](/guides/manage-llm-providers).
+- About 25 minutes. Every message the bot answers is billed by your model company.
+
+## Step 1: Create the bot in Discord
+
+This step happens in the [Discord Developer Portal](https://discord.com/developers/applications), not in ServFlow.
+
+1. Create an application and give it a name. This is the name your bot has in Discord.
+2. Open the application's **Bot** page. Under **Privileged Gateway Intents**, turn on **Message Content**. Without it, the bot connects and is disconnected at once.
+3. On the same page, copy the bot's token. Keep it private. Anyone who has it can act as your bot.
+4. Open **OAuth2 > URL Generator**. Select the `bot` scope, then the **View Channels**, **Send Messages**, **Send Messages in Threads**, and **Read Message History** permissions.
+5. Open the generated URL and add the bot to your server.
+
+The bot appears in your server's member list, offline.
+
+## Step 2: Store the token
+
+1. In the ServFlow sidebar under **Configure**, open **Secrets** and click **New Secret**.
+2. Name it `discord-bot-token`, paste the token as its value, and save.
+
+The secret is listed by name. Its value is not shown again.
+
+## Step 3: Connect Discord
+
+1. In the sidebar, open **Integrations**, click **New Integration**, and choose **Discord**.
+2. Under **Id**, enter `community-bot`. Under **Bot Token**, choose `discord-bot-token`. Click **Next**.
+3. Choose your server and add the integration.
+
+<Frame>
+  <img src="/images/guides/connect-an-agent-to-discord/03-discord-token.png" alt="The Connect Discord dialog with an id field and a Bot Token field that takes a stored secret" />
+</Frame>
+
+`community-bot` appears in the **Integrations** list. For each screen of this dialog, see [Connect an agent to Discord](/guides/connect-an-agent-to-discord#add-the-discord-integration).
+
+## Step 4: Create a workspace
+
+1. In the sidebar, open **Workspaces** and click **New Workspace**.
+2. Name it `Community notes` and click **Create Workspace**.
+
+This is where the bot keeps its notes. Give the bot a workspace of its own.
+
+## Step 5: Install the template
+
+1. In the sidebar under **Build**, open **Agents** and click **New Agent**.
+2. Under **How to start**, choose **Use a template**. On the **Discord Agent with Memory** card, click **Install**.
+
+<Frame>
+  <img src="/images/tutorials/discord-community-mod-agent/04-template-card.png" alt="The New Agent page with Use a template chosen and the Discord Agent with Memory card" />
+</Frame>
+
+3. Under **Requirements**, choose your provider under **AI provider**, `community-bot` under **Discord bot**, and `Community notes` under **Workspace for Understand request**. Click **Next**.
+
+<Frame>
+  <img src="/images/tutorials/discord-community-mod-agent/05-template-requirements.png" alt="The Requirements step with a provider, a Discord bot, and a workspace chosen" />
+</Frame>
+
+4. Under **Details**, enter `community-mod` as the **Instance name**. Under **Super user**, enter your own Discord username as `@name`. Under **Answer only when mentioned**, choose `true`. Click **Next**.
+
+<Frame>
+  <img src="/images/tutorials/discord-community-mod-agent/06-template-details.png" alt="The Details step with an instance name and a super user entered" />
+</Frame>
+
+5. Check the **Review** step and install.
+
+The template is installed as an agent named `community-mod`, and you can open it in the editor like any other agent. It has one sub-agent, **Understand request**, with tools for looking up members and channels, searching messages, and sending messages.
+
+## Step 6: Say hello
+
+1. Open the `community-mod` agent and make sure it is enabled. In Discord, the bot now shows as online.
+2. In any channel the bot can see, type `@YourBot hello, what can you do?`
+
+The bot replies in the channel.
+
+## Step 7: Give it a rule to remember
+
+1. In Discord, type `@YourBot remember that self-promotion is only allowed in #showcase`. The bot confirms.
+2. In ServFlow, open **Workspaces** and open `Community notes`. A file named `memory.md` is in the list. Click it. Your rule is in it.
+
+## Step 8: See what it remembers, and whom it listens to
+
+1. In a different channel, type `@YourBot can I post my project here?` The bot answers from the rule, although the rule was given in another channel.
+2. From a second account, or with a friend's help, type `@YourBot forget the self-promotion rule`. The bot should decline. Its instructions tell it to change its notes only for you, the super user.
+
+## What you built
+
+- **An integration** holds your bot's token, and is how the agent receives messages and replies as your bot. See [Integrations](/concepts/integrations).
+- **A Discord bot entry** decides which messages start the agent. Yours answers only when mentioned. See [Entries and entry handlers](/concepts/entries).
+- **Two kinds of memory.** The bot remembers a conversation within one channel on its own. The rule you gave it works in every channel because it is in a file. See [Workspaces and files](/concepts/workspaces-and-files).
+- **Tools** let the bot look things up and send messages. See [Add a tool to an agent](/guides/add-a-tool).
+
+## Next steps
+
+- Limit the channels the bot answers in, under **Runs when** in the agent's entry. See [Connect an agent to Discord](/guides/connect-an-agent-to-discord#set-the-agents-entry-to-discord).
+- Stop anyone but you from making the bot send messages, with a guard on its sending tools: `{{ .discord.is_super_user }}`. See [Guard rails](/concepts/guard-rails).
+- Change how the bot talks, in the **System prompt** of **Understand request**.
+- Put an agent you built yourself on Discord. See [Connect an agent to Discord](/guides/connect-an-agent-to-discord).
+
+## If the bot stays offline
+
+- **Message Content** is turned off in the Discord Developer Portal. Turn it on, then save the agent again.
+- The agent is not enabled.
+- The token was reset in Discord after you stored it. Replace the value of `discord-bot-token`, then open the agent and click **Save**.

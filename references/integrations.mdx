@@ -123,17 +123,19 @@ The `integration` noun of the `resource` command manages stored integrations. `l
 | `servflowai resource integration types` | Lists the integration types. |
 | `servflowai resource integration describe [type...]` | Describes types and their fields. Pass `--all` for every type. |
 
-{/* TODO: confirm the stored config shape once the integration create investigation lands. */}
-
-The body names the id, the type, and the config as a JSON string. Each field in the config is an object holding either a `value` or a `secret`:
+The body names the id, the type, and the config as a JSON object. Each field in the config is an object holding either a literal, as `{"value": ...}`, or the name of a stored secret, as `{"secret": "<secret name>"}`:
 
 ```json
 {
   "integrationId": "vectors",
   "type": "qdrant",
-  "config": "{\"url\": {\"value\": \"http://localhost:6333\"}}"
+  "config": {
+    "url": { "value": "http://localhost:6333" }
+  }
 }
 ```
+
+`create` and `update` take `--dry-run`, which validates the body and prints it without writing.
 
 ### MCP
 

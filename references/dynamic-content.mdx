@@ -1,0 +1,131 @@
+---
+title: "Dynamic content reference"
+description: "Every template function and variable: where templates are accepted, what each entry provides, and what each function takes and returns"
+icon: "wand-magic-sparkles"
+---
+
+Templates are text with `{{ }}` expressions that are resolved when an agent runs. This page lists where templates are accepted, what they can read, and every function. For an introduction, see [Dynamic content](/concepts/dynamic-content).
+
+Templates use Go's `text/template` syntax with the default `{{ }}` delimiters.
+
+## Where templates are accepted
+
+| Place | Functions available |
+|---|---|
+| A sub-agent's system prompt and user prompt | All |
+| An action tool's fields | All |
+| A context step's fields | All |
+| A guard's expression | All except `tool_param`. A guard never sees the model's arguments. |
+| An entry handler's settings | `secret` only. Settings are resolved when configs load, not on each run. |
+| An MCP tool's settings | `secret` only |
+
+## Reading the message
+
+What is available depends on the entry the run came in through.
+
+| Entry | Functions | Variables |
+|---|---|---|
+| Webhook | `body`, `param`, `header`, `urlparam` | none |
+| `github_webhook` | `body`, `param`, `header`, `urlparam` | `.github.*` |
+| `telegram_webhook` | `body`, `param`, `header`, `urlparam` | `.telegram.*` |
+| `discord_gateway` | none. Using one is a template error, because a Discord run has no HTTP request. | `.discord.*` |
+| Trigger, run by hand or handed a task | `input`, `trigger_value` | none |
+| Trigger, run on a schedule | none. `input` and `trigger_value` are not defined on a scheduled run. | none |
+
+The [Entry handlers reference](/references/entry-handlers) lists every variable of each handler.
+
+### Request functions
+
+| Function | Returns | Example |
+|---|---|---|
+| `body(path)` | A field of the JSON request body, by dot and array path. An empty path returns the whole body. Reads only when `Content-Type` is exactly `application/json`. | `{{ body "user.id" }}` |
+| `param(name)` | A query-string or form parameter. | `{{ param "page" }}` |
+| `header(name)` | A request header. | `{{ header "Authorization" }}` |
+| `urlparam(name)` | A variable declared in the entry's path, such as `{userId}` in `/users/{userId}`. | `{{ urlparam "userId" }}` |
+
+### Trigger functions
+
+| Function | Returns | Example |
+|---|---|---|
+| `input(key)` | An input the run was started with. An Agent Task Tool starts its agent with the model's instruction as `instruction`. | `{{ input "instruction" }}` |
+| `trigger_value(key)` | The same value, always as a string. Empty when absent. | `{{ trigger_value "instruction" }}` |
+
+## Available from any entry
+
+| Expression | Returns | Example |
+|---|---|---|
+| `.stepID`, `.stepID.field` | The output of an earlier context step or action, by its id. | `{{ .customer.name }}` |
+| `action(name)` | The same output, looked up by step id, then by display name. | `{{ action "customer" }}` |
+| `secret(name)` | A stored secret, or the environment variable of the same name. See [Secrets](/references/secrets). | `{{ secret "weather-api-key" }}` |
+| `tool_param(name)` | An argument the model passed to the tool. Available in an action tool's fields, and in the prompts of a sub-agent called by a Call sub-agent tool that declares `params`. | `{{ tool_param "question" }}` |
+
+## Transform functions
+
+| Function | Returns | Example |
+|---|---|---|
+| `tostring(value)` | The value as a string. `nil` gives an empty string. Anything that is not a plain value is given as JSON. | `{{ tostring (body "count") }}` |
+| `jsonout(value)` | The value as JSON. A string is escaped and returned without surrounding quotes, so it can sit inside a JSON template. | `{"q": "{{ jsonout (body "q") }}"}` |
+| `jsonraw(value)` | The value as JSON. A string keeps its surrounding quotes. | `{{ jsonraw .customer }}` |
+| `strip(text, prefix)` | `text` with a leading `prefix` removed, then trimmed of surrounding whitespace. | `{{ strip (header "Authorization") "Bearer" }}` |
+| `escape(text)` | `text` with quotes, backslashes, and control characters escaped. Anything that is not a string gives an empty string. | `{{ escape (body "note") }}` |
+| `join(list, separator)` | The list's strings joined. A list with any element that is not a string is returned unchanged. | `{{ join .tags ", " }}` |
+| `pluck(item, key)` | From a map, the value at `key`. From a list of maps, a list of each map's value at `key`. | `{{ pluck .users "email" }}` |
+| `hash(value)` | The MD5 hash of the value, as lowercase hex. | `{{ hash (body "email") }}` |
+| `now()` | The server's local time, as `2006-01-02 15:04:05`. | `{{ now }}` |
+
+## Condition functions
+
+Used mainly in guards. Each returns `true` or `false`.
+
+| Function | True when | Example |
+|---|---|---|
+| `eq(a, b)`, `ne(a, b)` | The values are equal, or not equal. | `{{ eq (body "plan") "pro" }}` |
+| `lt`, `le`, `gt`, `ge` | `a` is less than, at most, greater than, or at least `b`. | `{{ gt (len .orders) 0 }}` |
+| `empty(value, title)` | The value is empty. | `{{ empty (body "id") "id" }}` |
+| `notempty(value, title)` | The value is a non-empty string, map, or list. The string `"null"` counts as empty. | `{{ notempty (body "id") "id" }}` |
+| `email(value, title)` | The value is a valid email address. | `{{ email (body "email") "email" }}` |
+| `bcrypt(value, hash, title)` | The value matches the bcrypt hash. | `{{ bcrypt (body "password") .user.hash "password" }}` |
+
+`title` names the value being checked. It has no effect on a guard's result.
+
+## Built into the template language
+
+| Construct | Use | Example |
+|---|---|---|
+| `if`, `else`, `end` | Show text only when a value is set or a condition is true. | `{{ if .discord.is_super_user }} (the owner){{ end }}` |
+| `range`, `end` | Repeat text for each item of a list. | `{{ range .orders }}{{ .id }} {{ end }}` |
+| `with`, `end` | Work inside one value. | `{{ with .customer }}{{ .name }}{{ end }}` |
+| `and`, `or`, `not` | Combine conditions. | `{{ and .discord.is_super_user (not .discord.is_bot) }}` |
+| `len`, `index` | The length of a list, and one item of it. | `{{ index .orders 0 }}` |
+| `printf` | Format a string. | `{{ printf "%s-%v" .customer.name .customer.id }}` |
+| `\|` | Pass a value to the next function as its last argument. | `{{ body "email" \| hash }}` |
+
+See Go's [`text/template`](https://pkg.go.dev/text/template) documentation for the rest.
+
+## Missing values and unknown functions
+
+- A variable or field that does not exist renders as an empty string.
+- A `secret` whose name matches nothing renders as an empty string.
+- A function that is not defined is a template error. In a guard, the config is refused when it is saved. In a prompt, the run fails.
+
+## Related
+
+<CardGroup cols={2}>
+
+<Card title="Dynamic content" icon="wand-magic-sparkles" href="/concepts/dynamic-content">
+  An introduction to templates, in plain language.
+</Card>
+
+<Card title="Entry handlers" icon="right-to-bracket" href="/references/entry-handlers">
+  Every variable each handler provides.
+</Card>
+
+<Card title="Tools" icon="wrench" href="/references/tools">
+  Guards and action tool fields, which take templates.
+</Card>
+
+<Card title="Secrets" icon="key" href="/references/secrets">
+  How `secret` looks a value up.
+</Card>
+
+</CardGroup>
