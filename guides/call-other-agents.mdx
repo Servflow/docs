@@ -102,29 +102,16 @@ The called sub-agent uses its own provider, tools, and workspace, and does not s
 If you create agents from config files, the calling model can write its own question for the called sub-agent. Declare a parameter on the tool with `params`, and read it in the called sub-agent's prompt with `tool_param`:
 
 ```yaml
-agents:
-  support:
-    name: Support
-    providerID: 2
-    systemPrompt: You answer customer questions. Always ask the researcher for the facts first.
-    userPrompt: '{{ body "question" }}'
-    next: end
-    tools:
-      - type: agent
-        name: ask_researcher
-        description: Ask the researcher to look up a fact. Pass the question.
-        params: [question]
-        agentConfig:
-          id: researcher
-  researcher:
-    name: Researcher
-    providerID: 2
-    systemPrompt: You look up facts and answer in one or two sentences.
-    userPrompt: '{{ tool_param "question" }}'
-    next: end
+tools:
+  - type: agent
+    name: ask_researcher
+    description: Ask the researcher to look up a fact. Pass the question.
+    params: [question]
+    agentConfig:
+      id: researcher
 ```
 
-The dashboard's **Configure Call sub-agent** dialog has no setting for parameters. See [Create an agent](/guides/create-an-agent#create-an-agent-from-the-cli-or-mcp) for creating an agent from a file.
+The called sub-agent's `userPrompt` then reads `{{ tool_param "question" }}`. The dashboard's **Configure Call sub-agent** dialog has no setting for parameters. For the whole shape of an agent, see the [CLI reference](/references/cli#the-shape-of-an-agent).
 
 ## Hand a task to another agent
 
@@ -204,7 +191,7 @@ Both tools take guards. A guard checks who sent the message before the tool runs
   Triggers and the other ways an agent is started.
 </Card>
 
-<Card title="Tools" icon="wrench" href="/references/tools">
+<Card title="Tools" icon="wrench" href="/concepts/tools">
   Every tool type and its fields.
 </Card>
 

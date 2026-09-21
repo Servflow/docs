@@ -169,7 +169,7 @@ Click **New payload** and add `"plan": "pro"` to the body. The tool runs as befo
 
 ## Attach another type of tool
 
-**Add a tool…** lists three more types. Each opens the same dialog with a different middle section. For every field, see the [Tools reference](/references/tools).
+**Add a tool…** lists three more types. Each opens the same dialog with a different middle section. For every field, see the [Tools reference](/concepts/tools).
 
 ### MCP server
 
@@ -197,7 +197,7 @@ To hand a task to another stored agent, choose **Agent Task Tool…**. Under **A
 
 ### Built-in file tools
 
-Every sub-agent already has `read_file`, `write_file`, and `list_files`, with nothing to attach. They work in the folder chosen under **Workspace** in the panel's **Memory** section. See [Built-in tools](/references/tools#built-in-tools). To set a workspace up, see [Set up memory and file access](/guides/set-up-memory-and-file-access).
+Every sub-agent already has `read_file`, `write_file`, and `list_files`, with nothing to attach. They work in the folder chosen under **Workspace** in the panel's **Memory** section. See [Built-in tools](/references/cli#built-in-file-tools). To set a workspace up, see [Set up memory and file access](/guides/set-up-memory-and-file-access).
 
 ## If the tool is not called
 
@@ -210,16 +210,16 @@ Every sub-agent already has `read_file`, `write_file`, and `list_files`, with no
 
 <CardGroup cols={2}>
 
-<Card title="Tools reference" icon="wrench" href="/references/tools">
-  Every tool type, its fields, the rules a config has to pass, and the built-in file tools.
+<Card title="Tools" icon="wrench" href="/concepts/tools">
+  The four kinds of tool, and what the agent fills in.
 </Card>
 
 <Card title="Dynamic content" icon="code" href="/concepts/dynamic-content">
   Template functions such as `tool_param`, `body`, and `header`.
 </Card>
 
-<Card title="Available actions" icon="table-list" href="/concepts/actions/available">
-  The actions a tool can run.
+<Card title="Available actions" icon="table-list" href="/references/actions">
+  Every action a tool can run.
 </Card>
 
 <Card title="Create an agent" icon="robot" href="/guides/create-an-agent">

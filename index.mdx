@@ -12,10 +12,10 @@ ServFlow is the only system you need to run and manage agents. The plumbing you 
 
 - **[Agents](/concepts/agents)**: the top-level object. An agent has a name, a model, and instructions, and everything below belongs to one.
 - **Workflows**: the work an agent performs, either as HTTP endpoints the world can call (*webhooks*) or as scheduled and internal jobs (*tasks*).
-- **[Tools](/concepts/actions/overview)**: what the agent can decide to do while it works, such as query a database, hit an API, transform data, or run a workflow. The same building blocks compose workflows.
+- **[Tools](/references/actions)**: what the agent can decide to do while it works, such as query a database, hit an API, transform data, or run a workflow. The same building blocks compose workflows.
 - **Context retrieval**: the agent pulls in what it needs to know before it responds, whether by searching a vector store, looking up records in a database, or reading files from its workspace.
 - **A workspace**: files the agent can read and write, so it has somewhere to keep memories, state, and output.
-- **Integrations and [secrets](/references/secrets)**: the AI models, databases, and APIs the agent is allowed to use, with credentials stored encrypted and out of your configs.
+- **Integrations and [secrets](/concepts/secrets)**: the AI models, databases, and APIs the agent is allowed to use, with credentials stored encrypted and out of your configs.
 - **The dashboard and the CLI**: two ways to build the same objects. Design visually on the canvas, or declare agents as JSON or YAML files, deploy them from the CLI, and check them into git.
 
 ## Example agents

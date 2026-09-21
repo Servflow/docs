@@ -147,13 +147,13 @@ Before you delete a workspace, open every sub-agent that uses it and choose anot
 
 ## Manage workspaces from the CLI
 
-| Command | What it does |
-|---|---|
-| `servflowai resource workspace list` | Lists workspaces. |
-| `servflowai resource workspace get <id>` | Gets one workspace. |
-| `servflowai resource workspace create -f <file>` | Creates a workspace. The body takes `name`, which is required, and `description`. |
-| `servflowai resource workspace update <id> -f <file>` | Changes a workspace's name or description. |
-| `servflowai resource workspace delete <id>` | Deletes a workspace. |
+To create a workspace from a file:
+
+```bash
+servflowai resource workspace create -f workspace.json
+```
+
+For every command and the body it takes, see the [CLI reference](/references/cli#workspace).
 
 ## Related
 

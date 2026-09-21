@@ -113,29 +113,13 @@ On the **Providers** page, click the **Delete provider** icon on the provider's 
 
 ## Manage providers from the CLI
 
-The `provider` noun of the `resource` command manages stored providers. `list` and `get` never return a provider's key.
+To create a provider from a file, write its name, type, and config, and pass it to `create`:
 
-| Command | What it does |
-|---|---|
-| `servflowai resource provider list` | Lists providers. |
-| `servflowai resource provider get <id>` | Gets one provider. |
-| `servflowai resource provider create -f <file>` | Creates a provider. |
-| `servflowai resource provider update <id> -f <file>` | Renames a provider and changes the fields you give. |
-| `servflowai resource provider delete <id>` | Deletes a provider. |
-| `servflowai resource provider types` | Lists the provider types. |
-| `servflowai resource provider describe [type...]` | Describes a type's fields and suggested models. Pass `--all` for every type. |
-
-The body needs a name, a type, and a config:
-
-```json
-{
-  "name": "OpenAI production",
-  "type": "openai",
-  "config": { "api_key": "sk-...", "model": "gpt-4.1" }
-}
+```bash
+servflowai resource provider create -f provider.json
 ```
 
-`create` checks the config by building the connection it describes, so a missing field is reported at once. `--dry-run` validates without writing.
+For every command and the body each one takes, see the [CLI reference](/references/cli#provider).
 
 ## Related
 
@@ -145,7 +129,7 @@ The body needs a name, a type, and a config:
   What a provider is and why sub-agents share one.
 </Card>
 
-<Card title="Providers reference" icon="cloud" href="/references/providers">
+<Card title="Available providers" icon="cloud" href="/references/providers">
   Every provider type and its fields.
 </Card>
 

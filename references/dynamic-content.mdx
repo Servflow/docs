@@ -32,7 +32,7 @@ What is available depends on the entry the run came in through.
 | Trigger, run by hand or handed a task | `input`, `trigger_value` | none |
 | Trigger, run on a schedule | none. `input` and `trigger_value` are not defined on a scheduled run. | none |
 
-The [Entry handlers reference](/references/entry-handlers) lists every variable of each handler.
+The [Available entry handlers](/references/entry-handlers) lists every variable of each handler.
 
 ### Request functions
 
@@ -56,7 +56,7 @@ The [Entry handlers reference](/references/entry-handlers) lists every variable 
 |---|---|---|
 | `.stepID`, `.stepID.field` | The output of an earlier context step or action, by its id. | `{{ .customer.name }}` |
 | `action(name)` | The same output, looked up by step id, then by display name. | `{{ action "customer" }}` |
-| `secret(name)` | A stored secret, or the environment variable of the same name. See [Secrets](/references/secrets). | `{{ secret "weather-api-key" }}` |
+| `secret(name)` | A stored secret, or the environment variable of the same name. See [Secrets](/concepts/secrets). | `{{ secret "weather-api-key" }}` |
 | `tool_param(name)` | An argument the model passed to the tool. Available in an action tool's fields, and in the prompts of a sub-agent called by a Call sub-agent tool that declares `params`. | `{{ tool_param "question" }}` |
 
 ## Transform functions
@@ -116,15 +116,15 @@ See Go's [`text/template`](https://pkg.go.dev/text/template) documentation for t
   An introduction to templates, in plain language.
 </Card>
 
-<Card title="Entry handlers" icon="right-to-bracket" href="/references/entry-handlers">
+<Card title="Available entry handlers" icon="right-to-bracket" href="/references/entry-handlers">
   Every variable each handler provides.
 </Card>
 
-<Card title="Tools" icon="wrench" href="/references/tools">
+<Card title="Tools" icon="wrench" href="/concepts/tools">
   Guards and action tool fields, which take templates.
 </Card>
 
-<Card title="Secrets" icon="key" href="/references/secrets">
+<Card title="Secrets" icon="key" href="/concepts/secrets">
   How `secret` looks a value up.
 </Card>
 

@@ -181,29 +181,12 @@ The `body` function only reads requests sent with `Content-Type: application/jso
 
 ## Create an agent from the CLI or MCP
 
-If you keep agents in files, describe the agent in a JSON or YAML document and create it with the `resource` CLI or the management MCP server. Both write to the same store the dashboard uses, and a running server picks up the change without a restart.
-
-### CLI
-
-The `agent` noun of the `resource` command covers the whole lifecycle. It talks to the SQLite store directly, so it works with no server running.
+If you keep agents in files, describe the agent in a JSON or YAML document and create it with the `resource` command. It writes to the same store the dashboard uses, and a running server picks the change up without a restart.
 
 ```bash
-servflowai resource agent schema                 # JSON Schema for the config document
-servflowai resource agent create -f agent.yaml --dry-run
-servflowai resource agent create -f agent.yaml
-servflowai resource agent list
-servflowai resource agent get <config_id>
-servflowai resource agent update <config_id> -f agent.yaml
-servflowai resource agent enable <config_id>
-servflowai resource agent disable <config_id>
-servflowai resource agent delete <config_id>
+servflowai resource agent create -f agent.yaml --dry-run   # check it
+servflowai resource agent create -f agent.yaml            # create it
 ```
-
-- The body is a stored agent: a `name`, an optional `config_id`, and the config document under `config`. A missing `config_id` is derived from the name.
-- `-f -` reads the body from stdin.
-- `--dry-run` validates and prints the result without writing.
-- `--set key=value` overlays one field by dotted path. Repeat it for more.
-- `--reload` is on by default and signals a running server to reload.
 
 The agent from the first section, reduced to one sub-agent, looks like this. Replace `providerID` with an id from `servflowai resource provider list`.
 
@@ -224,19 +207,13 @@ config:
       next: end
 ```
 
-### MCP
-
-The management server at `/api/mcp` exposes the same operations to an AI client. The tools for agents are `config_schema`, `config_example`, `validate_config`, `create_config`, `update_config`, `list_configs`, `get_config`, `delete_config`, and `set_config_enabled`. A config has to name a real provider and, if an entry uses one, a real integration, so `list_providers` and `list_integrations` come first.
-
-In `local` and `none` authentication modes the MCP endpoint is unauthenticated. Anyone who can reach it can administer the instance, so keep it off the public internet.
-
-For the shape of the config document, run `servflowai resource agent schema` and see [Agents](/concepts/agents).
+For every command, the shape of an agent, and the MCP management server, see the [CLI reference](/references/cli).
 
 ## Related
 
 <CardGroup cols={2}>
 
-<Card title="Entry handlers" icon="right-to-bracket" href="/references/entry-handlers">
+<Card title="Available entry handlers" icon="right-to-bracket" href="/references/entry-handlers">
   Every entry type, its fields, and the variables it injects.
 </Card>
 

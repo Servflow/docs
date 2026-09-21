@@ -152,7 +152,7 @@ docker exec servflowai servflowai resource agent list --config /data/config.toml
 
 For an instance that outlives a first try:
 
-- **Encrypt secrets at rest.** Set `master_key` under `[sqlite]`, and set it through the `SERVFLOW_SQLITE_MASTER_KEY` environment variable rather than the file. See [Secrets](/references/secrets).
+- **Encrypt secrets at rest.** Set `master_key` under `[sqlite]`, and set it through the `SERVFLOW_SQLITE_MASTER_KEY` environment variable rather than the file. See [Secrets](/concepts/secrets).
 - **Back up the database.** The SQLite file holds your agents, integrations, secrets, and accounts.
 - **Do not expose the server directly.** Put it behind a reverse proxy with TLS. The management endpoint at `/api/mcp` is unauthenticated in `local` mode, so keep the instance off the public internet.
 - **Run it as a service.** Use a Docker restart policy, or a systemd unit for the binary, so it comes back after a reboot.

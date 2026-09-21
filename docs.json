@@ -44,6 +44,7 @@
             "icon": "lightbulb",
             "pages": [
               "concepts/agents",
+              "concepts/tools",
               "concepts/entries",
               "concepts/guard-rails",
               "concepts/context-fetching",
@@ -58,42 +59,13 @@
             "group": "References",
             "icon": "book",
             "pages": [
-              "references/configuration",
               "references/entry-handlers",
-              "references/tools",
-              "references/dynamic-content",
+              "references/actions",
               "references/integrations",
               "references/providers",
-              "references/secrets",
-              "references/concepts/conditionals",
-              {
-                "group": "Actions",
-                "icon": "bolt",
-                "pages": [
-                  "concepts/actions/overview",
-                  {
-                    "group": "Available actions",
-                    "icon": "table-list",
-                    "pages": [
-                      "concepts/actions/available",
-                      "concepts/actions/data-operations",
-                      "concepts/actions/vector-operations",
-                      "concepts/actions/http-requests",
-                      "concepts/actions/authentication",
-                      "concepts/actions/transformation",
-                      "concepts/actions/ai-agents",
-                      "concepts/actions/flow-control",
-                      "concepts/actions/github",
-                      "concepts/actions/discord",
-                      "concepts/actions/browser",
-                      "concepts/actions/communication",
-                      "concepts/actions/system",
-                      "concepts/actions/key-value",
-                      "concepts/actions/binance"
-                    ]
-                  }
-                ]
-              }
+              "references/dynamic-content",
+              "references/cli",
+              "references/configuration"
             ]
           }
         ]
@@ -116,6 +88,82 @@
     {
       "source": "/references/concepts/dynamic-content",
       "destination": "/concepts/dynamic-content"
+    },
+    {
+      "source": "/references/tools",
+      "destination": "/concepts/tools"
+    },
+    {
+      "source": "/references/secrets",
+      "destination": "/concepts/secrets"
+    },
+    {
+      "source": "/references/concepts/conditionals",
+      "destination": "/concepts/guard-rails"
+    },
+    {
+      "source": "/concepts/actions/overview",
+      "destination": "/references/actions"
+    },
+    {
+      "source": "/concepts/actions/available",
+      "destination": "/references/actions"
+    },
+    {
+      "source": "/concepts/actions/ai-agents",
+      "destination": "/references/actions"
+    },
+    {
+      "source": "/concepts/actions/authentication",
+      "destination": "/references/actions"
+    },
+    {
+      "source": "/concepts/actions/binance",
+      "destination": "/references/actions"
+    },
+    {
+      "source": "/concepts/actions/browser",
+      "destination": "/references/actions"
+    },
+    {
+      "source": "/concepts/actions/communication",
+      "destination": "/references/actions"
+    },
+    {
+      "source": "/concepts/actions/data-operations",
+      "destination": "/references/actions"
+    },
+    {
+      "source": "/concepts/actions/discord",
+      "destination": "/references/actions"
+    },
+    {
+      "source": "/concepts/actions/flow-control",
+      "destination": "/references/actions"
+    },
+    {
+      "source": "/concepts/actions/github",
+      "destination": "/references/actions"
+    },
+    {
+      "source": "/concepts/actions/http-requests",
+      "destination": "/references/actions"
+    },
+    {
+      "source": "/concepts/actions/key-value",
+      "destination": "/references/actions"
+    },
+    {
+      "source": "/concepts/actions/system",
+      "destination": "/references/actions"
+    },
+    {
+      "source": "/concepts/actions/transformation",
+      "destination": "/references/actions"
+    },
+    {
+      "source": "/concepts/actions/vector-operations",
+      "destination": "/references/actions"
     }
   ],
   "logo": {

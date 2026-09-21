@@ -9,7 +9,7 @@ This guide adds an integration in the dashboard: a stored credential, such as a 
 ## Before you begin
 
 - A running instance with the dashboard open. See [Install ServFlow](/installation).
-- The credential for the service you are connecting. Each type's fields are listed in the [Integrations reference](/references/integrations).
+- The credential for the service you are connecting. Each type's fields are listed in the [Available integrations](/references/integrations).
 
 ## Add the integration
 
@@ -46,7 +46,7 @@ Fill in the fields. A required field is marked with an asterisk. A select field,
 <Step title="Keep the credential in Secrets">
 A password field, such as **Connection String** or **Bot Token**, opens a secret picker. Choose a stored secret, or choose **+ New secret…** to store the value now. The form then keeps a reference, and the value stays in Secrets.
 
-To paste the value into the integration instead, choose **Enter a value directly…**. The form warns that the value is stored in the integration's config as typed. Any other field can hold a reference too: click **Use a stored secret instead** under it. See [Secrets](/references/secrets).
+To paste the value into the integration instead, choose **Enter a value directly…**. The form warns that the value is stored in the integration's config as typed. Any other field can hold a reference too: click **Use a stored secret instead** under it. See [Secrets](/concepts/secrets).
 </Step>
 
 <Step title="Add it">
@@ -87,11 +87,11 @@ The list shows ids and types only. Config is never printed.
 
 <CardGroup cols={2}>
 
-<Card title="Integrations reference" icon="puzzle-piece" href="/references/integrations">
+<Card title="Available integrations" icon="puzzle-piece" href="/references/integrations">
   Every type, its fields, and what uses it.
 </Card>
 
-<Card title="Secrets" icon="key" href="/references/secrets">
+<Card title="Secrets" icon="key" href="/concepts/secrets">
   Store a credential once and reference it from an integration.
 </Card>
 
