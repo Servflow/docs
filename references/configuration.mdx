@@ -118,6 +118,31 @@ collector_endpoint = ""
 
 Tracing can also be configured during [first-run setup](/installation#create-the-first-account), which offers a hosted collector, a custom endpoint, or disabling it.
 
+## `[shell]`
+
+Shell sandbox and execution.
+
+```toml
+[shell]
+# ServFlow Shell configuration. All fields support environment variable overrides; see example config.
+# Relative paths (e.g. working_dir) are anchored to the config file's directory.
+engine = "native"        # "native" (bubblewrap/Seatbelt) or "docker"
+working_dir = "/data/work"   # Relative to config file, not CWD
+timeout = "60s"          # Wall-clock for one command
+max_output = 32768        # Maximum combined output per command, in bytes
+
+[shell.native]
+folders = []              # Extra read folders
+write_folders = []        # Writable folders
+network = true            # Default: true; disables/removes network stack in native engines
+
+[shell.docker]
+image = "alpine:3.20"     # Docker image (engine = "docker" only)
+memory = "512m"           # Memory limit
+cpus = 1.0                # CPU count
+network = false           # Default: false; disables container networking
+```
+
 ## Complete example
 
 ```toml
@@ -134,11 +159,27 @@ master_key = ""
 [authentication]
 mode = "local"
 
-[tracing]
 enabled = false
 service_name = "servflowai"
 org_id = ""
 collector_endpoint = ""
+
+[shell]
+engine = "native"
+working_dir = "/data/work"
+timeout = "60s"
+max_output = 32768
+
+[shell.native]
+folders = []
+write_folders = []
+network = true
+
+[shell.docker]
+image = "alpine:3.20"
+memory = "512m"
+cpus = 1.0
+network = false
 ```
 
 ## Environment variable overrides
@@ -151,6 +192,7 @@ docker run -d \
   -e SERVFLOW_SQLITE_MASTER_KEY=my-secret-key \
   -e SERVFLOW_SQLITE_PATH=/data/servflow.db \
   -e SERVFLOW_AUTH_MODE=local \
+  -e SERVFLOW_SHELL_ENGINE=native \
   -v $(pwd)/config.toml:/data/config.toml \
   servflow/servflowai start --config /data/config.toml --dashboard
 ```
