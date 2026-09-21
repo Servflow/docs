@@ -1,0 +1,73 @@
+---
+title: "Integrations"
+description: "What an integration is: your connection to one outside service, set up once and used by name wherever an agent needs it"
+icon: "puzzle-piece"
+---
+
+An integration is your connection to one outside service: a Discord bot, a GitHub App, a database. It holds what ServFlow needs to reach that service as you. You set it up once, give it a name, and choose it by that name wherever an agent needs it. To add one, see [Add an integration](/guides/add-an-integration).
+
+<Frame>
+  <img src="/images/guides/add-an-integration/01-integrations.png" alt="The Integrations page listing integrations with their type" />
+</Frame>
+
+## Why an integration is separate from the agent
+
+The details are sensitive, so they are entered once and not copied into every agent. And several agents can use the same integration, so replacing a token is one change, not one change per agent.
+
+## Three places an integration is used
+
+| Where | What it does there | Example |
+|---|---|---|
+| An entry | Lets the agent receive messages from the service, and reply as that bot or app | A Discord bot entry |
+| A tool | Lets the agent act on the service when it decides to | A tool that sends a Discord message |
+| A context step | Lets a step look something up before the agent answers | A step that reads your database |
+
+In each place, you pick the integration from a list by its name.
+
+<Frame>
+  <img src="/images/concepts/integrations/01-integration-in-tool.png" alt="A tool dialog for Discord Send Message with an integration chosen under Discord Bot" />
+</Frame>
+
+A tool that connects to an MCP server can also take its access token from an integration. See [Tools](/references/tools).
+
+## One integration is both the key and the identity
+
+When an agent replies through a Discord integration, it replies as that bot, with that bot's name and picture. The integration that lets messages in also decides who the agent is when it answers. The same holds for a GitHub App and a Telegram bot.
+
+## Sharing an integration between agents
+
+Two agents can use the same Discord bot. Each decides for itself whether a message is for it, using its own entry settings. If both would answer the same message, both do.
+
+## Integrations and secrets
+
+Each sensitive field of an integration, such as a bot token, can point at a stored secret instead of holding the value. See [Secrets](/concepts/secrets), including what to do after you replace a secret that an integration uses.
+
+## What kinds there are
+
+The **New Integration** dialog shows every kind of integration your instance supports. The [Integrations reference](/references/integrations) has a section for each, with its fields and what uses it.
+
+## Integrations in the dashboard
+
+**Integrations**, in the sidebar under **Configure**, lists your integrations. Click **New Integration**, choose a kind, and give it an **Id**. That id is the name you pick everywhere else.
+
+## Related
+
+<CardGroup cols={2}>
+
+<Card title="Add an integration" icon="puzzle-piece" href="/guides/add-an-integration">
+  Set one up and use it in an entry.
+</Card>
+
+<Card title="Integrations" icon="puzzle-piece" href="/references/integrations">
+  Every integration type and its fields.
+</Card>
+
+<Card title="Secrets" icon="key" href="/concepts/secrets">
+  Where an integration's tokens are kept.
+</Card>
+
+<Card title="Connect an agent to Discord" icon="discord" href="/guides/connect-an-agent-to-discord">
+  An integration used by an entry, step by step.
+</Card>
+
+</CardGroup>

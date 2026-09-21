@@ -4,7 +4,7 @@ description: "What an agent is made of: entries, sub-agents, context groups, and
 icon: "robot"
 ---
 
-An agent is the unit you build, store, and run in ServFlow. It holds how a run starts, which AI models are called, in what order, and with what tools. This page explains the parts and how a run moves through them. To build one, see [Creating your first agent](/guides/create-an-agent).
+An agent is the unit you build, store, and run in ServFlow. It holds how a run starts, which AI models are called, in what order, and with what tools. This page explains the parts and how a run moves through them. To build one, see [Create an agent](/guides/create-an-agent).
 
 ## What an agent is made of
 
@@ -34,9 +34,7 @@ A sub-agent can call [tools](/guides/add-a-tool) while it works: an action, tool
 
 ## Context groups
 
-A context group runs its steps before the sub-agent it points at. Each step is an [action](/concepts/actions/overview) with an id, and later steps and prompts read a step's output through that id. Steps run in order, or all at once when the group is set to run in parallel.
-
-A step and a tool can run the same action. The difference is who decides. A context step always runs, before the model is called. A tool runs only when the model asks for it.
+A context group is a set of steps that run before a sub-agent, every time, to gather what its prompt needs. The dashboard calls this context gathering. See [Context fetching](/concepts/context-fetching) for how it works and when to use a step instead of a tool.
 
 ## Identity and state
 
@@ -48,7 +46,7 @@ An agent is either enabled or disabled. A disabled agent stays stored, but nothi
 
 <CardGroup cols={2}>
 
-<Card title="Creating your first agent" icon="robot" href="/guides/create-an-agent">
+<Card title="Create an agent" icon="robot" href="/guides/create-an-agent">
   Build an agent in the dashboard or from a config file, and call it from outside.
 </Card>
 

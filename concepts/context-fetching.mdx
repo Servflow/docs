@@ -1,0 +1,86 @@
+---
+title: "Context fetching"
+description: "How an agent gathers what it needs before it answers, and when to use a step that always runs instead of a tool the agent chooses"
+icon: "magnifying-glass"
+---
+
+Sometimes an agent needs to know something before it starts: which customer is writing, what is in stock, what a pull request changed. Context gathering is a set of steps that run first, every time, and hand what they find to the sub-agent's prompt. In a config file, a set of steps is called a context group.
+
+<Frame>
+  <img src="/images/concepts/context-fetching/01-canvas.png" alt="The canvas with a context node named Look up the customer in front of a sub-agent named Reply" />
+</Frame>
+
+## A step always runs. A tool runs if the agent decides to.
+
+A context step and a [tool](/guides/add-a-tool) can do the same job, such as looking something up in a database. The difference is who decides.
+
+| | A context step | A tool |
+|---|---|---|
+| When it runs | Every time, before the sub-agent | Only when the agent decides it needs it |
+| Who decides | You | The agent |
+| Good for | What every answer needs | What only some answers need |
+| Example | Look up the customer who is writing | Search the orders when asked about an order |
+
+Use a step for what you always need. It costs nothing in model decisions, and the agent cannot forget to do it. Use a tool for what you sometimes need.
+
+## Using what a step found
+
+Each step has a name, and the prompt reads the step's result by that name. In this **User prompt**, `customer` is a step that looked the customer up from the email address in the message:
+
+```
+The customer is {{ .customer.name }}, on the {{ .customer.plan }} plan.
+
+Their message: {{ body "message" }}
+```
+
+You do not have to remember a step's name. In any prompt, **Insert a variable** lists every step under **Step & agent outputs** and writes the braces for you.
+
+If a step found nothing, that part of the prompt is left empty, so write prompts that still read sensibly.
+
+## One after another, or all at once
+
+In order, which is how steps run unless you say otherwise, each step can use what the ones before it found. Look up the customer, then look up that customer's orders.
+
+With **Run steps in parallel**, the steps start together. That is faster, and the steps cannot use each other's results. Use it for look-ups that do not depend on each other.
+
+## When a step fails
+
+If a step cannot finish, the run stops there and the sub-agent is not called. If an agent that gathers context goes quiet, check its steps first.
+
+## Where it sits
+
+Context gathering belongs to a sub-agent and runs just before it. On the canvas it is a node of its own, in front of the sub-agent. See [Agents](/concepts/agents) for the path a run takes.
+
+## Set up context gathering in the dashboard
+
+1. Open a sub-agent. Under **Flow**, find **Context gathering** and click **Configure context**. A context node appears in front of the sub-agent with one step in it, and its panel opens.
+2. Under **Steps**, click **Configure step** on the step. Choose what the step does under **Type**, and fill in its fields.
+3. To add another step, click **Add step**.
+4. Optional: under **Execution**, turn on **Run steps in parallel**.
+5. Click **Save**.
+
+<Frame>
+  <img src="/images/concepts/context-fetching/02-context-panel.png" alt="The context panel with two steps, the Run steps in parallel setting, and the Next setting" />
+</Frame>
+
+## Related
+
+<CardGroup cols={2}>
+
+<Card title="Agents" icon="robot" href="/concepts/agents">
+  How entries, context gathering, and sub-agents fit together.
+</Card>
+
+<Card title="Add a tool to an agent" icon="wrench" href="/guides/add-a-tool">
+  For what the agent should decide to do itself.
+</Card>
+
+<Card title="Dynamic content" icon="wand-magic-sparkles" href="/concepts/dynamic-content">
+  How a prompt reads the message and what steps found.
+</Card>
+
+<Card title="Actions" icon="bolt" href="/concepts/actions/overview">
+  What a step can do.
+</Card>
+
+</CardGroup>

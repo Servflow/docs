@@ -85,6 +85,8 @@ An agent remembers the earlier messages of the conversation a run belongs to. Th
 
 This is why a Telegram bot remembers what you said a minute ago with nothing set up, and why a pull request reviewer reads each comment fresh.
 
+For something an agent should remember beyond one conversation, give it a workspace. See [Workspaces and files](/concepts/workspaces-and-files).
+
 ## Where the reply goes
 
 Telegram and Discord receive the reply as a message, in the chat or channel that asked.
@@ -97,7 +99,7 @@ A trigger has nobody to reply to. For a triggered agent to have an effect, give 
 
 ## What the prompt can read
 
-A handler gives the prompt the parts of a message by name. A Discord agent reads the message text as `{{ .discord.content }}`, and a GitHub agent reads a comment as `{{ .github.comment_body }}`. A webhook agent reads a field your application sent with `{{ body "question" }}`. The reference lists every name.
+A handler gives the prompt the parts of a message by name. A Discord agent reads the message text as `{{ .discord.content }}`, and a GitHub agent reads a comment as `{{ .github.comment_body }}`. A webhook agent reads a field your application sent with `{{ body "question" }}`. The reference lists every name, and [Dynamic content](/concepts/dynamic-content) explains how these work.
 
 ## More than one way in
 
@@ -111,7 +113,7 @@ To add one, click **+** on the canvas and choose **Entry** in the **Add to canva
 
 ## Handlers and integrations
 
-Every handler needs one [integration](/references/integrations): the stored details of your bot or App. The handler uses it to check incoming messages and to reply as that bot or App. You add the integration first, and the agent refers to it by its id.
+Every handler needs one [integration](/concepts/integrations): the stored details of your bot or App. The handler uses it to check incoming messages and to reply as that bot or App. You add the integration first, and the agent refers to it by its id.
 
 Several agents can share one integration. With Discord, take care: every agent on the same bot sees every message the bot sees, and each decides for itself whether to answer. Give each agent its own channels or commands, or two of them will reply to the same message.
 

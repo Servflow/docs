@@ -1,0 +1,87 @@
+---
+title: "Workspaces and files"
+description: "What a workspace is, what an agent can do in one, and how it differs from the conversation an agent remembers on its own"
+icon: "folder-open"
+---
+
+A workspace is a folder that belongs to your ServFlow instance. You can put files in it, and an agent you give it to can read those files and write its own. It is how an agent keeps something from one day to the next. This page explains what a workspace is for. To set one up, see [Set up memory and file access](/guides/set-up-memory-and-file-access).
+
+<Frame>
+  <img src="/images/concepts/workspaces-and-files/01-workspace-files.png" alt="A workspace page listing three files: faq.md, notes.md, and prices.csv" />
+</Frame>
+
+## What an agent can do in a workspace
+
+An agent with a workspace can do three things there: see which files exist, read a file, and write a file. It gets all three the moment you choose a workspace for it. There is no tool to add.
+
+It works with text: notes, Markdown, CSV, JSON. It cannot read pictures, PDFs, or other files that are not text, and it says so if it is asked to.
+
+Writing a file replaces what was in it. That is why a prompt that keeps notes tells the agent to read the file first, add to it, and save the whole thing.
+
+## Two kinds of memory
+
+An agent already remembers the conversation it is in, without a workspace. A workspace is for what should outlast the conversation.
+
+| | The conversation | The workspace |
+|---|---|---|
+| What is kept | The messages so far, and what the agent did | Files |
+| Who keeps it | ServFlow, automatically | The agent, when it decides to write |
+| How long | For as long as that conversation goes on | Until you delete it |
+| Shared with | Nobody. Each conversation is separate | Every sub-agent you give the workspace to |
+| Can you look at it | No | Yes, on the workspace's page |
+
+What counts as one conversation depends on how the agent is started: a Telegram chat, a Discord channel, or whatever a caller of a webhook says it is. See [What the agent remembers](/concepts/entries#what-the-agent-remembers).
+
+An example makes the difference concrete. A Discord bot remembers what was said in `#support` an hour ago, because that channel is one conversation. It knows the office hours in every channel, because they are in a file.
+
+## An agent uses a workspace only if you tell it to
+
+Choosing a workspace gives the agent the ability, not the reason. Say in the **System prompt** what to keep, in which file, and when to read it:
+
+```
+You keep your notes in a file called notes.md.
+Before every answer, use read_file to read notes.md. If it does not exist yet, carry on without it.
+When someone asks you to remember something, read notes.md, add the new note, and use write_file to save the whole file.
+```
+
+Without an instruction like this, an agent usually answers from the message alone and leaves the files untouched.
+
+## Sharing a workspace
+
+Several sub-agents, in one agent or in different agents, can use the same workspace and see each other's files. That is how one agent can leave something for another. If two of them write the same file at the same moment, the later one wins.
+
+## Who can change the files
+
+Anyone who can message the agent can ask it to write, and the agent will unless its prompt tells it not to. The built-in Discord template handles this in its prompt. Each message tells the agent whether the sender is the bot's owner, and the prompt tells the agent to refuse note changes from anyone else.
+
+A [guard](/concepts/guard-rails) limits a tool, and reading and writing files are not tools you can put a guard on. Limit them in the prompt.
+
+## Workspaces in the dashboard
+
+**Workspaces**, in the sidebar under **Configure**, lists your workspaces, and **New Workspace** creates one. Open a workspace to **Upload** files, read them, or delete them. To give a workspace to a sub-agent, open the sub-agent and choose it under **Memory**.
+
+<Frame>
+  <img src="/images/guides/set-up-memory-and-file-access/04-memory-section.png" alt="A sub-agent panel with a workspace chosen under Memory" />
+</Frame>
+
+## Related
+
+<CardGroup cols={2}>
+
+<Card title="Set up memory and file access" icon="folder-open" href="/guides/set-up-memory-and-file-access">
+  Create a workspace and give it to a sub-agent.
+</Card>
+
+<Card title="Entries and entry handlers" icon="right-to-bracket" href="/concepts/entries#what-the-agent-remembers">
+  What counts as one conversation for each kind of entry.
+</Card>
+
+<Card title="Guard rails" icon="shield-halved" href="/concepts/guard-rails">
+  Limit what people can make your agent do.
+</Card>
+
+<Card title="Agents" icon="robot" href="/concepts/agents">
+  What an agent is made of.
+</Card>
+
+</CardGroup>
