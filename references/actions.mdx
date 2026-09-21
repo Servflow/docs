@@ -1,995 +1,1003 @@
----
-title: "Available actions"
-description: "Every action a tool or a context step can run: what it does, its fields, and its shape in a config file"
-icon: "table-list"
----
-
-An action is one thing an agent can do: send a Discord message, fetch a web address, read a pull request. An agent runs an action in two places. A [tool](/concepts/tools) runs one when the agent decides to use it. A [context step](/concepts/context-fetching) runs one every time, before the agent starts. This page lists every action with its fields. `servflowai resource action describe --all` prints the same catalog.
-
-## All actions
-
-| Name in the dashboard | Type | What it does | Integration it needs |
-|---|---|---|---|
-| **Discord** | | | |
-| Discord Send Message | [`discord/sendmessage`](#discord%2Fsendmessage) | Sends a message to a channel, a thread, or a person. | [`discord`](/references/integrations#discord) |
-| Discord Read Messages | [`discord/readmessages`](#discord%2Freadmessages) | Reads a channel's recent messages. | `discord` |
-| Discord Search Messages | [`discord/searchmessages`](#discord%2Fsearchmessages) | Searches the whole server for messages. | `discord` |
-| Discord Read Server | [`discord/readguild`](#discord%2Freadguild) | Reads the server's details, channels, roles, or members. | `discord` |
-| **GitHub** | | | |
-| GitHub Fetch | [`github_fetch`](#github_fetch) | Reads a pull request's details, diff, or conversation. | [`github_app`](/references/integrations#github_app) |
-| GitHub Post | [`github_post`](#github_post) | Posts a comment on a pull request. | `github_app` |
-| **Gitea** | | | |
-| Gitea Fetch | [`gitea/fetch`](#gitea%2Ffetch) | Reads a pull request's details, diff, or conversation. | [`gitea`](/references/integrations#gitea) |
-| Gitea Post | [`gitea/post`](#gitea%2Fpost) | Posts a comment on a pull request or issue. | `gitea` |
-| **Web requests and code** | | | |
-| HTTP Request | [`http`](#http) | Calls a web address and returns the response. | none |
-| JavaScript | [`javascript`](#javascript) | Runs a JavaScript function. | none |
-| Shell Script | [`shell`](#shell) | Runs a shell script in a sandboxed folder. | none |
-| Static Value | [`static`](#static) | Returns a value you write, after its template is filled in. | none |
-| **Browser** | | | |
-| Chromium Navigate | [`chromium/navigate`](#chromium%2Fnavigate) | Opens a web address in the browser. | [`chromium`](/references/integrations#chromium) |
-| Chromium Click | [`chromium/click`](#chromium%2Fclick) | Clicks an element on the page. | `chromium` |
-| Chromium Body | [`chromium/body`](#chromium%2Fbody) | Returns the page's HTML as the browser shows it. | `chromium` |
-| Chromium Screenshot | [`chromium/screenshot`](#chromium%2Fscreenshot) | Takes a full-page screenshot. | `chromium` |
-| **Databases** | | | |
-| Fetch Data | [`fetch`](#fetch) | Reads rows from a table. | [`sql`](/references/integrations#sql) or [`mongo`](/references/integrations#mongo) |
-| Delete Data | [`delete`](#delete) | Deletes rows from a table. | `sql` or `mongo` |
-| MongoDB Query | [`mongoquery`](#mongoquery) | Runs a MongoDB query. | `mongo` |
-| Firestore | [`firestore`](#firestore) | Stores a document in Google Cloud Firestore. | none |
-| **Vectors** | | | |
-| Store Vectors | [`storevector`](#storevector) | Stores vectors for similarity search. | [`qdrant`](/references/integrations#qdrant) |
-| Fetch Vectors | [`fetchvectors`](#fetchvectors) | Finds the stored vectors closest to one you give. | `qdrant` |
-| **Stored values** | | | |
-| Store Key | [`store_key`](#store_key) | Stores a value under a key. | none |
-| Get Key | [`get_key`](#get_key) | Reads the value stored under a key. | none |
-| **Files and email** | | | |
-| Download File | [`download`](#download) | Saves a file from the request, or from an earlier action, to a folder. | none |
-| Send Email | [`email`](#email) | Sends an email through an SMTP server. | none |
-| **Sign-in and tokens** | | | |
-| Authenticate | [`authenticate`](#authenticate) | Checks a JWT and finds its user in a database. | `sql` or `mongo` |
-| JWT Token | [`jwt`](#jwt) | Creates or checks a JSON Web Token. | none |
-| Hash Value | [`hash`](#hash) | Hashes a value. | none |
-| **Binance** | | | |
-| Binance Get Price | [`binance/getprice`](#binance%2Fgetprice) | Reads a symbol's current or 24-hour price. | [`binance`](/references/integrations#binance) |
-| Binance Price Difference | [`binance/pricedifference`](#binance%2Fpricedifference) | Works out a price change over a period. | `binance` |
-| Binance Trade Info | [`binance/tradeinfo`](#binance%2Ftradeinfo) | Reads trading figures for a pair. | `binance` |
-| Binance Account Balance | [`binance/accountbalance`](#binance%2Faccountbalance) | Reads the account's balances. | `binance` |
-| Binance Spot Order | [`binance/spotorder`](#binance%2Fspotorder) | Places a spot order. | `binance` |
-| Binance Futures Order | [`binance/futuresorder`](#binance%2Ffuturesorder) | Places a futures order. | `binance` |
-| **ServFlow** | | | |
-| Servflow Validate | [`servflowvalidate`](#servflowvalidate) | Checks a ServFlow YAML config for mistakes. | none |
-| AI Agent | [`agent`](#agent-and-parallel) | How a sub-agent is stored. Not added by hand. | none |
-| Run In Parallel | [`parallel`](#agent-and-parallel) | How a parallel context group is stored. Not added by hand. | none |
-
-## How an action is written in a config file
-
-As a context step, an action is an `id`, a `type`, and a `config` that maps each field to a string. Every string is a template.
-
-```yaml
-- id: repo
-  type: http
-  config:
-    method: GET
-    url: 'https://api.github.com/repos/{{ body "repo" }}'
-```
-
-As a tool, the same action goes under `actionConfig`, and each field's value is wrapped in an object. `type: raw` means you set the value. `type: param` means the agent fills it in when it uses the tool, and `value` names the input it is asked for.
-
-```yaml
-actionConfig:
-  type: http
-  config:
-    method:
-      type: raw
-      value: GET
-    url:
-      type: param
-      value: address
-```
-
-Two differences follow from this:
-
-- **Field types.** A step's values are all strings, so a field of type `map` cannot be written as a map in a step. A tool's `raw` value can be a string, a number, a boolean, a list, or a map.
-- **Who fills a field.** Only a tool has `param`.
-
-The examples below show each action as a step. An action with a required `map` field is shown as a tool. The rest of a step and of a tool is in the [CLI reference](/references/cli#contextgroups).
-
-In the field tables, **Type** is the binary's field type: `string`, `text_area` (a long string), `boolean`, `map`, `file`, or `integration` (the id of a stored integration).
-
-## Discord
-
-### discord/sendmessage
-
-Sends a message to a Discord channel, a thread, or a person.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | Discord Bot | integration | Yes | none | A `discord` integration |
-| `content` | Message Content | string | Yes | none | The message to send |
-| `channel_id` | Channel ID | string | No | none | The channel to post in |
-| `user_id` | User ID | string | No | none | Sends a direct message to this person instead of posting in a channel |
-| `thread_id` | Thread ID | string | No | none | Sends to an existing thread |
-| `create_thread` | Create Thread | boolean | No | `false` | Creates a new thread for this message |
-| `thread_name` | Thread Name | string | No | none | The new thread's name. Needed when `create_thread` is `true` |
-| `reply_to` | Reply To | string | No | none | The id of the message this one replies to |
-| `mentions` | Mentions | string | No | `none` | Who the message may notify: `none`, `reply`, `users`, `roles`, `everyone` |
-| `split` | Split Long Messages | boolean | No | `true` | Posts text over 2000 characters as several messages |
-
-```yaml
-- id: announce
-  type: discord/sendmessage
-  config:
-    integration: my-discord-bot
-    channel_id: "112233445566778899"
-    content: 'New question from {{ .discord.display_name }}: {{ .discord.content }}'
-```
-
-As a tool that always posts in one channel and lets the agent write the text:
-
-```yaml
-actionConfig:
-  type: discord/sendmessage
-  config:
-    integration:
-      type: raw
-      value: my-discord-bot
-    channel_id:
-      type: raw
-      value: "112233445566778899"
-    content:
-      type: param
-      value: message
-```
-
-### discord/readmessages
-
-Reads a Discord channel's recent messages, oldest first.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | Discord Bot | integration | Yes | none | A `discord` integration |
-| `channel_id` | Channel ID | string | Yes | none | The channel to read |
-| `limit` | Limit | string | No | `50` | How many messages to read, 1 to 100 |
-| `before` | Before | string | No | none | A message id. Reads what came before it |
-| `after` | After | string | No | none | A message id. Reads what came after it |
-| `around` | Around | string | No | none | A message id. Reads what surrounds it |
-
-```yaml
-- id: history
-  type: discord/readmessages
-  config:
-    integration: my-discord-bot
-    channel_id: '{{ .discord.channel_id }}'
-    limit: "20"
-```
-
-### discord/searchmessages
-
-Searches the whole Discord server for messages that match a phrase, a channel, or an author. Each match comes back with a link to the message.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | Discord Bot | integration | Yes | none | A `discord` integration |
-| `content` | Search Text | string | No | none | Words to look for |
-| `channel_id` | Channel IDs | string | No | every channel | Channel ids, separated by commas |
-| `author_id` | Author IDs | string | No | everyone | User ids, separated by commas |
-| `sort_by` | Sort By | string | No | `timestamp` | `timestamp`, `relevance` |
-| `order` | Order | string | No | `desc` | `desc`, `asc` |
-
-```yaml
-- id: matches
-  type: discord/searchmessages
-  config:
-    integration: my-discord-bot
-    content: '{{ .discord.args }}'
-    sort_by: relevance
-```
-
-### discord/readguild
-
-Reads the integration's Discord server: its details, channels, roles, or members.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | Discord Bot | integration | Yes | none | A `discord` integration |
-| `resource` | Resource | string | Yes | none | `guild`, `channels`, `roles`, `member`, `member_search`, `members` |
-| `user_id` | User ID | string | For `member` | none | The member to look up |
-| `query` | Name Search | string | For `member_search` | none | The start of a username or nickname |
-| `limit` | Member Limit | string | No | `10` | How many members to return: 1 to 1000 for `member_search`, 1 to 5000 for `members` |
-
-```yaml
-- id: channels
-  type: discord/readguild
-  config:
-    integration: my-discord-bot
-    resource: channels
-```
-
-## GitHub
-
-### github_fetch
-
-Reads a pull request as a GitHub App: its details, its diff, or its conversation.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | GitHub App | integration | Yes | none | A `github_app` integration |
-| `resource` | Resource | string | Yes | none | `pr_meta`, `pr_diff`, `pr_conversation` |
-| `repo` | Repository | string | Yes | none | The repository, as `owner/name` |
-| `pr_number` | Pull Request Number | string | Yes | none | The pull request to read |
-
-```yaml
-- id: diff
-  type: github_fetch
-  config:
-    integration: my-github-app
-    resource: pr_diff
-    repo: '{{ .github.repo }}'
-    pr_number: '{{ .github.pr_number }}'
-```
-
-### github_post
-
-Posts a comment on a GitHub pull request as a GitHub App.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | GitHub App | integration | Yes | none | A `github_app` integration |
-| `resource` | Resource | string | Yes | `issue_comment` | `issue_comment` |
-| `repo` | Repository | string | Yes | none | The repository, as `owner/name` |
-| `pr_number` | Pull Request Number | string | Yes | none | The pull request to post to |
-| `body` | Body | text_area | Yes | none | The text of the comment |
-
-```yaml
-- id: notice
-  type: github_post
-  config:
-    integration: my-github-app
-    resource: issue_comment
-    repo: '{{ .github.repo }}'
-    pr_number: '{{ .github.pr_number }}'
-    body: A review is on its way.
-```
-
-## Gitea
-
-### gitea/fetch
-
-Reads a pull request from a Gitea server: its details, its diff, or its conversation.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | Gitea Server | integration | Yes | none | A `gitea` integration |
-| `resource` | Resource | string | Yes | none | `pr_meta`, `pr_diff`, `pr_conversation` |
-| `repo` | Repository | string | Yes | none | The repository, as `owner/name` |
-| `pr_number` | Pull Request Number | string | Yes | none | The pull request to read |
-
-```yaml
-- id: diff
-  type: gitea/fetch
-  config:
-    integration: my-gitea
-    resource: pr_diff
-    repo: '{{ .gitea.repo }}'
-    pr_number: '{{ .gitea.pr_number }}'
-```
-
-### gitea/post
-
-Posts a comment on a Gitea pull request or issue.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | Gitea Server | integration | Yes | none | A `gitea` integration |
-| `resource` | Resource | string | Yes | `issue_comment` | `issue_comment` |
-| `repo` | Repository | string | Yes | none | The repository, as `owner/name` |
-| `pr_number` | Pull Request Number | string | Yes | none | The pull request or issue to post to |
-| `body` | Body | text_area | Yes | none | The text of the comment |
-
-```yaml
-- id: notice
-  type: gitea/post
-  config:
-    integration: my-gitea
-    resource: issue_comment
-    repo: '{{ .gitea.repo }}'
-    pr_number: '{{ .gitea.pr_number }}'
-    body: A review is on its way.
-```
-
-## Web requests and code
-
-### http
-
-Calls a web address and returns the response.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `url` | URL | string | Yes | none | The address to call |
-| `method` | HTTP Method | string | Yes | `GET` | `GET`, `POST`, `PUT`, `DELETE`, `PATCH` |
-| `headers` | Headers | map | No | none | Header names and values |
-| `body` | Request Body | map | No | none | The request body. See below |
-| `responsePath` | Response Path | string | No | none | A path into the JSON response. Only that part is returned |
-| `expectedResponseCode` | Expected Response Code | string | No | empty | The status code that counts as success, such as `200` |
-| `failIfResponseEmpty` | Fail if Response Empty | boolean | No | `true` | Treats an empty response as a failure |
-
-```yaml
-- id: repo
-  type: http
-  config:
-    method: GET
-    url: 'https://api.github.com/repos/{{ body "repo" }}'
-    responsePath: description
-```
-
-As a tool, with headers and a body. Write `body` as a map. Each value is filled in on its own and then encoded as JSON, so quotes and line breaks in a value need no escaping.
-
-```yaml
-actionConfig:
-  type: http
-  config:
-    method:
-      type: raw
-      value: POST
-    url:
-      type: raw
-      value: https://api.example.com/tickets
-    headers:
-      type: raw
-      value:
-        Authorization: 'Bearer {{ secret "tickets-api-key" }}'
-    body:
-      type: raw
-      value:
-        title: '{{ tool_param "title" }}'
-        details: '{{ tool_param "details" }}'
-```
-
-### javascript
-
-Runs JavaScript. The script defines a function named `servflowRun`, and what the function returns is the action's result. The function receives three arguments: the run's variables, the body of the request that started the run, and the request's parameters. The script cannot call web addresses, and has no `require`.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `script` | Script | text_area | Yes | none | JavaScript that defines `servflowRun` |
-| `dependencies` | Dependencies | text_area | No | none | JavaScript loaded before the script, such as a bundled library |
-
-```yaml
-- id: customer
-  type: javascript
-  config:
-    script: |
-      function servflowRun(variables, requestBody, params) {
-        var request = JSON.parse(requestBody);
-        return { name: request.name.trim(), vip: request.orders > 10 };
-      }
-```
-
-A later step or a prompt reads the result as `{{ .customer.name }}`.
-
-### shell
-
-Runs a shell script, with the shell's full syntax. The script starts in a sandboxed folder of its own that is deleted when the run ends, and it cannot read the server's own files. The instance's `[shell]` settings decide how it is sandboxed.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `script` | Script | string | Yes | none | The script to run |
-
-```yaml
-- id: today
-  type: shell
-  config:
-    script: date +%A
-```
-
-### static
-
-Returns the value you write, after its template is filled in. Use it to build a value once and read it by the step's id afterwards.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `return` | Return Value | string | Yes | none | The value to return |
-| `config` | Config | string | No | none | Not used by the action |
-
-```yaml
-- id: hours
-  type: static
-  config:
-    return: Support is open 09:00 to 17:00, Monday to Friday.
-```
-
-## Browser
-
-The four browser actions share one browser session, the `chromium` integration. Open a page with `chromium/navigate` first, then read or click it.
-
-### chromium/navigate
-
-Opens a web address in the browser.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | Browser | integration | Yes | none | A `chromium` integration |
-| `url` | URL | string | Yes | none | The address to open |
-
-```yaml
-- id: open
-  type: chromium/navigate
-  config:
-    integration: browser
-    url: '{{ body "url" }}'
-```
-
-### chromium/click
-
-Clicks an element on the current page.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | Browser | integration | Yes | none | A `chromium` integration |
-| `selector` | CSS Selector | string | Yes | none | A CSS selector, such as `#submit-button` |
-
-```yaml
-- id: accept
-  type: chromium/click
-  config:
-    integration: browser
-    selector: "#accept-cookies"
-```
-
-### chromium/body
-
-Returns the HTML of the current page as the browser shows it, after scripts have run.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | Browser | integration | Yes | none | A `chromium` integration |
-
-```yaml
-- id: page
-  type: chromium/body
-  config:
-    integration: browser
-```
-
-### chromium/screenshot
-
-Takes a full-page screenshot and returns it as a PNG file.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | Browser | integration | Yes | none | A `chromium` integration |
-
-```yaml
-- id: shot
-  type: chromium/screenshot
-  config:
-    integration: browser
-```
-
-## Databases
-
-`fetch` and `delete` take `filters`: a list of conditions, each with a `field`, an `operation`, and a `comparator`. The operations are `==`, `!=`, `>`, `<`, `>=`, `<=`, and `like`.
-
-### fetch
-
-Reads rows from a table of a SQL or MongoDB database.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | Database Integration | integration | Yes | none | A `sql` or `mongo` integration |
-| `table` | Table | string | Yes | none | The table or collection |
-| `filters` | Filters | map | No | none | Conditions a row has to meet |
-| `single` | Single Result | boolean | No | `false` | Returns one row instead of a list |
-| `failIfEmpty` | Fail if Empty | boolean | No | `true` | Treats no rows as a failure |
-| `shouldFail` | Should Fail | boolean | No | `false` | Whether an error fails the action |
-| `datasourceOptions` | Datasource Options | map | No | none | Extra options for the database |
-
-```yaml
-- id: plans
-  type: fetch
-  config:
-    integration: orders-db
-    table: plans
-    failIfEmpty: "false"
-```
-
-As a tool, with a filter the agent fills in:
-
-```yaml
-actionConfig:
-  type: fetch
-  config:
-    integration:
-      type: raw
-      value: orders-db
-    table:
-      type: raw
-      value: orders
-    single:
-      type: raw
-      value: true
-    filters:
-      type: raw
-      value:
-        - field: order_number
-          operation: "=="
-          comparator: '{{ tool_param "order_number" }}'
-```
-
-### delete
-
-Deletes the rows of a table that meet the filters.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | Database Integration | integration | Yes | none | A `sql` or `mongo` integration |
-| `table` | Table | string | Yes | none | The table or collection |
-| `filters` | Filters | map | Yes | none | Conditions a row has to meet to be deleted |
-| `datasourceOptions` | Datasource Options | map | No | none | Extra options for the database |
-
-```yaml
-actionConfig:
-  type: delete
-  config:
-    integration:
-      type: raw
-      value: orders-db
-    table:
-      type: raw
-      value: drafts
-    filters:
-      type: raw
-      value:
-        - field: id
-          operation: "=="
-          comparator: '{{ tool_param "draft_id" }}'
-```
-
-### mongoquery
-
-Runs a query against a MongoDB collection.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | MongoDB Integration | integration | Yes | none | A `mongo` integration |
-| `collection` | Collection | string | Yes | none | The collection to query |
-| `filterQuery` | Filter Query | string | Yes | none | A MongoDB filter, as JSON |
-| `projection` | Projection | string | No | none | A MongoDB projection, as JSON |
-| `failIfEmpty` | Fail if Empty | boolean | No | `true` | Treats no results as a failure |
-
-```yaml
-- id: customer
-  type: mongoquery
-  config:
-    integration: app-db
-    collection: customers
-    filterQuery: '{"email": "{{ body "email" }}"}'
-```
-
-### firestore
-
-Stores a document in a Google Cloud Firestore collection.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `projectID` | Project ID | string | Yes | none | The Firebase project |
-| `collectionID` | Collection ID | string | Yes | none | The collection to write to |
-| `documentTemplate` | Document Template | string | Yes | none | The document, as JSON |
-| `serviceAccount` | Service Account | string | Yes | none | The service account's JSON key. Read it from a secret |
-
-```yaml
-- id: saved
-  type: firestore
-  config:
-    projectID: my-project
-    collectionID: questions
-    documentTemplate: '{"question": "{{ escape (body "question") }}"}'
-    serviceAccount: '{{ secret "firebase-service-account" }}'
-```
-
-## Vectors
-
-### storevector
-
-Stores vectors in a vector database, for similarity search.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | Vector Database | integration | Yes | none | A `qdrant` integration |
-| `vectors` | Vectors | string | Yes | none | The vector data to store |
-| `fields` | Fields | map | Yes | none | The data stored with the vectors |
-| `options` | Options | map | No | none | Extra storage options |
-
-```yaml
-actionConfig:
-  type: storevector
-  config:
-    integration:
-      type: raw
-      value: vectors
-    vectors:
-      type: raw
-      value: '{{ .embedding }}'
-    fields:
-      type: raw
-      value:
-        text: '{{ tool_param "text" }}'
-```
-
-### fetchvectors
-
-Finds the stored vectors closest to the one you give.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | Vector Database | integration | Yes | none | A `qdrant` integration |
-| `vector` | Vector | string | No | none | The vector to search with |
-| `options` | Options | map | No | none | Extra query options |
-
-```yaml
-- id: similar
-  type: fetchvectors
-  config:
-    integration: vectors
-    vector: '{{ .embedding }}'
-```
-
-## Stored values
-
-### store_key
-
-Stores a value under a key. The value stays until it is replaced.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `key` | Key | string | Yes | none | The key to store under |
-| `value` | Value | string | Yes | none | The value to store |
-
-```yaml
-- id: remember
-  type: store_key
-  config:
-    key: 'last-question-{{ .discord.author_id }}'
-    value: '{{ .discord.content }}'
-```
-
-### get_key
-
-Reads the value stored under a key.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `key` | Key | string | Yes | none | The key to read |
-| `failIfEmpty` | Fail if Empty | boolean | No | `false` | Treats a missing key as a failure |
-
-```yaml
-- id: last
-  type: get_key
-  config:
-    key: 'last-question-{{ .discord.author_id }}'
-```
-
-## Files and email
-
-### download
-
-Saves a file from the request, or from an earlier action's result, to a folder.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `file` | File | file | Yes | none | The file to save |
-| `destinationPath` | Destination Path | string | Yes | none | The folder to save into |
-| `fileName` | File Name | string | No | the file's own name | The name to save under |
-| `overwrite` | Overwrite | boolean | No | `false` | Replaces a file that is already there |
-
-```yaml
-- id: saved
-  type: download
-  config:
-    file: '{{ .shot }}'
-    destinationPath: /tmp/screenshots
-    fileName: page.png
-```
-
-### email
-
-Sends an email through an SMTP server.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `senderEmail` | Sender Email | string | Yes | none | The address the email comes from |
-| `name` | Sender Name | string | Yes | none | The sender's name |
-| `recipientEmail` | Recipient Email | string | Yes | none | The address the email goes to |
-| `subject` | Subject | string | No | none | The subject line |
-| `content` | Content | string | Yes | none | The text of the email |
-| `auth` | Server Configuration | map | Yes | none | The SMTP server: `serverHostname`, `serverPort`, `username`, `password` |
-
-```yaml
-actionConfig:
-  type: email
-  config:
-    senderEmail:
-      type: raw
-      value: support@example.com
-    name:
-      type: raw
-      value: Support
-    recipientEmail:
-      type: param
-      value: recipient
-    subject:
-      type: param
-      value: subject
-    content:
-      type: param
-      value: message
-    auth:
-      type: raw
-      value:
-        serverHostname: smtp.example.com
-        serverPort: "587"
-        username: support@example.com
-        password: '{{ secret "smtp-password" }}'
-```
-
-## Sign-in and tokens
-
-### authenticate
-
-Checks a JSON Web Token and finds the user it names in a database.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | User Database | integration | Yes | none | A `sql` or `mongo` integration that holds the users |
-| `collection` | Collection | string | Yes | none | The table or collection of users |
-| `databaseField` | Database Field | string | Yes | none | The field that holds the user's id |
-| `token` | Token | string | Yes | none | The token to check |
-| `jwtKey` | JWT Key | string | Yes | none | The key the token was signed with |
-| `failOnAuthError` | Fail on Auth Error | boolean | No | `true` | Treats a failed check as a failure |
-
-```yaml
-- id: user
-  type: authenticate
-  config:
-    integration: app-db
-    collection: users
-    databaseField: id
-    token: '{{ strip (header "Authorization") "Bearer " }}'
-    jwtKey: '{{ secret "jwt-signing-key" }}'
-```
-
-### jwt
-
-Creates or checks a JSON Web Token.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `mode` | Mode | string | Yes | none | `sign` or `verify` |
-| `field` | Field | string | Yes | none | The field name for the token data |
-| `key` | Key | string | No | none | The signing or checking key: a PEM or a shared secret |
-| `jwksURL` | JWKS URL | string | No | none | An address to fetch a JSON Web Key Set from, to check a token |
-| `claims` | Claims | map | No | none | The claims to sign |
-| `failOnValidationError` | Fail on Validation Error | boolean | No | `true` | Treats a failed check as a failure |
-
-```yaml
-- id: checked
-  type: jwt
-  config:
-    mode: verify
-    field: '{{ strip (header "Authorization") "Bearer " }}'
-    key: '{{ secret "jwt-signing-key" }}'
-```
-
-### hash
-
-Hashes a value, for example a password before it is stored.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `value` | Value | string | Yes | none | The value to hash |
-| `algorithm` | Algorithm | string | Yes | `bcrypt` | `bcrypt` |
-
-```yaml
-- id: hashed
-  type: hash
-  config:
-    value: '{{ body "password" }}'
-    algorithm: bcrypt
-```
-
-## Binance
-
-### binance/getprice
-
-Reads the current price of a symbol, or its figures for the last 24 hours.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | Binance Account | integration | Yes | none | A `binance` integration |
-| `symbol` | Symbol | string | Yes | none | A pair, such as `BTCUSDT` |
-| `price_type` | Price Type | string | Yes | `current` | `current`, `24hr` |
-
-```yaml
-- id: price
-  type: binance/getprice
-  config:
-    integration: my-binance
-    symbol: BTCUSDT
-    price_type: current
-```
-
-### binance/pricedifference
-
-Works out how much a price changed, and by what percentage, over a number of periods.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | Binance Account | integration | Yes | none | A `binance` integration |
-| `symbol` | Symbol(s) | string | Yes | none | One pair, or several separated by commas |
-| `interval` | Interval | string | No | `1h` | `1m`, `3m`, `5m`, `15m`, `30m`, `1h`, `2h`, `4h`, `6h`, `8h`, `12h`, `1d`, `3d`, `1w`, `1M` |
-| `period` | Period | string | No | `24` | How many intervals to look back |
-
-```yaml
-- id: change
-  type: binance/pricedifference
-  config:
-    integration: my-binance
-    symbol: BTCUSDT,ETHUSDT
-    interval: 1h
-    period: "24"
-```
-
-### binance/tradeinfo
-
-Reads trading figures for a pair.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | Binance Account | integration | Yes | none | A `binance` integration |
-| `symbol` | Symbol | string | Yes | none | A pair, such as `BTCUSDT` |
-
-```yaml
-- id: info
-  type: binance/tradeinfo
-  config:
-    integration: my-binance
-    symbol: BTCUSDT
-```
-
-### binance/accountbalance
-
-Reads the account's balances.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | Binance Account | integration | Yes | none | A `binance` integration |
-| `symbol` | Symbol | string | No | every asset | One asset, or several separated by commas, such as `BTC,ETH,USDT` |
-| `futures` | Futures | boolean | No | `false` | Reads the futures account instead of the spot account |
-
-```yaml
-- id: balance
-  type: binance/accountbalance
-  config:
-    integration: my-binance
-    symbol: BTC,USDT
-```
-
-### binance/spotorder
-
-Places a spot order. This action spends money on a live account. Put a [guard](/concepts/guard-rails) on any tool that runs it, and test with the integration's `testnet` turned on.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | Binance Account | integration | Yes | none | A `binance` integration |
-| `symbol` | Symbol | string | Yes | none | A pair, such as `BTCUSDT` |
-| `side` | Side | string | Yes | none | `BUY`, `SELL` |
-| `type` | Order Type | string | No | `MARKET` | `MARKET`, `LIMIT`, `STOP_LOSS`, `STOP_LOSS_LIMIT`, `TAKE_PROFIT`, `TAKE_PROFIT_LIMIT` |
-| `quantity` | Quantity | string | No | none | How much of the first asset of the pair |
-| `quote_order_qty` | Quote Order Quantity | string | No | none | How much of the second asset to spend. `MARKET` orders only |
-| `price` | Price | string | For `LIMIT` orders | none | The order's price |
-| `stop_price` | Stop Price | string | For stop orders | none | The stop price |
-| `time_in_force` | Time In Force | string | No | `GTC` | `GTC`, `IOC`, `FOK` |
-
-```yaml
-actionConfig:
-  type: binance/spotorder
-  config:
-    integration:
-      type: raw
-      value: my-binance
-    symbol:
-      type: raw
-      value: BTCUSDT
-    side:
-      type: param
-      value: side
-    quantity:
-      type: param
-      value: quantity
-```
-
-### binance/futuresorder
-
-Places a futures order. This action spends money on a live account. Put a [guard](/concepts/guard-rails) on any tool that runs it, and test with the integration's `testnet` turned on.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `integration` | Binance Account | integration | Yes | none | A `binance` integration |
-| `symbol` | Symbol | string | Yes | none | A pair, such as `BTCUSDT` |
-| `side` | Side | string | Yes | none | `BUY`, `SELL` |
-| `quantity` | Quantity | string | Yes | none | How much to buy or sell |
-| `type` | Order Type | string | No | `MARKET` | `MARKET`, `LIMIT`, `STOP`, `STOP_MARKET`, `TAKE_PROFIT`, `TAKE_PROFIT_MARKET` |
-| `price` | Price | string | For `LIMIT` orders | none | The order's price |
-| `time_in_force` | Time In Force | string | No | `GTC` | `GTC`, `IOC`, `FOK` |
-| `position_side` | Position Side | string | No | `BOTH` | `BOTH`, `LONG`, `SHORT` |
-| `reduce_only` | Reduce Only | string | No | `false` | `true` or `false` |
-| `leverage` | Leverage | string | No | none | The leverage to use |
-
-```yaml
-actionConfig:
-  type: binance/futuresorder
-  config:
-    integration:
-      type: raw
-      value: my-binance
-    symbol:
-      type: raw
-      value: BTCUSDT
-    side:
-      type: param
-      value: side
-    quantity:
-      type: param
-      value: quantity
-    position_side:
-      type: raw
-      value: BOTH
-```
-
-## ServFlow
-
-### servflowvalidate
-
-Checks a ServFlow YAML config for mistakes in its syntax and structure.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `yamlContent` | YAML Content | text_area | Yes | none | The YAML to check |
-
-```yaml
-- id: checked
-  type: servflowvalidate
-  config:
-    yamlContent: '{{ body "config" }}'
-```
-
-### agent and parallel
-
-The binary lists two more action types. You do not add them by hand. They are how ServFlow stores parts of an agent.
-
-| Type | Name | What it is |
-|---|---|---|
-| `agent` | AI Agent | A sub-agent. Its fields are the sub-agent's keys. See the [CLI reference](/references/cli#agents). |
-| `parallel` | Run In Parallel | A context group with **Run steps in parallel** turned on. See the [CLI reference](/references/cli#contextgroups). |
-
-## Related
-
-<CardGroup cols={2}>
-
-<Card title="Tools" icon="wrench" href="/concepts/tools">
-  How an agent uses an action when it decides to.
-</Card>
-
-<Card title="Context fetching" icon="layer-group" href="/concepts/context-fetching">
-  How an agent runs an action every time, before it starts.
-</Card>
-
-<Card title="Available integrations" icon="puzzle-piece" href="/references/integrations">
-  The integrations these actions take.
-</Card>
-
-<Card title="Dynamic content reference" icon="wand-magic-sparkles" href="/references/dynamic-content">
-  The template functions a field can use.
-</Card>
-
-</CardGroup>
+     1	---
+     2	title: "Available actions"
+     3	description: "Every action a tool or a context step can run: what it does, its fields, and its shape in a config file"
+     4	icon: "table-list"
+     5	---
+     6	
+     7	An action is one thing an agent can do: send a Discord message, fetch a web address, read a pull request. An agent runs an action in two places. A [tool](/concepts/tools) runs one when the agent decides to use it. A [context step](/concepts/context-fetching) runs one every time, before the agent starts. This page lists every action with its fields. `servflowai resource action describe --all` prints the same catalog.
+     8	
+     9	## All actions
+    10	
+    11	| Name in the dashboard | Type | What it does | Integration it needs |
+    12	|---|---|---|---|
+    13	| **Discord** | | | |
+    14	| Discord Send Message | [`discord/sendmessage`](#discord%2Fsendmessage) | Sends a message to a channel, a thread, or a person. | [`discord`](/references/integrations#discord) |
+    15	| Discord Read Messages | [`discord/readmessages`](#discord%2Freadmessages) | Reads a channel's recent messages. | `discord` |
+    16	| Discord Search Messages | [`discord/searchmessages`](#discord%2Fsearchmessages) | Searches the whole server for messages. | `discord` |
+    17	| Discord Read Server | [`discord/readguild`](#discord%2Freadguild) | Reads the server's details, channels, roles, or members. | `discord` |
+    18	| **GitHub** | | | |
+    19	| GitHub Fetch | [`github_fetch`](#github_fetch) | Reads a pull request's details, diff, or conversation. | [`github_app`](/references/integrations#github_app) |
+    20	| GitHub Post | [`github_post`](#github_post) | Posts a comment on a pull request. | `github_app` |
+    21	| **Gitea** | | | |
+    22	| Gitea Fetch | [`gitea/fetch`](#gitea%2Ffetch) | Reads a pull request's details, diff, or conversation. | [`gitea`](/references/integrations#gitea) |
+    23	| Gitea Post | [`gitea/post`](#gitea%2Fpost) | Posts a comment on a pull request or issue. | `gitea` |
+    24	| **Web requests and code** | | | |
+    25	| HTTP Request | [`http`](#http) | Calls a web address and returns the response. | none |
+    26	| JavaScript | [`javascript`](#javascript) | Runs a JavaScript function. | none |
+    27	| Shell Script | [`shell`](#shell) | Runs a shell script in a sandboxed folder. | none |
+    28	| Static Value | [`static`](#static) | Returns a value you write, after its template is filled in. | none |
+    29	| **Browser** | | | |
+    30	| Chromium Navigate | [`chromium/navigate`](#chromium%2Fnavigate) | Opens a web address in the browser. | [`chromium`](/references/integrations#chromium) |
+    31	| Chromium Click | [`chromium/click`](#chromium%2Fclick) | Clicks an element on the page. | `chromium` |
+    32	| Chromium Body | [`chromium/body`](#chromium%2Fbody) | Returns the page's HTML as the browser shows it. | `chromium` |
+    33	| Chromium Screenshot | [`chromium/screenshot`](#chromium%2Fscreenshot) | Takes a full-page screenshot. | `chromium` |
+    34	| **Databases** | | | |
+    35	| Fetch Data | [`fetch`](#fetch) | Reads rows from a table. | [`sql`](/references/integrations#sql) or [`mongo`](/references/integrations#mongo) |
+    36	| Delete Data | [`delete`](#delete) | Deletes rows from a table. | `sql` or `mongo` |
+    37	| MongoDB Query | [`mongoquery`](#mongoquery) | Runs a MongoDB query. | `mongo` |
+    38	| Firestore | [`firestore`](#firestore) | Stores a document in Google Cloud Firestore. | none |
+    39	| **Vectors** | | | |
+    40	| Store Vectors | [`storevector`](#storevector) | Stores vectors for similarity search. | [`qdrant`](/references/integrations#qdrant) |
+    41	| Fetch Vectors | [`fetchvectors`](#fetchvectors) | Finds the stored vectors closest to one you give. | `qdrant` |
+    42	| **Stored values** | | | |
+    43	| Store Key | [`store_key`](#store_key) | Stores a value under a key. | none |
+    44	| Get Key | [`get_key`](#get_key) | Reads the value stored under a key. | none |
+    45	| **Files and email** | | | |
+    46	| Download File | [`download`](#download) | Saves a file from the request, or from an earlier action, to a folder. | none |
+    47	| Send Email | [`email`](#email) | Sends an email through an SMTP server. | none |
+    48	| **Sign-in and tokens** | | | |
+    49	| Authenticate | [`authenticate`](#authenticate) | Checks a JWT and finds its user in a database. | `sql` or `mongo` |
+    50	| JWT Token | [`jwt`](#jwt) | Creates or checks a JSON Web Token. | none |
+    51	| Hash Value | [`hash`](#hash) | Hashes a value. | none |
+    52	| **Binance** | | | |
+    53	| Binance Get Price | [`binance/getprice`](#binance%2Fgetprice) | Reads a symbol's current or 24-hour price. | [`binance`](/references/integrations#binance) |
+    54	| Binance Price Difference | [`binance/pricedifference`](#binance%2Fpricedifference) | Works out a price change over a period. | `binance` |
+    55	| Binance Trade Info | [`binance/tradeinfo`](#binance%2Ftradeinfo) | Reads trading figures for a pair. | `binance` |
+    56	| Binance Account Balance | [`binance/accountbalance`](#binance%2Faccountbalance) | Reads the account's balances. | `binance` |
+    57	| Binance Spot Order | [`binance/spotorder`](#binance%2Fspotorder) | Places a spot order. | `binance` |
+    58	| Binance Futures Order | [`binance/futuresorder`](#binance%2Ffuturesorder) | Places a futures order. | `binance` |
+    59	| **ServFlow** | | | |
+    60	| Servflow Validate | [`servflowvalidate`](#servflowvalidate) | Checks a ServFlow YAML config for mistakes. | none |
+    61	| AI Agent | [`agent`](#agent-and-parallel) | How a sub-agent is stored. Not added by hand. | none |
+    62	| Run In Parallel | [`parallel`](#agent-and-parallel) | How a parallel context group is stored. Not added by hand. | none |
+    63	
+    64	## How an action is written in a config file
+    65	
+    66	As a context step, an action is an `id`, a `type`, and a `config` that maps each field to a string. Every string is a template.
+    67	
+    68	```yaml
+    69	- id: repo
+    70	  type: http
+    71	  config:
+    72	    method: GET
+    73	    url: 'https://api.github.com/repos/{{ body "repo" }}'
+    74	```
+    75	
+    76	As a tool, the same action goes under `actionConfig`, and each field's value is wrapped in an object. `type: raw` means you set the value. `type: param` means the agent fills it in when it uses the tool, and `value` names the input it is asked for.
+    77	
+    78	```yaml
+    79	actionConfig:
+    80	  type: http
+    81	  config:
+    82	    method:
+    83	      type: raw
+    84	      value: GET
+    85	    url:
+    86	      type: param
+    87	      value: address
+    88	```
+    89	
+    90	Two differences follow from this:
+    91	
+    92	- **Field types.** A step's values are all strings, so a field of type `map` cannot be written as a map in a step. A tool's `raw` value can be a string, a number, a boolean, a list, or a map.
+    93	- **Who fills a field.** Only a tool has `param`.
+    94	
+    95	The examples below show each action as a step. An action with a required `map` field is shown as a tool. The rest of a step and of a tool is in the [CLI reference](/references/cli#contextgroups).
+    96	
+    97	In the field tables, **Type** is the binary's field type: `string`, `text_area` (a long string), `boolean`, `map`, `file`, or `integration` (the id of a stored integration).
+    98	
+    99	## Discord
+   100	
+   101	### discord/sendmessage
+   102	
+   103	Sends a message to a Discord channel, a thread, or a person.
+   104	
+   105	| Key | Label | Type | Required | Default | Values |
+   106	|---|---|---|---|---|---|
+   107	| `integration` | Discord Bot | integration | Yes | none | A `discord` integration |
+   108	| `content` | Message Content | string | Yes | none | The message to send |
+   109	| `channel_id` | Channel ID | string | No | none | The channel to post in |
+   110	| `user_id` | User ID | string | No | none | Sends a direct message to this person instead of posting in a channel |
+   111	| `thread_id` | Thread ID | string | No | none | Sends to an existing thread |
+   112	| `create_thread` | Create Thread | boolean | No | `false` | Creates a new thread for this message |
+   113	| `thread_name` | Thread Name | string | No | none | The new thread's name. Needed when `create_thread` is `true` |
+   114	| `reply_to` | Reply To | string | No | none | The id of the message this one replies to |
+   115	| `mentions` | Mentions | string | No | `none` | Who the message may notify: `none`, `reply`, `users`, `roles`, `everyone` |
+   116	| `split` | Split Long Messages | boolean | No | `true` | Posts text over 2000 characters as several messages |
+   117	
+   118	```yaml
+   119	- id: announce
+   120	  type: discord/sendmessage
+   121	  config:
+   122	    integration: my-discord-bot
+   123	    channel_id: "112233445566778899"
+   124	    content: 'New question from {{ .discord.display_name }}: {{ .discord.content }}'
+   125	```
+   126	
+   127	As a tool that always posts in one channel and lets the agent write the text:
+   128	
+   129	```yaml
+   130	actionConfig:
+   131	  type: discord/sendmessage
+   132	  config:
+   133	    integration:
+   134	      type: raw
+   135	      value: my-discord-bot
+   136	    channel_id:
+   137	      type: raw
+   138	      value: "112233445566778899"
+   139	    content:
+   140	      type: param
+   141	      value: message
+   142	```
+   143	
+   144	### discord/readmessages
+   145	
+   146	Reads a Discord channel's recent messages, oldest first.
+   147	
+   148	| Key | Label | Type | Required | Default | Values |
+   149	|---|---|---|---|---|---|
+   150	| `integration` | Discord Bot | integration | Yes | none | A `discord` integration |
+   151	| `channel_id` | Channel ID | string | Yes | none | The channel to read |
+   152	| `limit` | Limit | string | No | `50` | How many messages to read, 1 to 100 |
+   153	| `before` | Before | string | No | none | A message id. Reads what came before it |
+   154	| `after` | After | string | No | none | A message id. Reads what came after it |
+   155	| `around` | Around | string | No | none | A message id. Reads what surrounds it |
+   156	
+   157	```yaml
+   158	- id: history
+   159	  type: discord/readmessages
+   160	  config:
+   161	    integration: my-discord-bot
+   162	    channel_id: '{{ .discord.channel_id }}'
+   163	    limit: "20"
+   164	```
+   165	
+   166	### discord/searchmessages
+   167	
+   168	Searches the whole Discord server for messages that match a phrase, a channel, or an author. Each match comes back with a link to the message.
+   169	
+   170	| Key | Label | Type | Required | Default | Values |
+   171	|---|---|---|---|---|---|
+   172	| `integration` | Discord Bot | integration | Yes | none | A `discord` integration |
+   173	| `content` | Search Text | string | No | none | Words to look for |
+   174	| `channel_id` | Channel IDs | string | No | every channel | Channel ids, separated by commas |
+   175	| `author_id` | Author IDs | string | No | everyone | User ids, separated by commas |
+   176	| `sort_by` | Sort By | string | No | `timestamp` | `timestamp`, `relevance` |
+   177	| `order` | Order | string | No | `desc` | `desc`, `asc` |
+   178	
+   179	```yaml
+   180	- id: matches
+   181	  type: discord/searchmessages
+   182	  config:
+   183	    integration: my-discord-bot
+   184	    content: '{{ .discord.args }}'
+   185	    sort_by: relevance
+   186	```
+   187	
+   188	### discord/readguild
+   189	
+   190	Reads the integration's Discord server: its details, channels, roles, or members.
+   191	
+   192	| Key | Label | Type | Required | Default | Values |
+   193	|---|---|---|---|---|---|
+   194	| `integration` | Discord Bot | integration | Yes | none | A `discord` integration |
+   195	| `resource` | Resource | string | Yes | none | `guild`, `channels`, `roles`, `member`, `member_search`, `members` |
+   196	| `user_id` | User ID | string | For `member` | none | The member to look up |
+   197	| `query` | Name Search | string | For `member_search` | none | The start of a username or nickname |
+   198	| `limit` | Member Limit | string | No | `10` | How many members to return: 1 to 1000 for `member_search`, 1 to 5000 for `members` |
+   199	
+   200	```yaml
+   201	- id: channels
+   202	  type: discord/readguild
+   203	  config:
+   204	    integration: my-discord-bot
+   205	    resource: channels
+   206	```
+   207	
+   208	## GitHub
+   209	
+   210	### github_fetch
+   211	
+   212	Reads a pull request as a GitHub App: its details, its diff, or its conversation.
+   213	
+   214	| Key | Label | Type | Required | Default | Values |
+   215	|---|---|---|---|---|---|
+   216	| `integration` | GitHub App | integration | Yes | none | A `github_app` integration |
+   217	| `resource` | Resource | string | Yes | none | `pr_meta`, `pr_diff`, `pr_conversation` |
+   218	| `repo` | Repository | string | Yes | none | The repository, as `owner/name` |
+   219	| `pr_number` | Pull Request Number | string | Yes | none | The pull request to read |
+   220	
+   221	```yaml
+   222	- id: diff
+   223	  type: github_fetch
+   224	  config:
+   225	    integration: my-github-app
+   226	    resource: pr_diff
+   227	    repo: '{{ .github.repo }}'
+   228	    pr_number: '{{ .github.pr_number }}'
+   229	```
+   230	
+   231	### github_post
+   232	
+   233	Posts a comment on a GitHub pull request as a GitHub App.
+   234	
+   235	| Key | Label | Type | Required | Default | Values |
+   236	|---|---|---|---|---|---|
+   237	| `integration` | GitHub App | integration | Yes | none | A `github_app` integration |
+   238	| `resource` | Resource | string | Yes | `issue_comment` | `issue_comment` |
+   239	| `repo` | Repository | string | Yes | none | The repository, as `owner/name` |
+   240	| `pr_number` | Pull Request Number | string | Yes | none | The pull request to post to |
+   241	| `body` | Body | text_area | Yes | none | The text of the comment |
+   242	
+   243	```yaml
+   244	- id: notice
+   245	  type: github_post
+   246	  config:
+   247	    integration: my-github-app
+   248	    resource: issue_comment
+   249	    repo: '{{ .github.repo }}'
+   250	    pr_number: '{{ .github.pr_number }}'
+   251	    body: A review is on its way.
+   252	```
+   253	
+   254	## Gitea
+   255	
+   256	### gitea/fetch
+   257	
+   258	Reads a pull request from a Gitea server: its details, its diff, or its conversation.
+   259	
+   260	| Key | Label | Type | Required | Default | Values |
+   261	|---|---|---|---|---|---|
+   262	| `integration` | Gitea Server | integration | Yes | none | A `gitea` integration |
+   263	| `resource` | Resource | string | Yes | none | `pr_meta`, `pr_diff`, `pr_conversation` |
+   264	| `repo` | Repository | string | Yes | none | The repository, as `owner/name` |
+   265	| `pr_number` | Pull Request Number | string | Yes | none | The pull request to read |
+   266	
+   267	```yaml
+   268	- id: diff
+   269	  type: gitea/fetch
+   270	  config:
+   271	    integration: my-gitea
+   272	    resource: pr_diff
+   273	    repo: '{{ .gitea.repo }}'
+   274	    pr_number: '{{ .gitea.pr_number }}'
+   275	```
+   276	
+   277	### gitea/post
+   278	
+   279	Posts a comment on a Gitea pull request or issue.
+   280	
+   281	| Key | Label | Type | Required | Default | Values |
+   282	|---|---|---|---|---|---|
+   283	| `integration` | Gitea Server | integration | Yes | none | A `gitea` integration |
+   284	| `resource` | Resource | string | Yes | `issue_comment` | `issue_comment` |
+   285	| `repo` | Repository | string | Yes | none | The repository, as `owner/name` |
+   286	| `pr_number` | Pull Request Number | string | Yes | none | The pull request or issue to post to |
+   287	| `body` | Body | text_area | Yes | none | The text of the comment |
+   288	
+   289	```yaml
+   290	- id: notice
+   291	  type: gitea/post
+   292	  config:
+   293	    integration: my-gitea
+   294	    resource: issue_comment
+   295	    repo: '{{ .gitea.repo }}'
+   296	    pr_number: '{{ .gitea.pr_number }}'
+   297	    body: A review is on its way.
+   298	```
+   299	
+   300	## Web requests and code
+   301	
+   302	### http
+   303	
+   304	Calls a web address and returns the response.
+   305	
+   306	| Key | Label | Type | Required | Default | Values |
+   307	|---|---|---|---|---|---|
+   308	| `url` | URL | string | Yes | none | The address to call |
+   309	| `method` | HTTP Method | string | Yes | `GET` | `GET`, `POST`, `PUT`, `DELETE`, `PATCH` |
+   310	| `headers` | Headers | map | No | none | Header names and values |
+   311	| `body` | Request Body | map | No | none | The request body. See below |
+   312	| `responsePath` | Response Path | string | No | none | A path into the JSON response. Only that part is returned |
+   313	| `expectedResponseCode` | Expected Response Code | string | No | empty | The status code that counts as success, such as `200` |
+   314	| `failIfResponseEmpty` | Fail if Response Empty | boolean | No | `true` | Treats an empty response as a failure |
+   315	
+   316	```yaml
+   317	- id: repo
+   318	  type: http
+   319	  config:
+   320	    method: GET
+   321	    url: 'https://api.github.com/repos/{{ body "repo" }}'
+   322	    responsePath: description
+   323	```
+   324	
+   325	As a tool, with headers and a body. Write `body` as a map. Each value is filled in on its own and then encoded as JSON, so quotes and line breaks in a value need no escaping.
+   326	
+   327	```yaml
+   328	actionConfig:
+   329	  type: http
+   330	  config:
+   331	    method:
+   332	      type: raw
+   333	      value: POST
+   334	    url:
+   335	      type: raw
+   336	      value: https://api.example.com/tickets
+   337	    headers:
+   338	      type: raw
+   339	      value:
+   340	        Authorization: 'Bearer {{ secret "tickets-api-key" }}'
+   341	    body:
+   342	      type: raw
+   343	      value:
+   344	        title: '{{ tool_param "title" }}'
+   345	        details: '{{ tool_param "details" }}'
+   346	```
+   347	
+   348	### javascript
+   349	
+   350	Runs JavaScript. The script defines a function named `servflowRun`, and what the function returns is the action's result. The function receives three arguments: the run's variables, the body of the request that started the run, and the request's parameters. The script cannot call web addresses, and has no `require`.
+   351	
+   352	| Key | Label | Type | Required | Default | Values |
+   353	|---|---|---|---|---|---|
+   354	| `script` | Script | text_area | Yes | none | JavaScript that defines `servflowRun` |
+   355	| `dependencies` | Dependencies | text_area | No | none | JavaScript loaded before the script, such as a bundled library |
+   356	
+   357	```yaml
+   358	- id: customer
+   359	  type: javascript
+   360	  config:
+   361	    script: |
+   362	      function servflowRun(variables, requestBody, params) {
+   363	        var request = JSON.parse(requestBody);
+   364	        return { name: request.name.trim(), vip: request.orders > 10 };
+   365	      }
+   366	```
+   367	
+   368	A later step or a prompt reads the result as `{{ .customer.name }}`.
+   369	
+   370	### shell
+   371	
+   372	Runs a shell script, with the shell's full syntax. The script starts in a sandboxed folder of its own that is deleted when the run ends, and it cannot read the server's own files. The instance's `[shell]` settings decide how it is sandboxed.
+   373	
+   374	| Key | Label | Type | Required | Default | Values |
+   375	|---|---|---|---|---|---|
+   376	| `script` | Script | string | Yes | none | The script to run |
+| `env` | Environment | array | No | none | Each entry: a name and one source (integration, secret, or literal)
+   377	
+   378	```yaml
+   379	- id: today
+   380	  type: shell
+   381	  config:
+   382	    script: date +%A
+    env:
+      - name: GH_TOKEN
+        integrationId: github-app
+      - name: NPM_TOKEN
+        secretId: npm-publish
+      - name: REPO
+        value: servflow/servflowai
+   383	```
+   384	
+   385	### static
+   386	
+   387	Returns the value you write, after its template is filled in. Use it to build a value once and read it by the step's id afterwards.
+   388	
+   389	| Key | Label | Type | Required | Default | Values |
+   390	|---|---|---|---|---|---|
+   391	| `return` | Return Value | string | Yes | none | The value to return |
+   392	| `config` | Config | string | No | none | Not used by the action |
+   393	
+   394	```yaml
+   395	- id: hours
+   396	  type: static
+   397	  config:
+   398	    return: Support is open 09:00 to 17:00, Monday to Friday.
+   399	```
+   400	
+   401	## Browser
+   402	
+   403	The four browser actions share one browser session, the `chromium` integration. Open a page with `chromium/navigate` first, then read or click it.
+   404	
+   405	### chromium/navigate
+   406	
+   407	Opens a web address in the browser.
+   408	
+   409	| Key | Label | Type | Required | Default | Values |
+   410	|---|---|---|---|---|---|
+   411	| `integration` | Browser | integration | Yes | none | A `chromium` integration |
+   412	| `url` | URL | string | Yes | none | The address to open |
+   413	
+   414	```yaml
+   415	- id: open
+   416	  type: chromium/navigate
+   417	  config:
+   418	    integration: browser
+   419	    url: '{{ body "url" }}'
+   420	```
+   421	
+   422	### chromium/click
+   423	
+   424	Clicks an element on the current page.
+   425	
+   426	| Key | Label | Type | Required | Default | Values |
+   427	|---|---|---|---|---|---|
+   428	| `integration` | Browser | integration | Yes | none | A `chromium` integration |
+   429	| `selector` | CSS Selector | string | Yes | none | A CSS selector, such as `#submit-button` |
+   430	
+   431	```yaml
+   432	- id: accept
+   433	  type: chromium/click
+   434	  config:
+   435	    integration: browser
+   436	    selector: "#accept-cookies"
+   437	```
+   438	
+   439	### chromium/body
+   440	
+   441	Returns the HTML of the current page as the browser shows it, after scripts have run.
+   442	
+   443	| Key | Label | Type | Required | Default | Values |
+   444	|---|---|---|---|---|---|
+   445	| `integration` | Browser | integration | Yes | none | A `chromium` integration |
+   446	
+   447	```yaml
+   448	- id: page
+   449	  type: chromium/body
+   450	  config:
+   451	    integration: browser
+   452	```
+   453	
+   454	### chromium/screenshot
+   455	
+   456	Takes a full-page screenshot and returns it as a PNG file.
+   457	
+   458	| Key | Label | Type | Required | Default | Values |
+   459	|---|---|---|---|---|---|
+   460	| `integration` | Browser | integration | Yes | none | A `chromium` integration |
+   461	
+   462	```yaml
+   463	- id: shot
+   464	  type: chromium/screenshot
+   465	  config:
+   466	    integration: browser
+   467	```
+   468	
+   469	## Databases
+   470	
+   471	`fetch` and `delete` take `filters`: a list of conditions, each with a `field`, an `operation`, and a `comparator`. The operations are `==`, `!=`, `>`, `<`, `>=`, `<=`, and `like`.
+   472	
+   473	### fetch
+   474	
+   475	Reads rows from a table of a SQL or MongoDB database.
+   476	
+   477	| Key | Label | Type | Required | Default | Values |
+   478	|---|---|---|---|---|---|
+   479	| `integration` | Database Integration | integration | Yes | none | A `sql` or `mongo` integration |
+   480	| `table` | Table | string | Yes | none | The table or collection |
+   481	| `filters` | Filters | map | No | none | Conditions a row has to meet |
+   482	| `single` | Single Result | boolean | No | `false` | Returns one row instead of a list |
+   483	| `failIfEmpty` | Fail if Empty | boolean | No | `true` | Treats no rows as a failure |
+   484	| `shouldFail` | Should Fail | boolean | No | `false` | Whether an error fails the action |
+   485	| `datasourceOptions` | Datasource Options | map | No | none | Extra options for the database |
+   486	
+   487	```yaml
+   488	- id: plans
+   489	  type: fetch
+   490	  config:
+   491	    integration: orders-db
+   492	    table: plans
+   493	    failIfEmpty: "false"
+   494	```
+   495	
+   496	As a tool, with a filter the agent fills in:
+   497	
+   498	```yaml
+   499	actionConfig:
+   500	  type: fetch
+   501	  config:
+   502	    integration:
+   503	      type: raw
+   504	      value: orders-db
+   505	    table:
+   506	      type: raw
+   507	      value: orders
+   508	    single:
+   509	      type: raw
+   510	      value: true
+   511	    filters:
+   512	      type: raw
+   513	      value:
+   514	        - field: order_number
+   515	          operation: "=="
+   516	          comparator: '{{ tool_param "order_number" }}'
+   517	```
+   518	
+   519	### delete
+   520	
+   521	Deletes the rows of a table that meet the filters.
+   522	
+   523	| Key | Label | Type | Required | Default | Values |
+   524	|---|---|---|---|---|---|
+   525	| `integration` | Database Integration | integration | Yes | none | A `sql` or `mongo` integration |
+   526	| `table` | Table | string | Yes | none | The table or collection |
+   527	| `filters` | Filters | map | Yes | none | Conditions a row has to meet to be deleted |
+   528	| `datasourceOptions` | Datasource Options | map | No | none | Extra options for the database |
+   529	
+   530	```yaml
+   531	actionConfig:
+   532	  type: delete
+   533	  config:
+   534	    integration:
+   535	      type: raw
+   536	      value: orders-db
+   537	    table:
+   538	      type: raw
+   539	      value: drafts
+   540	    filters:
+   541	      type: raw
+   542	      value:
+   543	        - field: id
+   544	          operation: "=="
+   545	          comparator: '{{ tool_param "draft_id" }}'
+   546	```
+   547	
+   548	### mongoquery
+   549	
+   550	Runs a query against a MongoDB collection.
+   551	
+   552	| Key | Label | Type | Required | Default | Values |
+   553	|---|---|---|---|---|---|
+   554	| `integration` | MongoDB Integration | integration | Yes | none | A `mongo` integration |
+   555	| `collection` | Collection | string | Yes | none | The collection to query |
+   556	| `filterQuery` | Filter Query | string | Yes | none | A MongoDB filter, as JSON |
+   557	| `projection` | Projection | string | No | none | A MongoDB projection, as JSON |
+   558	| `failIfEmpty` | Fail if Empty | boolean | No | `true` | Treats no results as a failure |
+   559	
+   560	```yaml
+   561	- id: customer
+   562	  type: mongoquery
+   563	  config:
+   564	    integration: app-db
+   565	    collection: customers
+   566	    filterQuery: '{"email": "{{ body "email" }}"}'
+   567	```
+   568	
+   569	### firestore
+   570	
+   571	Stores a document in a Google Cloud Firestore collection.
+   572	
+   573	| Key | Label | Type | Required | Default | Values |
+   574	|---|---|---|---|---|---|
+   575	| `projectID` | Project ID | string | Yes | none | The Firebase project |
+   576	| `collectionID` | Collection ID | string | Yes | none | The collection to write to |
+   577	| `documentTemplate` | Document Template | string | Yes | none | The document, as JSON |
+   578	| `serviceAccount` | Service Account | string | Yes | none | The service account's JSON key. Read it from a secret |
+   579	
+   580	```yaml
+   581	- id: saved
+   582	  type: firestore
+   583	  config:
+   584	    projectID: my-project
+   585	    collectionID: questions
+   586	    documentTemplate: '{"question": "{{ escape (body "question") }}"}'
+   587	    serviceAccount: '{{ secret "firebase-service-account" }}'
+   588	```
+   589	
+   590	## Vectors
+   591	
+   592	### storevector
+   593	
+   594	Stores vectors in a vector database, for similarity search.
+   595	
+   596	| Key | Label | Type | Required | Default | Values |
+   597	|---|---|---|---|---|---|
+   598	| `integration` | Vector Database | integration | Yes | none | A `qdrant` integration |
+   599	| `vectors` | Vectors | string | Yes | none | The vector data to store |
+   600	| `fields` | Fields | map | Yes | none | The data stored with the vectors |
+   601	| `options` | Options | map | No | none | Extra storage options |
+   602	
+   603	```yaml
+   604	actionConfig:
+   605	  type: storevector
+   606	  config:
+   607	    integration:
+   608	      type: raw
+   609	      value: vectors
+   610	    vectors:
+   611	      type: raw
+   612	      value: '{{ .embedding }}'
+   613	    fields:
+   614	      type: raw
+   615	      value:
+   616	        text: '{{ tool_param "text" }}'
+   617	```
+   618	
+   619	### fetchvectors
+   620	
+   621	Finds the stored vectors closest to the one you give.
+   622	
+   623	| Key | Label | Type | Required | Default | Values |
+   624	|---|---|---|---|---|---|
+   625	| `integration` | Vector Database | integration | Yes | none | A `qdrant` integration |
+   626	| `vector` | Vector | string | No | none | The vector to search with |
+   627	| `options` | Options | map | No | none | Extra query options |
+   628	
+   629	```yaml
+   630	- id: similar
+   631	  type: fetchvectors
+   632	  config:
+   633	    integration: vectors
+   634	    vector: '{{ .embedding }}'
+   635	```
+   636	
+   637	## Stored values
+   638	
+   639	### store_key
+   640	
+   641	Stores a value under a key. The value stays until it is replaced.
+   642	
+   643	| Key | Label | Type | Required | Default | Values |
+   644	|---|---|---|---|---|---|
+   645	| `key` | Key | string | Yes | none | The key to store under |
+   646	| `value` | Value | string | Yes | none | The value to store |
+   647	
+   648	```yaml
+   649	- id: remember
+   650	  type: store_key
+   651	  config:
+   652	    key: 'last-question-{{ .discord.author_id }}'
+   653	    value: '{{ .discord.content }}'
+   654	```
+   655	
+   656	### get_key
+   657	
+   658	Reads the value stored under a key.
+   659	
+   660	| Key | Label | Type | Required | Default | Values |
+   661	|---|---|---|---|---|---|
+   662	| `key` | Key | string | Yes | none | The key to read |
+   663	| `failIfEmpty` | Fail if Empty | boolean | No | `false` | Treats a missing key as a failure |
+   664	
+   665	```yaml
+   666	- id: last
+   667	  type: get_key
+   668	  config:
+   669	    key: 'last-question-{{ .discord.author_id }}'
+   670	```
+   671	
+   672	## Files and email
+   673	
+   674	### download
+   675	
+   676	Saves a file from the request, or from an earlier action's result, to a folder.
+   677	
+   678	| Key | Label | Type | Required | Default | Values |
+   679	|---|---|---|---|---|---|
+   680	| `file` | File | file | Yes | none | The file to save |
+   681	| `destinationPath` | Destination Path | string | Yes | none | The folder to save into |
+   682	| `fileName` | File Name | string | No | the file's own name | The name to save under |
+   683	| `overwrite` | Overwrite | boolean | No | `false` | Replaces a file that is already there |
+   684	
+   685	```yaml
+   686	- id: saved
+   687	  type: download
+   688	  config:
+   689	    file: '{{ .shot }}'
+   690	    destinationPath: /tmp/screenshots
+   691	    fileName: page.png
+   692	```
+   693	
+   694	### email
+   695	
+   696	Sends an email through an SMTP server.
+   697	
+   698	| Key | Label | Type | Required | Default | Values |
+   699	|---|---|---|---|---|---|
+   700	| `senderEmail` | Sender Email | string | Yes | none | The address the email comes from |
+   701	| `name` | Sender Name | string | Yes | none | The sender's name |
+   702	| `recipientEmail` | Recipient Email | string | Yes | none | The address the email goes to |
+   703	| `subject` | Subject | string | No | none | The subject line |
+   704	| `content` | Content | string | Yes | none | The text of the email |
+   705	| `auth` | Server Configuration | map | Yes | none | The SMTP server: `serverHostname`, `serverPort`, `username`, `password` |
+   706	
+   707	```yaml
+   708	actionConfig:
+   709	  type: email
+   710	  config:
+   711	    senderEmail:
+   712	      type: raw
+   713	      value: support@example.com
+   714	    name:
+   715	      type: raw
+   716	      value: Support
+   717	    recipientEmail:
+   718	      type: param
+   719	      value: recipient
+   720	    subject:
+   721	      type: param
+   722	      value: subject
+   723	    content:
+   724	      type: param
+   725	      value: message
+   726	    auth:
+   727	      type: raw
+   728	      value:
+   729	        serverHostname: smtp.example.com
+   730	        serverPort: "587"
+   731	        username: support@example.com
+   732	        password: '{{ secret "smtp-password" }}'
+   733	```
+   734	
+   735	## Sign-in and tokens
+   736	
+   737	### authenticate
+   738	
+   739	Checks a JSON Web Token and finds the user it names in a database.
+   740	
+   741	| Key | Label | Type | Required | Default | Values |
+   742	|---|---|---|---|---|---|
+   743	| `integration` | User Database | integration | Yes | none | A `sql` or `mongo` integration that holds the users |
+   744	| `collection` | Collection | string | Yes | none | The table or collection of users |
+   745	| `databaseField` | Database Field | string | Yes | none | The field that holds the user's id |
+   746	| `token` | Token | string | Yes | none | The token to check |
+   747	| `jwtKey` | JWT Key | string | Yes | none | The key the token was signed with |
+   748	| `failOnAuthError` | Fail on Auth Error | boolean | No | `true` | Treats a failed check as a failure |
+   749	
+   750	```yaml
+   751	- id: user
+   752	  type: authenticate
+   753	  config:
+   754	    integration: app-db
+   755	    collection: users
+   756	    databaseField: id
+   757	    token: '{{ strip (header "Authorization") "Bearer " }}'
+   758	    jwtKey: '{{ secret "jwt-signing-key" }}'
+   759	```
+   760	
+   761	### jwt
+   762	
+   763	Creates or checks a JSON Web Token.
+   764	
+   765	| Key | Label | Type | Required | Default | Values |
+   766	|---|---|---|---|---|---|
+   767	| `mode` | Mode | string | Yes | none | `sign` or `verify` |
+   768	| `field` | Field | string | Yes | none | The field name for the token data |
+   769	| `key` | Key | string | No | none | The signing or checking key: a PEM or a shared secret |
+   770	| `jwksURL` | JWKS URL | string | No | none | An address to fetch a JSON Web Key Set from, to check a token |
+   771	| `claims` | Claims | map | No | none | The claims to sign |
+   772	| `failOnValidationError` | Fail on Validation Error | boolean | No | `true` | Treats a failed check as a failure |
+   773	
+   774	```yaml
+   775	- id: checked
+   776	  type: jwt
+   777	  config:
+   778	    mode: verify
+   779	    field: '{{ strip (header "Authorization") "Bearer " }}'
+   780	    key: '{{ secret "jwt-signing-key" }}'
+   781	```
+   782	
+   783	### hash
+   784	
+   785	Hashes a value, for example a password before it is stored.
+   786	
+   787	| Key | Label | Type | Required | Default | Values |
+   788	|---|---|---|---|---|---|
+   789	| `value` | Value | string | Yes | none | The value to hash |
+   790	| `algorithm` | Algorithm | string | Yes | `bcrypt` | `bcrypt` |
+   791	
+   792	```yaml
+   793	- id: hashed
+   794	  type: hash
+   795	  config:
+   796	    value: '{{ body "password" }}'
+   797	    algorithm: bcrypt
+   798	```
+   799	
+   800	## Binance
+   801	
+   802	### binance/getprice
+   803	
+   804	Reads the current price of a symbol, or its figures for the last 24 hours.
+   805	
+   806	| Key | Label | Type | Required | Default | Values |
+   807	|---|---|---|---|---|---|
+   808	| `integration` | Binance Account | integration | Yes | none | A `binance` integration |
+   809	| `symbol` | Symbol | string | Yes | none | A pair, such as `BTCUSDT` |
+   810	| `price_type` | Price Type | string | Yes | `current` | `current`, `24hr` |
+   811	
+   812	```yaml
+   813	- id: price
+   814	  type: binance/getprice
+   815	  config:
+   816	    integration: my-binance
+   817	    symbol: BTCUSDT
+   818	    price_type: current
+   819	```
+   820	
+   821	### binance/pricedifference
+   822	
+   823	Works out how much a price changed, and by what percentage, over a number of periods.
+   824	
+   825	| Key | Label | Type | Required | Default | Values |
+   826	|---|---|---|---|---|---|
+   827	| `integration` | Binance Account | integration | Yes | none | A `binance` integration |
+   828	| `symbol` | Symbol(s) | string | Yes | none | One pair, or several separated by commas |
+   829	| `interval` | Interval | string | No | `1h` | `1m`, `3m`, `5m`, `15m`, `30m`, `1h`, `2h`, `4h`, `6h`, `8h`, `12h`, `1d`, `3d`, `1w`, `1M` |
+   830	| `period` | Period | string | No | `24` | How many intervals to look back |
+   831	
+   832	```yaml
+   833	- id: change
+   834	  type: binance/pricedifference
+   835	  config:
+   836	    integration: my-binance
+   837	    symbol: BTCUSDT,ETHUSDT
+   838	    interval: 1h
+   839	    period: "24"
+   840	```
+   841	
+   842	### binance/tradeinfo
+   843	
+   844	Reads trading figures for a pair.
+   845	
+   846	| Key | Label | Type | Required | Default | Values |
+   847	|---|---|---|---|---|---|
+   848	| `integration` | Binance Account | integration | Yes | none | A `binance` integration |
+   849	| `symbol` | Symbol | string | Yes | none | A pair, such as `BTCUSDT` |
+   850	
+   851	```yaml
+   852	- id: info
+   853	  type: binance/tradeinfo
+   854	  config:
+   855	    integration: my-binance
+   856	    symbol: BTCUSDT
+   857	```
+   858	
+   859	### binance/accountbalance
+   860	
+   861	Reads the account's balances.
+   862	
+   863	| Key | Label | Type | Required | Default | Values |
+   864	|---|---|---|---|---|---|
+   865	| `integration` | Binance Account | integration | Yes | none | A `binance` integration |
+   866	| `symbol` | Symbol | string | No | every asset | One asset, or several separated by commas, such as `BTC,ETH,USDT` |
+   867	| `futures` | Futures | boolean | No | `false` | Reads the futures account instead of the spot account |
+   868	
+   869	```yaml
+   870	- id: balance
+   871	  type: binance/accountbalance
+   872	  config:
+   873	    integration: my-binance
+   874	    symbol: BTC,USDT
+   875	```
+   876	
+   877	### binance/spotorder
+   878	
+   879	Places a spot order. This action spends money on a live account. Put a [guard](/concepts/guard-rails) on any tool that runs it, and test with the integration's `testnet` turned on.
+   880	
+   881	| Key | Label | Type | Required | Default | Values |
+   882	|---|---|---|---|---|---|
+   883	| `integration` | Binance Account | integration | Yes | none | A `binance` integration |
+   884	| `symbol` | Symbol | string | Yes | none | A pair, such as `BTCUSDT` |
+   885	| `side` | Side | string | Yes | none | `BUY`, `SELL` |
+   886	| `type` | Order Type | string | No | `MARKET` | `MARKET`, `LIMIT`, `STOP_LOSS`, `STOP_LOSS_LIMIT`, `TAKE_PROFIT`, `TAKE_PROFIT_LIMIT` |
+   887	| `quantity` | Quantity | string | No | none | How much of the first asset of the pair |
+   888	| `quote_order_qty` | Quote Order Quantity | string | No | none | How much of the second asset to spend. `MARKET` orders only |
+   889	| `price` | Price | string | For `LIMIT` orders | none | The order's price |
+   890	| `stop_price` | Stop Price | string | For stop orders | none | The stop price |
+   891	| `time_in_force` | Time In Force | string | No | `GTC` | `GTC`, `IOC`, `FOK` |
+   892	
+   893	```yaml
+   894	actionConfig:
+   895	  type: binance/spotorder
+   896	  config:
+   897	    integration:
+   898	      type: raw
+   899	      value: my-binance
+   900	    symbol:
+   901	      type: raw
+   902	      value: BTCUSDT
+   903	    side:
+   904	      type: param
+   905	      value: side
+   906	    quantity:
+   907	      type: param
+   908	      value: quantity
+   909	```
+   910	
+   911	### binance/futuresorder
+   912	
+   913	Places a futures order. This action spends money on a live account. Put a [guard](/concepts/guard-rails) on any tool that runs it, and test with the integration's `testnet` turned on.
+   914	
+   915	| Key | Label | Type | Required | Default | Values |
+   916	|---|---|---|---|---|---|
+   917	| `integration` | Binance Account | integration | Yes | none | A `binance` integration |
+   918	| `symbol` | Symbol | string | Yes | none | A pair, such as `BTCUSDT` |
+   919	| `side` | Side | string | Yes | none | `BUY`, `SELL` |
+   920	| `quantity` | Quantity | string | Yes | none | How much to buy or sell |
+   921	| `type` | Order Type | string | No | `MARKET` | `MARKET`, `LIMIT`, `STOP`, `STOP_MARKET`, `TAKE_PROFIT`, `TAKE_PROFIT_MARKET` |
+   922	| `price` | Price | string | For `LIMIT` orders | none | The order's price |
+   923	| `time_in_force` | Time In Force | string | No | `GTC` | `GTC`, `IOC`, `FOK` |
+   924	| `position_side` | Position Side | string | No | `BOTH` | `BOTH`, `LONG`, `SHORT` |
+   925	| `reduce_only` | Reduce Only | string | No | `false` | `true` or `false` |
+   926	| `leverage` | Leverage | string | No | none | The leverage to use |
+   927	
+   928	```yaml
+   929	actionConfig:
+   930	  type: binance/futuresorder
+   931	  config:
+   932	    integration:
+   933	      type: raw
+   934	      value: my-binance
+   935	    symbol:
+   936	      type: raw
+   937	      value: BTCUSDT
+   938	    side:
+   939	      type: param
+   940	      value: side
+   941	    quantity:
+   942	      type: param
+   943	      value: quantity
+   944	    position_side:
+   945	      type: raw
+   946	      value: BOTH
+   947	```
+   948	
+   949	## ServFlow
+   950	
+   951	### servflowvalidate
+   952	
+   953	Checks a ServFlow YAML config for mistakes in its syntax and structure.
+   954	
+   955	| Key | Label | Type | Required | Default | Values |
+   956	|---|---|---|---|---|---|
+   957	| `yamlContent` | YAML Content | text_area | Yes | none | The YAML to check |
+   958	
+   959	```yaml
+   960	- id: checked
+   961	  type: servflowvalidate
+   962	  config:
+   963	    yamlContent: '{{ body "config" }}'
+   964	```
+   965	
+   966	### agent and parallel
+   967	
+   968	The binary lists two more action types. You do not add them by hand. They are how ServFlow stores parts of an agent.
+   969	
+   970	| Type | Name | What it is |
+   971	|---|---|---|
+   972	| `agent` | AI Agent | A sub-agent. Its fields are the sub-agent's keys. See the [CLI reference](/references/cli#agents). |
+   973	| `parallel` | Run In Parallel | A context group with **Run steps in parallel** turned on. See the [CLI reference](/references/cli#contextgroups). |
+   974	
+   975	## Related
+   976	
+   977	<CardGroup cols={2}>
+   978	
+   979	<Card title="Tools" icon="wrench" href="/concepts/tools">
+   980	  How an agent uses an action when it decides to.
+   981	</Card>
+   982	
+   983	<Card title="Context fetching" icon="layer-group" href="/concepts/context-fetching">
+   984	  How an agent runs an action every time, before it starts.
+   985	</Card>
+   986	
+   987	<Card title="Available integrations" icon="puzzle-piece" href="/references/integrations">
+   988	  The integrations these actions take.
+   989	</Card>
+   990	
+   991	<Card title="Dynamic content reference" icon="wand-magic-sparkles" href="/references/dynamic-content">
+   992	  The template functions a field can use.
+   993	</Card>
+   994	
+   995	</CardGroup>
