@@ -1,0 +1,995 @@
+---
+title: "Available actions"
+description: "Every action a tool or a context step can run: what it does, its fields, and its shape in a config file"
+icon: "table-list"
+---
+
+An action is one thing an agent can do: send a Discord message, fetch a web address, read a pull request. An agent runs an action in two places. A [tool](/concepts/tools) runs one when the agent decides to use it. A [context step](/concepts/context-fetching) runs one every time, before the agent starts. This page lists every action with its fields. `servflowai resource action describe --all` prints the same catalog.
+
+## All actions
+
+| Name in the dashboard | Type | What it does | Integration it needs |
+|---|---|---|---|
+| **Discord** | | | |
+| Discord Send Message | [`discord/sendmessage`](#discord%2Fsendmessage) | Sends a message to a channel, a thread, or a person. | [`discord`](/references/integrations#discord) |
+| Discord Read Messages | [`discord/readmessages`](#discord%2Freadmessages) | Reads a channel's recent messages. | `discord` |
+| Discord Search Messages | [`discord/searchmessages`](#discord%2Fsearchmessages) | Searches the whole server for messages. | `discord` |
+| Discord Read Server | [`discord/readguild`](#discord%2Freadguild) | Reads the server's details, channels, roles, or members. | `discord` |
+| **GitHub** | | | |
+| GitHub Fetch | [`github_fetch`](#github_fetch) | Reads a pull request's details, diff, or conversation. | [`github_app`](/references/integrations#github_app) |
+| GitHub Post | [`github_post`](#github_post) | Posts a comment on a pull request. | `github_app` |
+| **Gitea** | | | |
+| Gitea Fetch | [`gitea/fetch`](#gitea%2Ffetch) | Reads a pull request's details, diff, or conversation. | [`gitea`](/references/integrations#gitea) |
+| Gitea Post | [`gitea/post`](#gitea%2Fpost) | Posts a comment on a pull request or issue. | `gitea` |
+| **Web requests and code** | | | |
+| HTTP Request | [`http`](#http) | Calls a web address and returns the response. | none |
+| JavaScript | [`javascript`](#javascript) | Runs a JavaScript function. | none |
+| Shell Script | [`shell`](#shell) | Runs a shell script in a sandboxed folder. | none |
+| Static Value | [`static`](#static) | Returns a value you write, after its template is filled in. | none |
+| **Browser** | | | |
+| Chromium Navigate | [`chromium/navigate`](#chromium%2Fnavigate) | Opens a web address in the browser. | [`chromium`](/references/integrations#chromium) |
+| Chromium Click | [`chromium/click`](#chromium%2Fclick) | Clicks an element on the page. | `chromium` |
+| Chromium Body | [`chromium/body`](#chromium%2Fbody) | Returns the page's HTML as the browser shows it. | `chromium` |
+| Chromium Screenshot | [`chromium/screenshot`](#chromium%2Fscreenshot) | Takes a full-page screenshot. | `chromium` |
+| **Databases** | | | |
+| Fetch Data | [`fetch`](#fetch) | Reads rows from a table. | [`sql`](/references/integrations#sql) or [`mongo`](/references/integrations#mongo) |
+| Delete Data | [`delete`](#delete) | Deletes rows from a table. | `sql` or `mongo` |
+| MongoDB Query | [`mongoquery`](#mongoquery) | Runs a MongoDB query. | `mongo` |
+| Firestore | [`firestore`](#firestore) | Stores a document in Google Cloud Firestore. | none |
+| **Vectors** | | | |
+| Store Vectors | [`storevector`](#storevector) | Stores vectors for similarity search. | [`qdrant`](/references/integrations#qdrant) |
+| Fetch Vectors | [`fetchvectors`](#fetchvectors) | Finds the stored vectors closest to one you give. | `qdrant` |
+| **Stored values** | | | |
+| Store Key | [`store_key`](#store_key) | Stores a value under a key. | none |
+| Get Key | [`get_key`](#get_key) | Reads the value stored under a key. | none |
+| **Files and email** | | | |
+| Download File | [`download`](#download) | Saves a file from the request, or from an earlier action, to a folder. | none |
+| Send Email | [`email`](#email) | Sends an email through an SMTP server. | none |
+| **Sign-in and tokens** | | | |
+| Authenticate | [`authenticate`](#authenticate) | Checks a JWT and finds its user in a database. | `sql` or `mongo` |
+| JWT Token | [`jwt`](#jwt) | Creates or checks a JSON Web Token. | none |
+| Hash Value | [`hash`](#hash) | Hashes a value. | none |
+| **Binance** | | | |
+| Binance Get Price | [`binance/getprice`](#binance%2Fgetprice) | Reads a symbol's current or 24-hour price. | [`binance`](/references/integrations#binance) |
+| Binance Price Difference | [`binance/pricedifference`](#binance%2Fpricedifference) | Works out a price change over a period. | `binance` |
+| Binance Trade Info | [`binance/tradeinfo`](#binance%2Ftradeinfo) | Reads trading figures for a pair. | `binance` |
+| Binance Account Balance | [`binance/accountbalance`](#binance%2Faccountbalance) | Reads the account's balances. | `binance` |
+| Binance Spot Order | [`binance/spotorder`](#binance%2Fspotorder) | Places a spot order. | `binance` |
+| Binance Futures Order | [`binance/futuresorder`](#binance%2Ffuturesorder) | Places a futures order. | `binance` |
+| **ServFlow** | | | |
+| Servflow Validate | [`servflowvalidate`](#servflowvalidate) | Checks a ServFlow YAML config for mistakes. | none |
+| AI Agent | [`agent`](#agent-and-parallel) | How a sub-agent is stored. Not added by hand. | none |
+| Run In Parallel | [`parallel`](#agent-and-parallel) | How a parallel context group is stored. Not added by hand. | none |
+
+## How an action is written in a config file
+
+As a context step, an action is an `id`, a `type`, and a `config` that maps each field to a string. Every string is a template.
+
+```yaml
+- id: repo
+  type: http
+  config:
+    method: GET
+    url: 'https://api.github.com/repos/{{ body "repo" }}'
+```
+
+As a tool, the same action goes under `actionConfig`, and each field's value is wrapped in an object. `type: raw` means you set the value. `type: param` means the agent fills it in when it uses the tool, and `value` names the input it is asked for.
+
+```yaml
+actionConfig:
+  type: http
+  config:
+    method:
+      type: raw
+      value: GET
+    url:
+      type: param
+      value: address
+```
+
+Two differences follow from this:
+
+- **Field types.** A step's values are all strings, so a field of type `map` cannot be written as a map in a step. A tool's `raw` value can be a string, a number, a boolean, a list, or a map.
+- **Who fills a field.** Only a tool has `param`.
+
+The examples below show each action as a step. An action with a required `map` field is shown as a tool. The rest of a step and of a tool is in the [CLI reference](/references/cli#contextgroups).
+
+In the field tables, **Type** is the binary's field type: `string`, `text_area` (a long string), `boolean`, `map`, `file`, or `integration` (the id of a stored integration).
+
+## Discord
+
+### discord/sendmessage
+
+Sends a message to a Discord channel, a thread, or a person.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | Discord Bot | integration | Yes | none | A `discord` integration |
+| `content` | Message Content | string | Yes | none | The message to send |
+| `channel_id` | Channel ID | string | No | none | The channel to post in |
+| `user_id` | User ID | string | No | none | Sends a direct message to this person instead of posting in a channel |
+| `thread_id` | Thread ID | string | No | none | Sends to an existing thread |
+| `create_thread` | Create Thread | boolean | No | `false` | Creates a new thread for this message |
+| `thread_name` | Thread Name | string | No | none | The new thread's name. Needed when `create_thread` is `true` |
+| `reply_to` | Reply To | string | No | none | The id of the message this one replies to |
+| `mentions` | Mentions | string | No | `none` | Who the message may notify: `none`, `reply`, `users`, `roles`, `everyone` |
+| `split` | Split Long Messages | boolean | No | `true` | Posts text over 2000 characters as several messages |
+
+```yaml
+- id: announce
+  type: discord/sendmessage
+  config:
+    integration: my-discord-bot
+    channel_id: "112233445566778899"
+    content: 'New question from {{ .discord.display_name }}: {{ .discord.content }}'
+```
+
+As a tool that always posts in one channel and lets the agent write the text:
+
+```yaml
+actionConfig:
+  type: discord/sendmessage
+  config:
+    integration:
+      type: raw
+      value: my-discord-bot
+    channel_id:
+      type: raw
+      value: "112233445566778899"
+    content:
+      type: param
+      value: message
+```
+
+### discord/readmessages
+
+Reads a Discord channel's recent messages, oldest first.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | Discord Bot | integration | Yes | none | A `discord` integration |
+| `channel_id` | Channel ID | string | Yes | none | The channel to read |
+| `limit` | Limit | string | No | `50` | How many messages to read, 1 to 100 |
+| `before` | Before | string | No | none | A message id. Reads what came before it |
+| `after` | After | string | No | none | A message id. Reads what came after it |
+| `around` | Around | string | No | none | A message id. Reads what surrounds it |
+
+```yaml
+- id: history
+  type: discord/readmessages
+  config:
+    integration: my-discord-bot
+    channel_id: '{{ .discord.channel_id }}'
+    limit: "20"
+```
+
+### discord/searchmessages
+
+Searches the whole Discord server for messages that match a phrase, a channel, or an author. Each match comes back with a link to the message.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | Discord Bot | integration | Yes | none | A `discord` integration |
+| `content` | Search Text | string | No | none | Words to look for |
+| `channel_id` | Channel IDs | string | No | every channel | Channel ids, separated by commas |
+| `author_id` | Author IDs | string | No | everyone | User ids, separated by commas |
+| `sort_by` | Sort By | string | No | `timestamp` | `timestamp`, `relevance` |
+| `order` | Order | string | No | `desc` | `desc`, `asc` |
+
+```yaml
+- id: matches
+  type: discord/searchmessages
+  config:
+    integration: my-discord-bot
+    content: '{{ .discord.args }}'
+    sort_by: relevance
+```
+
+### discord/readguild
+
+Reads the integration's Discord server: its details, channels, roles, or members.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | Discord Bot | integration | Yes | none | A `discord` integration |
+| `resource` | Resource | string | Yes | none | `guild`, `channels`, `roles`, `member`, `member_search`, `members` |
+| `user_id` | User ID | string | For `member` | none | The member to look up |
+| `query` | Name Search | string | For `member_search` | none | The start of a username or nickname |
+| `limit` | Member Limit | string | No | `10` | How many members to return: 1 to 1000 for `member_search`, 1 to 5000 for `members` |
+
+```yaml
+- id: channels
+  type: discord/readguild
+  config:
+    integration: my-discord-bot
+    resource: channels
+```
+
+## GitHub
+
+### github_fetch
+
+Reads a pull request as a GitHub App: its details, its diff, or its conversation.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | GitHub App | integration | Yes | none | A `github_app` integration |
+| `resource` | Resource | string | Yes | none | `pr_meta`, `pr_diff`, `pr_conversation` |
+| `repo` | Repository | string | Yes | none | The repository, as `owner/name` |
+| `pr_number` | Pull Request Number | string | Yes | none | The pull request to read |
+
+```yaml
+- id: diff
+  type: github_fetch
+  config:
+    integration: my-github-app
+    resource: pr_diff
+    repo: '{{ .github.repo }}'
+    pr_number: '{{ .github.pr_number }}'
+```
+
+### github_post
+
+Posts a comment on a GitHub pull request as a GitHub App.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | GitHub App | integration | Yes | none | A `github_app` integration |
+| `resource` | Resource | string | Yes | `issue_comment` | `issue_comment` |
+| `repo` | Repository | string | Yes | none | The repository, as `owner/name` |
+| `pr_number` | Pull Request Number | string | Yes | none | The pull request to post to |
+| `body` | Body | text_area | Yes | none | The text of the comment |
+
+```yaml
+- id: notice
+  type: github_post
+  config:
+    integration: my-github-app
+    resource: issue_comment
+    repo: '{{ .github.repo }}'
+    pr_number: '{{ .github.pr_number }}'
+    body: A review is on its way.
+```
+
+## Gitea
+
+### gitea/fetch
+
+Reads a pull request from a Gitea server: its details, its diff, or its conversation.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | Gitea Server | integration | Yes | none | A `gitea` integration |
+| `resource` | Resource | string | Yes | none | `pr_meta`, `pr_diff`, `pr_conversation` |
+| `repo` | Repository | string | Yes | none | The repository, as `owner/name` |
+| `pr_number` | Pull Request Number | string | Yes | none | The pull request to read |
+
+```yaml
+- id: diff
+  type: gitea/fetch
+  config:
+    integration: my-gitea
+    resource: pr_diff
+    repo: '{{ .gitea.repo }}'
+    pr_number: '{{ .gitea.pr_number }}'
+```
+
+### gitea/post
+
+Posts a comment on a Gitea pull request or issue.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | Gitea Server | integration | Yes | none | A `gitea` integration |
+| `resource` | Resource | string | Yes | `issue_comment` | `issue_comment` |
+| `repo` | Repository | string | Yes | none | The repository, as `owner/name` |
+| `pr_number` | Pull Request Number | string | Yes | none | The pull request or issue to post to |
+| `body` | Body | text_area | Yes | none | The text of the comment |
+
+```yaml
+- id: notice
+  type: gitea/post
+  config:
+    integration: my-gitea
+    resource: issue_comment
+    repo: '{{ .gitea.repo }}'
+    pr_number: '{{ .gitea.pr_number }}'
+    body: A review is on its way.
+```
+
+## Web requests and code
+
+### http
+
+Calls a web address and returns the response.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `url` | URL | string | Yes | none | The address to call |
+| `method` | HTTP Method | string | Yes | `GET` | `GET`, `POST`, `PUT`, `DELETE`, `PATCH` |
+| `headers` | Headers | map | No | none | Header names and values |
+| `body` | Request Body | map | No | none | The request body. See below |
+| `responsePath` | Response Path | string | No | none | A path into the JSON response. Only that part is returned |
+| `expectedResponseCode` | Expected Response Code | string | No | empty | The status code that counts as success, such as `200` |
+| `failIfResponseEmpty` | Fail if Response Empty | boolean | No | `true` | Treats an empty response as a failure |
+
+```yaml
+- id: repo
+  type: http
+  config:
+    method: GET
+    url: 'https://api.github.com/repos/{{ body "repo" }}'
+    responsePath: description
+```
+
+As a tool, with headers and a body. Write `body` as a map. Each value is filled in on its own and then encoded as JSON, so quotes and line breaks in a value need no escaping.
+
+```yaml
+actionConfig:
+  type: http
+  config:
+    method:
+      type: raw
+      value: POST
+    url:
+      type: raw
+      value: https://api.example.com/tickets
+    headers:
+      type: raw
+      value:
+        Authorization: 'Bearer {{ secret "tickets-api-key" }}'
+    body:
+      type: raw
+      value:
+        title: '{{ tool_param "title" }}'
+        details: '{{ tool_param "details" }}'
+```
+
+### javascript
+
+Runs JavaScript. The script defines a function named `servflowRun`, and what the function returns is the action's result. The function receives three arguments: the run's variables, the body of the request that started the run, and the request's parameters. The script cannot call web addresses, and has no `require`.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `script` | Script | text_area | Yes | none | JavaScript that defines `servflowRun` |
+| `dependencies` | Dependencies | text_area | No | none | JavaScript loaded before the script, such as a bundled library |
+
+```yaml
+- id: customer
+  type: javascript
+  config:
+    script: |
+      function servflowRun(variables, requestBody, params) {
+        var request = JSON.parse(requestBody);
+        return { name: request.name.trim(), vip: request.orders > 10 };
+      }
+```
+
+A later step or a prompt reads the result as `{{ .customer.name }}`.
+
+### shell
+
+Runs a shell script, with the shell's full syntax. The script starts in a sandboxed folder of its own that is deleted when the run ends, and it cannot read the server's own files. The instance's `[shell]` settings decide how it is sandboxed.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `script` | Script | string | Yes | none | The script to run |
+
+```yaml
+- id: today
+  type: shell
+  config:
+    script: date +%A
+```
+
+### static
+
+Returns the value you write, after its template is filled in. Use it to build a value once and read it by the step's id afterwards.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `return` | Return Value | string | Yes | none | The value to return |
+| `config` | Config | string | No | none | Not used by the action |
+
+```yaml
+- id: hours
+  type: static
+  config:
+    return: Support is open 09:00 to 17:00, Monday to Friday.
+```
+
+## Browser
+
+The four browser actions share one browser session, the `chromium` integration. Open a page with `chromium/navigate` first, then read or click it.
+
+### chromium/navigate
+
+Opens a web address in the browser.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | Browser | integration | Yes | none | A `chromium` integration |
+| `url` | URL | string | Yes | none | The address to open |
+
+```yaml
+- id: open
+  type: chromium/navigate
+  config:
+    integration: browser
+    url: '{{ body "url" }}'
+```
+
+### chromium/click
+
+Clicks an element on the current page.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | Browser | integration | Yes | none | A `chromium` integration |
+| `selector` | CSS Selector | string | Yes | none | A CSS selector, such as `#submit-button` |
+
+```yaml
+- id: accept
+  type: chromium/click
+  config:
+    integration: browser
+    selector: "#accept-cookies"
+```
+
+### chromium/body
+
+Returns the HTML of the current page as the browser shows it, after scripts have run.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | Browser | integration | Yes | none | A `chromium` integration |
+
+```yaml
+- id: page
+  type: chromium/body
+  config:
+    integration: browser
+```
+
+### chromium/screenshot
+
+Takes a full-page screenshot and returns it as a PNG file.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | Browser | integration | Yes | none | A `chromium` integration |
+
+```yaml
+- id: shot
+  type: chromium/screenshot
+  config:
+    integration: browser
+```
+
+## Databases
+
+`fetch` and `delete` take `filters`: a list of conditions, each with a `field`, an `operation`, and a `comparator`. The operations are `==`, `!=`, `>`, `<`, `>=`, `<=`, and `like`.
+
+### fetch
+
+Reads rows from a table of a SQL or MongoDB database.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | Database Integration | integration | Yes | none | A `sql` or `mongo` integration |
+| `table` | Table | string | Yes | none | The table or collection |
+| `filters` | Filters | map | No | none | Conditions a row has to meet |
+| `single` | Single Result | boolean | No | `false` | Returns one row instead of a list |
+| `failIfEmpty` | Fail if Empty | boolean | No | `true` | Treats no rows as a failure |
+| `shouldFail` | Should Fail | boolean | No | `false` | Whether an error fails the action |
+| `datasourceOptions` | Datasource Options | map | No | none | Extra options for the database |
+
+```yaml
+- id: plans
+  type: fetch
+  config:
+    integration: orders-db
+    table: plans
+    failIfEmpty: "false"
+```
+
+As a tool, with a filter the agent fills in:
+
+```yaml
+actionConfig:
+  type: fetch
+  config:
+    integration:
+      type: raw
+      value: orders-db
+    table:
+      type: raw
+      value: orders
+    single:
+      type: raw
+      value: true
+    filters:
+      type: raw
+      value:
+        - field: order_number
+          operation: "=="
+          comparator: '{{ tool_param "order_number" }}'
+```
+
+### delete
+
+Deletes the rows of a table that meet the filters.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | Database Integration | integration | Yes | none | A `sql` or `mongo` integration |
+| `table` | Table | string | Yes | none | The table or collection |
+| `filters` | Filters | map | Yes | none | Conditions a row has to meet to be deleted |
+| `datasourceOptions` | Datasource Options | map | No | none | Extra options for the database |
+
+```yaml
+actionConfig:
+  type: delete
+  config:
+    integration:
+      type: raw
+      value: orders-db
+    table:
+      type: raw
+      value: drafts
+    filters:
+      type: raw
+      value:
+        - field: id
+          operation: "=="
+          comparator: '{{ tool_param "draft_id" }}'
+```
+
+### mongoquery
+
+Runs a query against a MongoDB collection.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | MongoDB Integration | integration | Yes | none | A `mongo` integration |
+| `collection` | Collection | string | Yes | none | The collection to query |
+| `filterQuery` | Filter Query | string | Yes | none | A MongoDB filter, as JSON |
+| `projection` | Projection | string | No | none | A MongoDB projection, as JSON |
+| `failIfEmpty` | Fail if Empty | boolean | No | `true` | Treats no results as a failure |
+
+```yaml
+- id: customer
+  type: mongoquery
+  config:
+    integration: app-db
+    collection: customers
+    filterQuery: '{"email": "{{ body "email" }}"}'
+```
+
+### firestore
+
+Stores a document in a Google Cloud Firestore collection.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `projectID` | Project ID | string | Yes | none | The Firebase project |
+| `collectionID` | Collection ID | string | Yes | none | The collection to write to |
+| `documentTemplate` | Document Template | string | Yes | none | The document, as JSON |
+| `serviceAccount` | Service Account | string | Yes | none | The service account's JSON key. Read it from a secret |
+
+```yaml
+- id: saved
+  type: firestore
+  config:
+    projectID: my-project
+    collectionID: questions
+    documentTemplate: '{"question": "{{ escape (body "question") }}"}'
+    serviceAccount: '{{ secret "firebase-service-account" }}'
+```
+
+## Vectors
+
+### storevector
+
+Stores vectors in a vector database, for similarity search.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | Vector Database | integration | Yes | none | A `qdrant` integration |
+| `vectors` | Vectors | string | Yes | none | The vector data to store |
+| `fields` | Fields | map | Yes | none | The data stored with the vectors |
+| `options` | Options | map | No | none | Extra storage options |
+
+```yaml
+actionConfig:
+  type: storevector
+  config:
+    integration:
+      type: raw
+      value: vectors
+    vectors:
+      type: raw
+      value: '{{ .embedding }}'
+    fields:
+      type: raw
+      value:
+        text: '{{ tool_param "text" }}'
+```
+
+### fetchvectors
+
+Finds the stored vectors closest to the one you give.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | Vector Database | integration | Yes | none | A `qdrant` integration |
+| `vector` | Vector | string | No | none | The vector to search with |
+| `options` | Options | map | No | none | Extra query options |
+
+```yaml
+- id: similar
+  type: fetchvectors
+  config:
+    integration: vectors
+    vector: '{{ .embedding }}'
+```
+
+## Stored values
+
+### store_key
+
+Stores a value under a key. The value stays until it is replaced.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `key` | Key | string | Yes | none | The key to store under |
+| `value` | Value | string | Yes | none | The value to store |
+
+```yaml
+- id: remember
+  type: store_key
+  config:
+    key: 'last-question-{{ .discord.author_id }}'
+    value: '{{ .discord.content }}'
+```
+
+### get_key
+
+Reads the value stored under a key.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `key` | Key | string | Yes | none | The key to read |
+| `failIfEmpty` | Fail if Empty | boolean | No | `false` | Treats a missing key as a failure |
+
+```yaml
+- id: last
+  type: get_key
+  config:
+    key: 'last-question-{{ .discord.author_id }}'
+```
+
+## Files and email
+
+### download
+
+Saves a file from the request, or from an earlier action's result, to a folder.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `file` | File | file | Yes | none | The file to save |
+| `destinationPath` | Destination Path | string | Yes | none | The folder to save into |
+| `fileName` | File Name | string | No | the file's own name | The name to save under |
+| `overwrite` | Overwrite | boolean | No | `false` | Replaces a file that is already there |
+
+```yaml
+- id: saved
+  type: download
+  config:
+    file: '{{ .shot }}'
+    destinationPath: /tmp/screenshots
+    fileName: page.png
+```
+
+### email
+
+Sends an email through an SMTP server.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `senderEmail` | Sender Email | string | Yes | none | The address the email comes from |
+| `name` | Sender Name | string | Yes | none | The sender's name |
+| `recipientEmail` | Recipient Email | string | Yes | none | The address the email goes to |
+| `subject` | Subject | string | No | none | The subject line |
+| `content` | Content | string | Yes | none | The text of the email |
+| `auth` | Server Configuration | map | Yes | none | The SMTP server: `serverHostname`, `serverPort`, `username`, `password` |
+
+```yaml
+actionConfig:
+  type: email
+  config:
+    senderEmail:
+      type: raw
+      value: support@example.com
+    name:
+      type: raw
+      value: Support
+    recipientEmail:
+      type: param
+      value: recipient
+    subject:
+      type: param
+      value: subject
+    content:
+      type: param
+      value: message
+    auth:
+      type: raw
+      value:
+        serverHostname: smtp.example.com
+        serverPort: "587"
+        username: support@example.com
+        password: '{{ secret "smtp-password" }}'
+```
+
+## Sign-in and tokens
+
+### authenticate
+
+Checks a JSON Web Token and finds the user it names in a database.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | User Database | integration | Yes | none | A `sql` or `mongo` integration that holds the users |
+| `collection` | Collection | string | Yes | none | The table or collection of users |
+| `databaseField` | Database Field | string | Yes | none | The field that holds the user's id |
+| `token` | Token | string | Yes | none | The token to check |
+| `jwtKey` | JWT Key | string | Yes | none | The key the token was signed with |
+| `failOnAuthError` | Fail on Auth Error | boolean | No | `true` | Treats a failed check as a failure |
+
+```yaml
+- id: user
+  type: authenticate
+  config:
+    integration: app-db
+    collection: users
+    databaseField: id
+    token: '{{ strip (header "Authorization") "Bearer " }}'
+    jwtKey: '{{ secret "jwt-signing-key" }}'
+```
+
+### jwt
+
+Creates or checks a JSON Web Token.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `mode` | Mode | string | Yes | none | `sign` or `verify` |
+| `field` | Field | string | Yes | none | The field name for the token data |
+| `key` | Key | string | No | none | The signing or checking key: a PEM or a shared secret |
+| `jwksURL` | JWKS URL | string | No | none | An address to fetch a JSON Web Key Set from, to check a token |
+| `claims` | Claims | map | No | none | The claims to sign |
+| `failOnValidationError` | Fail on Validation Error | boolean | No | `true` | Treats a failed check as a failure |
+
+```yaml
+- id: checked
+  type: jwt
+  config:
+    mode: verify
+    field: '{{ strip (header "Authorization") "Bearer " }}'
+    key: '{{ secret "jwt-signing-key" }}'
+```
+
+### hash
+
+Hashes a value, for example a password before it is stored.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `value` | Value | string | Yes | none | The value to hash |
+| `algorithm` | Algorithm | string | Yes | `bcrypt` | `bcrypt` |
+
+```yaml
+- id: hashed
+  type: hash
+  config:
+    value: '{{ body "password" }}'
+    algorithm: bcrypt
+```
+
+## Binance
+
+### binance/getprice
+
+Reads the current price of a symbol, or its figures for the last 24 hours.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | Binance Account | integration | Yes | none | A `binance` integration |
+| `symbol` | Symbol | string | Yes | none | A pair, such as `BTCUSDT` |
+| `price_type` | Price Type | string | Yes | `current` | `current`, `24hr` |
+
+```yaml
+- id: price
+  type: binance/getprice
+  config:
+    integration: my-binance
+    symbol: BTCUSDT
+    price_type: current
+```
+
+### binance/pricedifference
+
+Works out how much a price changed, and by what percentage, over a number of periods.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | Binance Account | integration | Yes | none | A `binance` integration |
+| `symbol` | Symbol(s) | string | Yes | none | One pair, or several separated by commas |
+| `interval` | Interval | string | No | `1h` | `1m`, `3m`, `5m`, `15m`, `30m`, `1h`, `2h`, `4h`, `6h`, `8h`, `12h`, `1d`, `3d`, `1w`, `1M` |
+| `period` | Period | string | No | `24` | How many intervals to look back |
+
+```yaml
+- id: change
+  type: binance/pricedifference
+  config:
+    integration: my-binance
+    symbol: BTCUSDT,ETHUSDT
+    interval: 1h
+    period: "24"
+```
+
+### binance/tradeinfo
+
+Reads trading figures for a pair.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | Binance Account | integration | Yes | none | A `binance` integration |
+| `symbol` | Symbol | string | Yes | none | A pair, such as `BTCUSDT` |
+
+```yaml
+- id: info
+  type: binance/tradeinfo
+  config:
+    integration: my-binance
+    symbol: BTCUSDT
+```
+
+### binance/accountbalance
+
+Reads the account's balances.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | Binance Account | integration | Yes | none | A `binance` integration |
+| `symbol` | Symbol | string | No | every asset | One asset, or several separated by commas, such as `BTC,ETH,USDT` |
+| `futures` | Futures | boolean | No | `false` | Reads the futures account instead of the spot account |
+
+```yaml
+- id: balance
+  type: binance/accountbalance
+  config:
+    integration: my-binance
+    symbol: BTC,USDT
+```
+
+### binance/spotorder
+
+Places a spot order. This action spends money on a live account. Put a [guard](/concepts/guard-rails) on any tool that runs it, and test with the integration's `testnet` turned on.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | Binance Account | integration | Yes | none | A `binance` integration |
+| `symbol` | Symbol | string | Yes | none | A pair, such as `BTCUSDT` |
+| `side` | Side | string | Yes | none | `BUY`, `SELL` |
+| `type` | Order Type | string | No | `MARKET` | `MARKET`, `LIMIT`, `STOP_LOSS`, `STOP_LOSS_LIMIT`, `TAKE_PROFIT`, `TAKE_PROFIT_LIMIT` |
+| `quantity` | Quantity | string | No | none | How much of the first asset of the pair |
+| `quote_order_qty` | Quote Order Quantity | string | No | none | How much of the second asset to spend. `MARKET` orders only |
+| `price` | Price | string | For `LIMIT` orders | none | The order's price |
+| `stop_price` | Stop Price | string | For stop orders | none | The stop price |
+| `time_in_force` | Time In Force | string | No | `GTC` | `GTC`, `IOC`, `FOK` |
+
+```yaml
+actionConfig:
+  type: binance/spotorder
+  config:
+    integration:
+      type: raw
+      value: my-binance
+    symbol:
+      type: raw
+      value: BTCUSDT
+    side:
+      type: param
+      value: side
+    quantity:
+      type: param
+      value: quantity
+```
+
+### binance/futuresorder
+
+Places a futures order. This action spends money on a live account. Put a [guard](/concepts/guard-rails) on any tool that runs it, and test with the integration's `testnet` turned on.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `integration` | Binance Account | integration | Yes | none | A `binance` integration |
+| `symbol` | Symbol | string | Yes | none | A pair, such as `BTCUSDT` |
+| `side` | Side | string | Yes | none | `BUY`, `SELL` |
+| `quantity` | Quantity | string | Yes | none | How much to buy or sell |
+| `type` | Order Type | string | No | `MARKET` | `MARKET`, `LIMIT`, `STOP`, `STOP_MARKET`, `TAKE_PROFIT`, `TAKE_PROFIT_MARKET` |
+| `price` | Price | string | For `LIMIT` orders | none | The order's price |
+| `time_in_force` | Time In Force | string | No | `GTC` | `GTC`, `IOC`, `FOK` |
+| `position_side` | Position Side | string | No | `BOTH` | `BOTH`, `LONG`, `SHORT` |
+| `reduce_only` | Reduce Only | string | No | `false` | `true` or `false` |
+| `leverage` | Leverage | string | No | none | The leverage to use |
+
+```yaml
+actionConfig:
+  type: binance/futuresorder
+  config:
+    integration:
+      type: raw
+      value: my-binance
+    symbol:
+      type: raw
+      value: BTCUSDT
+    side:
+      type: param
+      value: side
+    quantity:
+      type: param
+      value: quantity
+    position_side:
+      type: raw
+      value: BOTH
+```
+
+## ServFlow
+
+### servflowvalidate
+
+Checks a ServFlow YAML config for mistakes in its syntax and structure.
+
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `yamlContent` | YAML Content | text_area | Yes | none | The YAML to check |
+
+```yaml
+- id: checked
+  type: servflowvalidate
+  config:
+    yamlContent: '{{ body "config" }}'
+```
+
+### agent and parallel
+
+The binary lists two more action types. You do not add them by hand. They are how ServFlow stores parts of an agent.
+
+| Type | Name | What it is |
+|---|---|---|
+| `agent` | AI Agent | A sub-agent. Its fields are the sub-agent's keys. See the [CLI reference](/references/cli#agents). |
+| `parallel` | Run In Parallel | A context group with **Run steps in parallel** turned on. See the [CLI reference](/references/cli#contextgroups). |
+
+## Related
+
+<CardGroup cols={2}>
+
+<Card title="Tools" icon="wrench" href="/concepts/tools">
+  How an agent uses an action when it decides to.
+</Card>
+
+<Card title="Context fetching" icon="layer-group" href="/concepts/context-fetching">
+  How an agent runs an action every time, before it starts.
+</Card>
+
+<Card title="Available integrations" icon="puzzle-piece" href="/references/integrations">
+  The integrations these actions take.
+</Card>
+
+<Card title="Dynamic content reference" icon="wand-magic-sparkles" href="/references/dynamic-content">
+  The template functions a field can use.
+</Card>
+
+</CardGroup>
