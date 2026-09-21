@@ -1,0 +1,178 @@
+---
+title: "Set up memory and file access"
+description: "Create a workspace, give it to a sub-agent, and have the agent keep notes and read your files"
+icon: "folder-open"
+---
+
+A workspace is a folder your agent can read from and write to. This guide creates one, gives it to a sub-agent, and checks that the agent can save a note and find it again on a later run.
+
+## Before you begin
+
+- An agent with at least one sub-agent and a provider. See [Create an agent](/guides/create-an-agent).
+- The check at the end runs the agent twice. Your model company bills you for those runs.
+
+## Create a workspace
+
+<Steps>
+
+<Step title="Open the Workspaces page">
+In the sidebar under **Configure**, open **Workspaces**.
+
+<Frame>
+  <img src="/images/guides/set-up-memory-and-file-access/01-workspaces.png" alt="The Workspaces page with the New Workspace button" />
+</Frame>
+</Step>
+
+<Step title="Click New Workspace">
+Click **New Workspace**. The **New Workspace** dialog opens.
+</Step>
+
+<Step title="Name the workspace">
+Enter a **Name**, such as `Support notes`, and a **Description**. Click **Create Workspace**. The workspace appears in the list.
+
+<Frame>
+  <img src="/images/guides/set-up-memory-and-file-access/02-new-workspace.png" alt="The New Workspace dialog with a name and description entered" />
+</Frame>
+</Step>
+
+</Steps>
+
+## Add your own files
+
+<Steps>
+
+<Step title="Open the workspace">
+Optional: to give the agent documents to work from, click the workspace in the list. A new workspace reads "No files yet".
+
+<Frame>
+  <img src="/images/guides/set-up-memory-and-file-access/03-empty-workspace.png" alt="An empty workspace page with the Upload button" />
+</Frame>
+</Step>
+
+<Step title="Upload files">
+Click **Upload**, or drop files anywhere on the page. The files appear in the list.
+</Step>
+
+</Steps>
+
+The agent reads text files, such as `.md`, `.txt`, `.csv`, and `.json`. It cannot read pictures, PDFs, or other files that are not text.
+
+## Give the workspace to a sub-agent
+
+<Steps>
+
+<Step title="Open the sub-agent">
+Open your agent and click the sub-agent on the canvas. Its panel opens.
+</Step>
+
+<Step title="Choose the workspace">
+Scroll to **Memory**. Under **Workspace**, choose your workspace. The section's summary changes from "No memory" to the workspace's name.
+
+<Frame>
+  <img src="/images/guides/set-up-memory-and-file-access/04-memory-section.png" alt="A sub-agent panel with a workspace chosen under Memory" />
+</Frame>
+</Step>
+
+</Steps>
+
+The sub-agent can now list, read, and write files in the workspace. There is nothing else to switch on.
+
+## Tell the agent how to use the workspace
+
+The agent now has the ability, but it needs the instruction. Without one, it answers from the message alone and leaves the files untouched.
+
+<Steps>
+
+<Step title="Add instructions to the system prompt">
+In the sub-agent's **System prompt**, say which file to use and when:
+
+```
+You keep your notes in a file called notes.md.
+Before every answer, use read_file to read notes.md. If it does not exist yet, carry on without it.
+When someone asks you to remember something, read notes.md, add the new note, and use write_file to save the whole file.
+```
+
+The last line asks for the whole file because writing a file replaces what was in it.
+</Step>
+
+<Step title="Save">
+Click **Save** in the top bar.
+</Step>
+
+</Steps>
+
+## Verify
+
+<Steps>
+
+<Step title="Ask the agent to remember something">
+Click **Run**, enter a request that fits your agent's prompt, and click **Run**. For an agent that reads `{{ body "message" }}`:
+
+```json
+{ "message": "Remember that our office closes at 5pm on Fridays." }
+```
+
+The **Log** in the **Run** panel shows "attempting to execute tool" and "successfully executed tool" twice, once for reading the notes and once for saving them, and the agent confirms.
+
+<Frame>
+  <img src="/images/guides/set-up-memory-and-file-access/05-run-write-file.png" alt="The Run panel showing two tool steps and the agent confirming the note" />
+</Frame>
+</Step>
+
+<Step title="Read the note in the dashboard">
+Open **Workspaces** and open your workspace. `notes.md` is in the list. Click it to read it.
+
+<Frame>
+  <img src="/images/guides/set-up-memory-and-file-access/06-file-viewer.png" alt="The workspace page with notes.md open in the file viewer" />
+</Frame>
+</Step>
+
+<Step title="Ask for it back">
+Run the agent again with a question the note answers:
+
+```json
+{ "message": "When does the office close on Fridays?" }
+```
+
+The log shows one tool step, and the agent answers from the note. Each run from the editor is a new conversation, so the agent can only know this from the file.
+</Step>
+
+</Steps>
+
+## Remove a file or a workspace
+
+To delete a file, open the workspace, hover the file's row, click the delete icon, and confirm.
+
+Before you delete a workspace, open every sub-agent that uses it and choose another workspace, or **No memory**. An agent left pointing at a deleted workspace stops loading until you do. Deleting a workspace removes it from ServFlow and leaves its files on the server's disk.
+
+## Manage workspaces from the CLI
+
+| Command | What it does |
+|---|---|
+| `servflowai resource workspace list` | Lists workspaces. |
+| `servflowai resource workspace get <id>` | Gets one workspace. |
+| `servflowai resource workspace create -f <file>` | Creates a workspace. The body takes `name`, which is required, and `description`. |
+| `servflowai resource workspace update <id> -f <file>` | Changes a workspace's name or description. |
+| `servflowai resource workspace delete <id>` | Deletes a workspace. |
+
+## Related
+
+<CardGroup cols={2}>
+
+<Card title="Workspaces and files" icon="folder-open" href="/concepts/workspaces-and-files">
+  What a workspace is, and how it differs from the conversation an agent remembers on its own.
+</Card>
+
+<Card title="Entries and entry handlers" icon="right-to-bracket" href="/concepts/entries#what-the-agent-remembers">
+  What an agent remembers within a conversation.
+</Card>
+
+<Card title="Guard rails" icon="shield-halved" href="/concepts/guard-rails">
+  Limit what people can make your agent do.
+</Card>
+
+<Card title="Add a tool to an agent" icon="wrench" href="/guides/add-a-tool">
+  Give a sub-agent other abilities.
+</Card>
+
+</CardGroup>

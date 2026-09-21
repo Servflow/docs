@@ -1,5 +1,5 @@
 ---
-title: "Creating your first agent"
+title: "Create an agent"
 description: "Build an agent in the dashboard, from the New Agent page to a reply over HTTP, or create one from a config file with the CLI or MCP"
 icon: "robot"
 ---
@@ -11,7 +11,7 @@ The example is a two-stage pipeline named Question answerer. The first stage ans
 ## Before you begin
 
 - A running instance with the dashboard open. See [Install ServFlow](/installation).
-- An LLM provider. In the sidebar under **Configure**, open **Providers** and add one if the list is empty. A sub-agent without a provider cannot run.
+- An LLM provider. In the sidebar under **Configure**, open **Providers** and add one if the list is empty. See [Manage LLM providers](/guides/manage-llm-providers). A sub-agent without a provider cannot run.
 
 ## Create an agent in the UI
 
@@ -210,11 +210,11 @@ The agent from the first section, reduced to one sub-agent, looks like this. Rep
 ```yaml
 name: Question answerer
 config:
-  entry:
-    type: handler
-    handlerConfig:
-      path: /ask
-    start: agent.answer
+  entries:
+    - type: handler
+      handlerConfig:
+        path: /ask
+      start: agent.answer
   agents:
     answer:
       name: Answerer
@@ -226,7 +226,7 @@ config:
 
 ### MCP
 
-The management server at `/api/mcp` exposes the same operations to an AI client. The tools for agents are `config_schema`, `config_example`, `validate_config`, `create_config`, `update_config`, `list_configs`, `get_config`, `delete_config`, and `set_config_enabled`. `config_schema` and `config_example` take a `kind` argument that defaults to `agent`. A config has to name a real provider and, for a handler entry, a real integration, so `list_providers` and `list_integrations` come first.
+The management server at `/api/mcp` exposes the same operations to an AI client. The tools for agents are `config_schema`, `config_example`, `validate_config`, `create_config`, `update_config`, `list_configs`, `get_config`, `delete_config`, and `set_config_enabled`. A config has to name a real provider and, if an entry uses one, a real integration, so `list_providers` and `list_integrations` come first.
 
 In `local` and `none` authentication modes the MCP endpoint is unauthenticated. Anyone who can reach it can administer the instance, so keep it off the public internet.
 
@@ -244,7 +244,7 @@ For the shape of the config document, run `servflowai resource agent schema` and
   What an agent is made of: entry, sub-agents, and context groups.
 </Card>
 
-<Card title="Dynamic content" icon="code" href="/references/concepts/dynamic-content">
+<Card title="Dynamic content" icon="code" href="/concepts/dynamic-content">
   Template functions such as `body`, `param`, and `secret`.
 </Card>
 

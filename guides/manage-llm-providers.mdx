@@ -1,0 +1,160 @@
+---
+title: "Manage LLM providers"
+description: "Add the model account your agents use, point a sub-agent at it, and change or delete it safely"
+icon: "cloud"
+---
+
+A provider is the account your agents call an AI model through, such as your OpenAI or Anthropic account, together with the model to use. This guide adds a provider, points a sub-agent at it, and shows how to change and delete one.
+
+## Before you begin
+
+- A running instance with the dashboard open. See [Install ServFlow](/installation).
+- An API key from the company whose models you want to use. You enter the key yourself. After you save it, it is hidden.
+
+## Add a provider
+
+<Steps>
+
+<Step title="Open the Providers page">
+In the sidebar under **Configure**, open **Providers**. The page lists the providers you already have.
+
+<Frame>
+  <img src="/images/guides/manage-llm-providers/01-providers-page.png" alt="The Providers page with the New Provider button in the top right" />
+</Frame>
+</Step>
+
+<Step title="Click New Provider">
+Click **New Provider** in the top right. The **New Provider** dialog opens.
+
+<Frame>
+  <img src="/images/guides/manage-llm-providers/02-new-provider.png" alt="The New Provider dialog with five type cards: Claude, LiteLLM, OpenAI, OpenRouter, and Qwen" />
+</Frame>
+</Step>
+
+<Step title="Choose a type">
+Under **Type**, click the card for your model company: Claude, LiteLLM, OpenAI, OpenRouter, or Qwen. The fields below the cards change to match.
+
+LiteLLM, OpenRouter, and Qwen also ask for the web address of the service. OpenRouter adds a **Reasoning** setting. Leave it on its default unless you know you need it.
+</Step>
+
+<Step title="Enter a name">
+Enter a **Name**, for example `OpenAI production`. This is the name you choose in a sub-agent.
+</Step>
+
+<Step title="Enter your API key">
+Enter your key under **API Key**. The field hides what you type. If you do not have a key yet, the link under the field opens the company's page for creating one.
+</Step>
+
+<Step title="Choose a model">
+Under **Model**, pick a model from the list or type a model name.
+
+<Frame>
+  <img src="/images/guides/manage-llm-providers/03-new-provider-filled.png" alt="The New Provider dialog with OpenAI selected and a name entered" />
+</Frame>
+</Step>
+
+<Step title="Click Add Provider">
+Click **Add Provider**. The dialog closes and the provider appears in the list with its type and model.
+</Step>
+
+</Steps>
+
+## Point a sub-agent at the provider
+
+<Steps>
+
+<Step title="Open a sub-agent">
+In the sidebar under **Build**, open **Agents** and open an agent. Click a sub-agent on the canvas. Its panel opens.
+</Step>
+
+<Step title="Choose the provider">
+Under **Provider**, choose the provider. The panel confirms with "Calls" and the provider's name.
+
+<Frame>
+  <img src="/images/guides/manage-llm-providers/05-subagent-provider.png" alt="A sub-agent panel with a provider chosen under Provider" />
+</Frame>
+</Step>
+
+<Step title="Save">
+Click **Save** in the top bar.
+</Step>
+
+</Steps>
+
+## Use a different model for one sub-agent
+
+The model belongs to the provider, not to the sub-agent, so a sub-agent's panel has no model setting. To give one sub-agent a different model, add a second provider of the same type with the other model, and choose it in that sub-agent. The same API key works for both.
+
+## Change a provider's key or model
+
+To change a provider's type, add a new provider instead. The type of an existing provider is fixed.
+
+<Steps>
+
+<Step title="Open the provider">
+On the **Providers** page, click the **Edit provider** icon on the provider's row. The **Edit Provider** dialog opens.
+
+<Frame>
+  <img src="/images/guides/manage-llm-providers/04-edit-provider.png" alt="The Edit Provider dialog with the type locked and the API key hidden" />
+</Frame>
+</Step>
+
+<Step title="Change the key or the model and save">
+Enter a new **API Key** or choose another **Model**, then click **Save Changes**. Every agent that uses the provider picks up the change on its next run. You do not need to save the agents again.
+</Step>
+
+</Steps>
+
+## Delete a provider
+
+Before you delete a provider, point every sub-agent that uses it at another one. ServFlow does not stop the delete, and an agent left pointing at a deleted provider fails the next time it runs.
+
+On the **Providers** page, click the **Delete provider** icon on the provider's row and confirm.
+
+## Manage providers from the CLI
+
+The `provider` noun of the `resource` command manages stored providers. `list` and `get` never return a provider's key.
+
+| Command | What it does |
+|---|---|
+| `servflowai resource provider list` | Lists providers. |
+| `servflowai resource provider get <id>` | Gets one provider. |
+| `servflowai resource provider create -f <file>` | Creates a provider. |
+| `servflowai resource provider update <id> -f <file>` | Renames a provider and changes the fields you give. |
+| `servflowai resource provider delete <id>` | Deletes a provider. |
+| `servflowai resource provider types` | Lists the provider types. |
+| `servflowai resource provider describe [type...]` | Describes a type's fields and suggested models. Pass `--all` for every type. |
+
+The body needs a name, a type, and a config:
+
+```json
+{
+  "name": "OpenAI production",
+  "type": "openai",
+  "config": { "api_key": "sk-...", "model": "gpt-4.1" }
+}
+```
+
+`create` checks the config by building the connection it describes, so a missing field is reported at once. `--dry-run` validates without writing.
+
+## Related
+
+<CardGroup cols={2}>
+
+<Card title="Providers" icon="cloud" href="/concepts/providers">
+  What a provider is and why sub-agents share one.
+</Card>
+
+<Card title="Providers reference" icon="cloud" href="/references/providers">
+  Every provider type and its fields.
+</Card>
+
+<Card title="Create an agent" icon="robot" href="/guides/create-an-agent">
+  Build an agent and choose a provider for each sub-agent.
+</Card>
+
+<Card title="Secrets" icon="key" href="/concepts/secrets">
+  Where tokens for integrations are kept, and why a provider's key is not one of them.
+</Card>
+
+</CardGroup>

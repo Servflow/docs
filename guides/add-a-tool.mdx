@@ -10,7 +10,7 @@ The example is a tool named `github_repo` that looks a repository up on the GitH
 
 ## Before you begin
 
-- An agent that answers a webhook and has a provider. See [Creating your first agent](/guides/create-an-agent). The screenshots show an agent named Repo lookup that answers on `/repo`.
+- An agent that answers a webhook and has a provider. See [Create an agent](/guides/create-an-agent). The screenshots show an agent named Repo lookup that answers on `/repo`.
 - For the example, an instance that can reach `api.github.com`. The request needs no credentials.
 
 ## Attach an action tool
@@ -181,7 +181,7 @@ To offer the tools of a Model Context Protocol server, choose **MCP server…**.
 
 ### Call sub-agent
 
-To let one sub-agent call another in the same agent, choose **Call sub-agent…**. Under **Sub-agent**, choose the sub-agent to call. The **Display name** takes that sub-agent's name. The called sub-agent's reply is what comes back.
+To let one sub-agent call another in the same agent, choose **Call sub-agent…**. Under **Sub-agent**, choose the sub-agent to call. The **Display name** takes that sub-agent's name. The called sub-agent's reply is what comes back. For the full steps, including what the called sub-agent's prompt has to say, see [Call other agents](/guides/call-other-agents#let-a-sub-agent-ask-another-sub-agent).
 
 <Frame>
   <img src="/images/guides/add-a-tool/11-dialog-subagent.png" alt="The Configure Call sub-agent dialog with a sub-agent chosen" />
@@ -189,7 +189,7 @@ To let one sub-agent call another in the same agent, choose **Call sub-agent…*
 
 ### Agent Task Tool
 
-To hand a task to another stored agent, choose **Agent Task Tool…**. Under **Agent**, choose an enabled agent that is entered by a trigger. When the model calls the tool it writes one instruction, which the other agent reads as `{{ input "instruction" }}`. The tool returns as soon as the task has started, and nothing the other agent says comes back.
+To hand a task to another stored agent, choose **Agent Task Tool…**. Under **Agent**, choose an enabled agent that is entered by a trigger. When the model calls the tool it writes one instruction, which the other agent reads as `{{ input "instruction" }}`. The tool returns as soon as the task has started, and nothing the other agent says comes back. See [Call other agents](/guides/call-other-agents#hand-a-task-to-another-agent).
 
 <Frame>
   <img src="/images/guides/add-a-tool/12-dialog-agent-task.png" alt="The Configure Agent Task Tool dialog with an agent chosen" />
@@ -197,7 +197,7 @@ To hand a task to another stored agent, choose **Agent Task Tool…**. Under **A
 
 ### Built-in file tools
 
-Every sub-agent already has `read_file`, `write_file`, and `list_files`, with nothing to attach. They work in the folder chosen under **Workspace** in the panel's **Memory** section. See [Built-in tools](/references/tools#built-in-tools).
+Every sub-agent already has `read_file`, `write_file`, and `list_files`, with nothing to attach. They work in the folder chosen under **Workspace** in the panel's **Memory** section. See [Built-in tools](/references/tools#built-in-tools). To set a workspace up, see [Set up memory and file access](/guides/set-up-memory-and-file-access).
 
 ## If the tool is not called
 
@@ -214,7 +214,7 @@ Every sub-agent already has `read_file`, `write_file`, and `list_files`, with no
   Every tool type, its fields, the rules a config has to pass, and the built-in file tools.
 </Card>
 
-<Card title="Dynamic content" icon="code" href="/references/concepts/dynamic-content">
+<Card title="Dynamic content" icon="code" href="/concepts/dynamic-content">
   Template functions such as `tool_param`, `body`, and `header`.
 </Card>
 
@@ -222,7 +222,7 @@ Every sub-agent already has `read_file`, `write_file`, and `list_files`, with no
   The actions a tool can run.
 </Card>
 
-<Card title="Creating your first agent" icon="robot" href="/guides/create-an-agent">
+<Card title="Create an agent" icon="robot" href="/guides/create-an-agent">
   Build the agent this guide adds a tool to.
 </Card>
 
