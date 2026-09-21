@@ -1,25 +1,19 @@
 ---
-title: "Integrations"
-description: "Every integration type: its configuration fields, what uses it, and how an integration is identified and stored"
+title: "Available integrations"
+description: "Every integration type: what uses it, its fields, and its shape in a config file"
 icon: "puzzle-piece"
 ---
 
-An integration is a stored set of third-party credentials, such as a bot token or a database connection string, that actions, entry handlers, and MCP tools look up by id. This page lists every integration type, its fields, and what uses it. Values are taken from the running binary; `servflowai resource integration describe --all` prints the same catalog.
+This page lists every integration type. Each type's section says what uses it and lists its fields and its body in a file. `servflowai resource integration describe --all` prints the same catalog. For what an integration is, see [Integrations](/concepts/integrations). To add one in the dashboard, see [Add an integration](/guides/add-an-integration).
 
-## Identity and storage
+In a body, each field of `config` holds either a literal, as `{"value": ...}`, or the name of a stored secret, as `{"secret": "<secret name>"}`. Use a secret for every password field. A secret that a body names has to exist before the integration is created. The commands that take a body are in the [CLI reference](/references/cli#integration).
 
-- **Id.** Every integration has an id, such as `discord` or `github-app`. Configs reference the integration by this id. The id cannot be changed after the integration is created.
-- **Field values.** Each field holds either a literal value or a reference to a stored [secret](/references/secrets). A literal is stored in the integration's config as typed. A secret reference keeps the value in Secrets, so it never appears in the config.
-- **Encryption.** When `master_key` is set under `[sqlite]`, integration config is encrypted at rest. See the [Configuration reference](/references/configuration).
-- **Guided setup.** In the dashboard, `discord`, `github_app`, and `notion_mcp` open a guided setup. Every other type opens a form with one input per field. To add one in the dashboard, see [Add an integration](/guides/add-an-integration).
-
-## Types
-
-| Type | Name | Guided setup | Used by |
+| Type | Name in the dashboard | Guided setup | Used by |
 |---|---|---|---|
 | [`binance`](#binance) | Binance | No | `binance/*` actions |
 | [`chromium`](#chromium) | Chromium | No | `chromium/*` actions |
 | [`discord`](#discord) | Discord | Yes | `discord/*` actions, `discord_gateway` entry |
+| [`gitea`](#gitea) | Gitea | No | `gitea/*` actions, replies from a `gitea_webhook` entry |
 | [`github_app`](#github_app) | GitHub App | Yes | `github_fetch` and `github_post` actions, `github_webhook` entry |
 | [`mongo`](#mongo) | MongoDB | No | `fetch`, `delete`, `authenticate`, and `mongoquery` actions |
 | [`notion_mcp`](#notion_mcp) | Notion | Yes | MCP server tools |
@@ -27,16 +21,32 @@ An integration is a stored set of third-party credentials, such as a bot token o
 | [`sql`](#sql) | SQL Database | No | `fetch`, `delete`, and `authenticate` actions |
 | [`telegram_bot`](#telegram_bot) | Telegram Bot | No | `telegram_webhook` entry |
 
+A type with a guided setup opens its own set of screens in the dashboard. Every other type opens a form with one input for each field.
+
+## Types
+
 ### binance
 
 Binance cryptocurrency exchange integration for trading operations.
 
 | Key | Label | Type | Required | Default |
 |---|---|---|---|---|
-| `api_key` | API Key | password | Yes | — |
-| `secret_key` | Secret Key | password | Yes | — |
+| `api_key` | API Key | password | Yes | none |
+| `secret_key` | Secret Key | password | Yes | none |
 | `testnet` | Testnet | boolean | No | `false` |
 | `timeout` | Timeout (seconds) | number | No | `30` |
+
+```json
+{
+  "integrationId": "my-binance",
+  "type": "binance",
+  "config": {
+    "api_key": { "secret": "binance-api-key" },
+    "secret_key": { "secret": "binance-secret-key" },
+    "testnet": { "value": true }
+  }
+}
+```
 
 ### chromium
 
@@ -47,14 +57,56 @@ Chromium browser automation integration for web scraping and testing.
 | `headless` | Headless Mode | boolean | No | `true` |
 | `timeout` | Timeout (seconds) | number | No | `30` |
 
+```json
+{
+  "integrationId": "browser",
+  "type": "chromium",
+  "config": {
+    "headless": { "value": true },
+    "timeout": { "value": 30 }
+  }
+}
+```
+
 ### discord
 
 A Discord bot for one server. It reads that server, and sends messages anywhere it can. To run an agent as a Discord bot, see [Connect an agent to Discord](/guides/connect-an-agent-to-discord).
 
 | Key | Label | Type | Required | Default |
 |---|---|---|---|---|
-| `bot_token` | Bot Token | password | Yes | — |
-| `guild_id` | Server | string | Yes | — |
+| `bot_token` | Bot Token | password | Yes | none |
+| `guild_id` | Server | string | Yes | none |
+
+```json
+{
+  "integrationId": "my-discord-bot",
+  "type": "discord",
+  "config": {
+    "bot_token": { "secret": "discord-bot-token" },
+    "guild_id": { "value": "905712398471923849" }
+  }
+}
+```
+
+### gitea
+
+A Gitea server and the account the agent acts as on it. Receiving a Gitea webhook needs no integration, because that secret belongs to the webhook and is set on the entry.
+
+| Key | Label | Type | Required | Default |
+|---|---|---|---|---|
+| `base_url` | Server URL | string | Yes | none |
+| `token` | Access Token | password | Yes | none |
+
+```json
+{
+  "integrationId": "my-gitea",
+  "type": "gitea",
+  "config": {
+    "base_url": { "value": "https://gitea.example.com" },
+    "token": { "secret": "gitea-access-token" }
+  }
+}
+```
 
 ### github_app
 
@@ -63,10 +115,23 @@ A GitHub App's credentials. The GitHub actions mint installation tokens with the
 | Key | Label | Type | Required | Default |
 |---|---|---|---|---|
 | `base_url` | Base URL | string | No | `https://api.github.com` |
-| `client_id` | Client ID | string | Yes | — |
-| `installation_id` | Installation ID | string | Yes | — |
-| `pem` | Private Key (PEM) | password | Yes | — |
-| `webhook_secret` | Webhook Secret | password | Yes | — |
+| `client_id` | Client ID | string | Yes | none |
+| `installation_id` | Installation ID | string | Yes | none |
+| `pem` | Private Key (PEM) | password | Yes | none |
+| `webhook_secret` | Webhook Secret | password | Yes | none |
+
+```json
+{
+  "integrationId": "my-github-app",
+  "type": "github_app",
+  "config": {
+    "client_id": { "value": "Iv1.0000000000000000" },
+    "installation_id": { "value": "12345678" },
+    "pem": { "secret": "github-app-private-key" },
+    "webhook_secret": { "secret": "github-app-webhook-secret" }
+  }
+}
+```
 
 ### mongo
 
@@ -74,8 +139,19 @@ MongoDB database integration for document storage and retrieval.
 
 | Key | Label | Type | Required | Default |
 |---|---|---|---|---|
-| `connectionString` | Connection String | password | Yes | — |
-| `dbName` | Database Name | string | Yes | — |
+| `connectionString` | Connection String | password | Yes | none |
+| `dbName` | Database Name | string | Yes | none |
+
+```json
+{
+  "integrationId": "app-db",
+  "type": "mongo",
+  "config": {
+    "connectionString": { "secret": "mongo-uri" },
+    "dbName": { "value": "app" }
+  }
+}
+```
 
 ### notion_mcp
 
@@ -87,43 +163,7 @@ Qdrant vector database for similarity search and vector storage.
 
 | Key | Label | Type | Required | Default |
 |---|---|---|---|---|
-| `url` | URL | string | Yes | — |
-
-### sql
-
-SQL database integration supporting PostgreSQL and MySQL.
-
-| Key | Label | Type | Required | Default | Values |
-|---|---|---|---|---|---|
-| `connectionString` | Connection String | password | Yes | — | — |
-| `type` | Database Type | select | Yes | — | `postgres`, `mysql` |
-
-### telegram_bot
-
-A Telegram bot: the token BotFather issued, and the secret its webhook is registered with.
-
-| Key | Label | Type | Required | Default |
-|---|---|---|---|---|
-| `secret_token` | Webhook Secret Token | password | Yes | — |
-| `token` | Bot Token | password | Yes | — |
-
-## Managing integrations outside the dashboard
-
-### CLI
-
-The `integration` noun of the `resource` command manages stored integrations. `list` never includes config.
-
-| Command | What it does |
-|---|---|
-| `servflowai resource integration list` | Lists integrations, without config. |
-| `servflowai resource integration get <integrationId>` | Gets one integration. |
-| `servflowai resource integration create -f <file>` | Creates an integration. |
-| `servflowai resource integration update <integrationId> -f <file>` | Replaces an integration's type and config. |
-| `servflowai resource integration delete <integrationId>` | Deletes an integration. |
-| `servflowai resource integration types` | Lists the integration types. |
-| `servflowai resource integration describe [type...]` | Describes types and their fields. Pass `--all` for every type. |
-
-The body names the id, the type, and the config as a JSON object. Each field in the config is an object holding either a literal, as `{"value": ...}`, or the name of a stored secret, as `{"secret": "<secret name>"}`:
+| `url` | URL | string | Yes | none |
 
 ```json
 {
@@ -135,26 +175,64 @@ The body names the id, the type, and the config as a JSON object. Each field in 
 }
 ```
 
-`create` and `update` take `--dry-run`, which validates the body and prints it without writing.
+### sql
 
-### MCP
+SQL database integration supporting PostgreSQL and MySQL.
 
-The management server at `/api/mcp` exposes `list_integrations`, `get_integration`, `create_integration`, `update_integration`, `delete_integration`, `list_integration_types`, and `describe_integration_type`.
+| Key | Label | Type | Required | Default | Values |
+|---|---|---|---|---|---|
+| `connectionString` | Connection String | password | Yes | none | none |
+| `type` | Database Type | select | Yes | none | `postgres`, `mysql` |
+
+```json
+{
+  "integrationId": "orders-db",
+  "type": "sql",
+  "config": {
+    "connectionString": { "secret": "orders-db-url" },
+    "type": { "value": "postgres" }
+  }
+}
+```
+
+### telegram_bot
+
+A Telegram bot: the token BotFather issued, and the secret its webhook is registered with.
+
+| Key | Label | Type | Required | Default |
+|---|---|---|---|---|
+| `secret_token` | Webhook Secret Token | password | Yes | none |
+| `token` | Bot Token | password | Yes | none |
+
+```json
+{
+  "integrationId": "my-telegram-bot",
+  "type": "telegram_bot",
+  "config": {
+    "token": { "secret": "telegram-bot-token" },
+    "secret_token": { "secret": "telegram-webhook-secret" }
+  }
+}
+```
 
 ## Related
 
 <CardGroup cols={2}>
 
-<Card title="Connect an agent to Discord" icon="discord" href="/guides/connect-an-agent-to-discord">
-  Add a Discord integration and run an agent as a bot.
+<Card title="Integrations" icon="puzzle-piece" href="/concepts/integrations">
+  What an integration is, and the places one is used.
 </Card>
 
-<Card title="Entry handlers" icon="right-to-bracket" href="/references/entry-handlers">
-  The entries that take an integration, and their fields.
+<Card title="Add an integration" icon="plug" href="/guides/add-an-integration">
+  Add one in the dashboard.
 </Card>
 
-<Card title="Secrets" icon="key" href="/references/secrets">
-  Store a credential once and reference it from an integration.
+<Card title="Available entry handlers" icon="right-to-bracket" href="/references/entry-handlers">
+  The entries that take an integration.
+</Card>
+
+<Card title="Available actions" icon="table-list" href="/references/actions">
+  The actions that take an integration.
 </Card>
 
 </CardGroup>

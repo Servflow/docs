@@ -48,26 +48,31 @@ env = "production"
 
 ## `[sqlite]`
 
-Persistent storage for agents, workflow configs, secrets, integrations, and user accounts.
+The store. Agents, integrations, providers, secrets, workspaces, and user accounts are rows in one SQLite file.
 
 ```toml
 [sqlite]
-path = "./secrets.db"
+path = "secrets.db"
 master_key = ""
 ```
 
 | Field | Environment variable | Default | Description |
 |---|---|---|---|
-| `path` | `SERVFLOW_SQLITE_PATH` | — | Path to the SQLite database file. Relative paths resolve against the working directory |
-| `master_key` | `SERVFLOW_SQLITE_MASTER_KEY` | — | Encryption key for secrets and credentials at rest. Empty disables encryption |
+| `path` | `SERVFLOW_SQLITE_PATH` | `secrets.db` | Path to the SQLite file. A relative path is resolved against the folder that holds the settings file, so the default is `~/.servflow/secrets.db`. |
+| `master_key` | `SERVFLOW_SQLITE_MASTER_KEY` | empty | The key that encrypts stored credentials. Empty stores them as plain text. |
+
+When `master_key` is set, these are encrypted in the store:
+
+- the value of every [secret](/concepts/secrets)
+- the config of every [integration](/concepts/integrations)
+- the config of every [provider](/concepts/providers), which holds its API key
+- the tokens of integrations connected through a sign-in, such as Notion
+
+Rows written before `master_key` was set stay in plain text.
 
 <Warning>
-Never commit `master_key` to version control. Set it with `SERVFLOW_SQLITE_MASTER_KEY` in production. Changing it makes previously encrypted secrets unreadable.
+Never commit `master_key` to version control. Set it with `SERVFLOW_SQLITE_MASTER_KEY` in production. Changing it makes previously encrypted values unreadable.
 </Warning>
-
-<Note>
-SQLite backs the dashboard, secrets, and user accounts. Without it, ServFlow falls back to file-based storage and those features are unavailable. See [Secrets Management](/references/secrets).
-</Note>
 
 ## `[authentication]`
 
@@ -84,7 +89,7 @@ domain = "your-domain.com"
 | `mode` | `SERVFLOW_AUTH_MODE` | `local` | `local` gates the dashboard behind username/password accounts stored in SQLite. `none` disables the gate entirely |
 | `domain` | `SERVFLOW_AUTH_DOMAIN` | — | Public base URL of this instance, used to build OAuth integration callback URLs |
 
-**`mode` defaults to `local`.** A config file that omits this section is still gated — the first time you open the dashboard you are asked to create an account. See [First run](/installation#first-run-create-your-account).
+**`mode` defaults to `local`.** A config file that omits this section is still gated — the first time you open the dashboard you are asked to create an account. See [First run](/installation#create-the-first-account).
 
 <Warning>
 `mode = "none"` leaves the dashboard and management API open to anyone who can reach the port. Use it only on a trusted local machine.
@@ -111,7 +116,7 @@ collector_endpoint = ""
 | `org_id` | `SERVFLOW_TRACING_ORG_ID` | — | Organization ID for multi-tenant collectors |
 | `collector_endpoint` | `SERVFLOW_TRACING_COLLECTOR_ENDPOINT` | — | Base URL of the OTLP/HTTP ingest endpoint. The `/v1/traces` path is appended automatically, so give a full URL including scheme |
 
-Tracing can also be configured during [first-run setup](/installation#first-run-create-your-account), which offers a hosted collector, a custom endpoint, or disabling it.
+Tracing can also be configured during [first-run setup](/installation#create-the-first-account), which offers a hosted collector, a custom endpoint, or disabling it.
 
 ## Complete example
 
@@ -150,6 +155,15 @@ docker run -d \
   servflow/servflowai start --config /data/config.toml --dashboard
 ```
 
+## Secrets from environment variables
+
+A secret is looked up by name each time it is used. An environment variable whose name is exactly the secret's name, with no prefix and no change of case, is used before the stored secret of that name. A name that matches neither gives an empty value, not an error.
+
+| Order | Where the value comes from |
+|---|---|
+| 1 | An environment variable with exactly the secret's name. |
+| 2 | The secret stored under that name. |
+
 ## Viewing the active configuration
 
 To see the settings an instance actually resolved, including defaults and environment overrides:
@@ -166,8 +180,8 @@ servflowai resource settings view --config config.toml
   Install ServFlow and create your first account.
 </Card>
 
-<Card title="Secrets Management" icon="key" href="/references/secrets">
-  Store API keys and credentials for your agents.
+<Card title="Secrets" icon="key" href="/concepts/secrets">
+  Store a credential once and use it by name.
 </Card>
 
 <Card title="Agents" icon="robot" href="/concepts/agents">

@@ -1,32 +1,47 @@
 ---
-title: "Entry handlers"
-description: "Every way an agent can be started: the entry types, each handler's configuration fields, and the variables a handler injects for prompts"
+title: "Available entry handlers"
+description: "Every way an agent can be started: each entry handler's settings, its shape in a config file, and the variables it gives to prompts"
 icon: "right-to-bracket"
 ---
 
-An agent's entries decide how a run starts. This page lists every entry type, the configuration fields of each entry handler, and the variables a handler makes available to prompts. Values are taken from the running binary; `servflowai resource handler describe --all` prints the same catalog.
+This page lists every entry an agent can have. Each entry's section holds its settings, its shape in a config file, and, for an entry handler, the variables a prompt can read. `servflowai resource handler describe --all` prints the same catalog. For what entries are and how to choose one, see [Entries and entry handlers](/concepts/entries).
 
-## Entry types
-
-| Dashboard label | `type` | `handlerConfig.type` | Needs a path | Replies to |
+| Entry type in the dashboard | `type` | `handlerConfig.type` | Path | Replies to |
 |---|---|---|---|---|
-| Trigger — run manually or on a schedule | `trigger` | — | No | Nobody. The reply is logged. |
-| Webhook — a plain HTTP request starts the agent | `handler` | empty | Yes | The HTTP caller. |
-| GitHub webhook | `handler` | `github_webhook` | Yes | The pull request or issue, when `respond_to` allows. |
-| Telegram bot | `handler` | `telegram_webhook` | Yes | The chat the message came from. |
-| Discord bot | `handler` | `discord_gateway` | No | The channel the message came from. |
+| [Trigger — run manually or on a schedule](#trigger) | `trigger` | none | No | Nobody. The reply is logged. |
+| [Webhook — a plain HTTP request starts the agent](#webhook) | `handler` | empty | Yes | Whoever sent the request. |
+| [GitHub webhook](#github_webhook) | `handler` | `github_webhook` | Yes | The pull request or issue, when `respond_to` allows. |
+| [Gitea webhook](#gitea_webhook) | `handler` | `gitea_webhook` | Yes | The pull request or issue, when `respond_to` allows. |
+| [Telegram bot](#telegram_webhook) | `handler` | `telegram_webhook` | Yes | The chat the message came from. |
+| [Discord bot](#discord_gateway) | `handler` | `discord_gateway` | No | The channel the message came from. |
+
+The keys every entry shares, `type` and `start`, and the rules for an agent with several entries are in the [CLI reference](/references/cli#entries).
+
+## Entries without a handler
 
 ### Trigger
 
-A trigger entry has one field.
+Starts the agent on a schedule, by hand from the editor, or when another agent hands it a task.
 
-| Key | Type | Required | Default | Description |
-|---|---|---|---|---|
-| `cron` | string | No | empty | Cron expression with six fields, seconds first, such as `0 0 9 * * 1-5` for 09:00 on weekdays, or a descriptor such as `@hourly` or `@every 5m`. Empty means the agent runs only when started by hand or handed a task. |
+| Key | Dashboard label | Type | Required | Default | Description |
+|---|---|---|---|---|---|
+| `trigger.cron` | Run on a schedule | string | No | empty | A cron expression with six fields, seconds first, such as `0 0 9 * * 1-5` for 09:00 on weekdays. A descriptor such as `@hourly` or `@every 5m` also works. Empty means the agent runs only when it is started. |
+
+```yaml
+entries:
+  - type: trigger
+    trigger:
+      cron: "0 0 9 * * 1-5"
+    start: agent.digest
+```
 
 ### Webhook
 
-A webhook entry answers `POST` requests on its path. The method is fixed. No handler wraps the request, so nothing is authenticated and nothing is read from it in advance. Prompts read the request with the `body`, `param`, and `header` template functions. `body` reads a field from a JSON body and requires `Content-Type: application/json`.
+Answers `POST` requests on its path. Nothing about the request is checked in advance. Prompts read the request with the `body`, `param`, `header`, and `urlparam` functions. See the [Dynamic content reference](/references/dynamic-content).
+
+| Key | Dashboard label | Type | Required | Description |
+|---|---|---|---|---|
+| `handlerConfig.path` | Path | string | Yes | The path the agent answers on, such as `/ask`. |
 
 | Response | When |
 |---|---|
@@ -34,147 +49,42 @@ A webhook entry answers `POST` requests on its path. The method is fixed. No han
 | `204`, with no body | The run finished and the agent said nothing. |
 | `500` | The run failed. |
 
-Every response carries an `X-Conversation-Id` header naming the conversation thread the run used. A request that sends the same header continues that thread, so the agent remembers the earlier requests. A request without it starts a new thread.
+Every response carries an `X-Conversation-Id` header naming the conversation the run used. A request that sends the same header continues that conversation. A request without it starts a new one.
+
+```yaml
+entries:
+  - type: handler
+    handlerConfig:
+      path: /ask
+    start: agent.answer
+```
 
 ## Entry handlers
 
-An entry handler receives from one outside service and delivers the agent's reply to it. Each handler needs an integration of a specific type, created before the agent. For what a handler does and why, see [Entries and entry handlers](/concepts/entries).
+An entry handler receives from one outside service and delivers the agent's reply to it. A prompt reads a handler's variables as `{{ .<namespace>.<key> }}`, such as `{{ .github.comment_body }}`.
 
-Variables are read in a prompt as `{{ .<namespace>.<key> }}`, for example `{{ .github.comment_body }}`.
-
-A handler marked as a listener dials its sender and holds the connection open. It has no path, and needs no address the sender can reach.
-
-A handler's configuration is resolved once, when the agent loads. The only template function it can use is `secret`, and it cannot read the request. A changed secret takes effect the next time the agent loads.
+A handler's settings are read once, when the agent loads. The only template function they accept is `secret`.
 
 ### github_webhook
 
-Runs on a delivery from a GitHub App: an issue or pull request comment, a review comment, a push. The agent's answer is posted back to the pull request or issue that started the run when `respond_to` says so.
+Runs on a delivery from a GitHub App: an issue or pull request comment, a review comment, a new pull request, a push. When `respond_to` says so, the agent's answer is posted on the pull request or issue that started the run.
 
-Namespace: `github`. Needs a path. Integration type: `github_app`.
+Namespace: `github`. Needs a path. Integration type: [`github_app`](/references/integrations#github_app).
 
-A delivery is answered `202` at once, and the run continues after the response. Each delivery runs in a conversation thread of its own. A delivery that the filters refuse, or that comes from an installation other than the integration's, is answered `202` with `{"status":"ignored"}` and starts no run.
+A delivery is answered `202` at once, and the run continues after the response. Each delivery runs in a conversation of its own. A delivery that the settings filter out, or that comes from an installation other than the integration's, is answered `202` with `{"status":"ignored"}` and starts no run.
 
-**Configuration**
+**Settings**
 
-| Key | Label | Type | Required | Default | Description |
+| Key | Dashboard label | Type | Required | Default | Description |
 |---|---|---|---|---|---|
-| `integration` | GitHub App | integration | Yes | — | The App whose deliveries this entry answers, and whose identity it replies as. Its webhook secret authenticates every delivery. |
-| `events` | Events | string list | No | every event the App is subscribed to | `X-GitHub-Event` names this entry accepts, such as `issue_comment`, `pull_request`, `pull_request_review_comment`, `issues`, `push`. |
-| `actions` | Actions | string list | No | any action | Delivery actions this entry accepts, such as `opened`, `created`, `synchronize`. |
+| `integration` | App | integration | Yes | none | The App whose deliveries this entry answers, and whose identity it replies as. Its webhook secret authenticates every delivery. |
+| `events` | Deliveries, or **Set events and actions directly** under **Advanced settings** | string list | No | every event the App is subscribed to | `X-GitHub-Event` names this entry accepts, such as `issue_comment`, `pull_request`, `pull_request_review_comment`, `issues`, `push`. |
+| `actions` | Deliveries, or **Set events and actions directly** under **Advanced settings** | string list | No | any action | Delivery actions this entry accepts, such as `opened`, `created`, `synchronize`. |
 | `trigger_text` | Trigger text | string | No | the App's own handle | What a comment has to say to be talking to this agent. Set it to be summoned by something other than the App's name, such as `/review`. |
-| `respond_to` | Respond to. **Reply on** in the dashboard | string list | No | never posts; the answer only reaches the log | Which kinds of delivery get the agent's answer posted back. Values: `pull_request`, `issue`. |
-| `update_pr_comment` | Update the previous comment | boolean | No | `false` | Edit the comment this config last left on the pull request instead of posting another one underneath it. |
+| `respond_to` | Reply on | string list | No | never replies; the answer only reaches the log | Which kinds of delivery get the agent's answer posted back. Values: `pull_request` (**The pull request thread**), `issue` (**The issue thread**). |
+| `update_pr_comment` | the choice between **Rewrites the one it left before** and **Is posted as a new comment each time** | boolean | No | `false` | Edits the comment this agent last left on the pull request instead of posting another one under it. |
 
-**Variables**
-
-| Key | Type | Description |
-|---|---|---|
-| `event` | string | The `X-GitHub-Event` the delivery carried. |
-| `action` | string | The delivery's action, such as `opened` or `synchronize`. |
-| `delivery` | string | GitHub's delivery id, for matching a run to a webhook redelivery. |
-| `repo` | string | The repository's full name, `owner/name`. |
-| `installation_id` | number | The App installation this delivery is for. A `github_post` step needs it. |
-| `is_pr` | boolean | Whether the delivery is about a pull request. |
-| `pr_number` | number | The pull request or issue number. |
-| `is_comment` | boolean | Whether the delivery is a comment. |
-| `comment_body` | string | The comment's text. |
-| `sender_login` | string | Who caused the delivery. |
-| `sender_is_bot` | boolean | Whether the sender is a bot account. |
-| `comment_app_id` | number | The App a comment was written through, when GitHub says. |
-| `app_slug` | string | This App's slug, as GitHub reports it. |
-| `trigger_text` | string | What a comment had to name to reach this agent. |
-
-### telegram_webhook
-
-Runs on a message delivered by the Telegram Bot API, and sends the agent's answer back to the chat it came from. Each chat keeps its own conversation thread.
-
-Namespace: `telegram`. Needs a path. Integration type: `telegram_bot`.
-
-Each chat has one conversation thread, so the agent remembers earlier messages in that chat.
-
-**Configuration**
-
-| Key | Label | Type | Required | Default | Description |
-|---|---|---|---|---|---|
-| `integration` | Telegram bot | integration | Yes | — | The bot this entry receives as and answers as. Its secret token authenticates every delivery. |
-| `chat_types` | Chat types | string list | No | all three | The kinds of chat this agent answers in. Values: `private`, `group`, `supergroup`. |
-| `allowed_chats` | Allowed chats | string list | No | any chat | Chat ids or `@usernames` this agent answers. Anything else is ignored. |
-| `require_mention` | Required mention | string | No | no mention required | The text a group message must contain to run the agent, such as `@mybot`. Group chats only. In a private chat every message is addressed to the bot already. |
-| `ignore_bots` | Ignore bots | boolean | No | `false` | Ignore messages sent by other bots. |
-| `commands` | Commands | string list | No | every message runs the agent | Slash commands this agent answers, such as `/ask`. A message that is not one of them is ignored. |
-| `typing` | Typing indicator | boolean | No | `true` | Show "typing…" in the chat for the length of the run. |
-| `reply_in_thread` | Reply to the message | boolean | No | on in groups, off in private chats | Quote the message that asked, rather than answering the chat. |
-| `parse_mode` | Parse mode | string | No | plain text | How Telegram renders the answer. Values: `MarkdownV2`, `HTML`. Leave it unset unless the agent is told to write that markup. One unescaped character costs the whole message. |
-
-**Variables**
-
-| Key | Type | Description |
-|---|---|---|
-| `text` | string | The message text. |
-| `chat_id` | number | The chat the message arrived in. |
-| `chat_type` | string | `private`, `group`, or `supergroup`. |
-| `chat_title` | string | The group's title, empty in a private chat. |
-| `chat_username` | string | The chat's `@username`, when it has one. |
-| `message_id` | number | The message's id. |
-| `update_id` | number | Telegram's update id. |
-| `user_id` | number | Who sent the message. |
-| `username` | string | The sender's `@username`. |
-| `first_name` | string | The sender's first name. |
-| `is_bot` | boolean | Whether the sender is a bot. |
-| `is_command` | boolean | Whether the message starts with a `/command`. |
-| `command` | string | The command name, without the slash. |
-| `args` | string | Everything after the command. |
-| `reply_to_text` | string | The text of the message this one replies to. |
-| `thread_id` | number | The forum topic this message belongs to, `0` outside one. |
-
-### discord_gateway
-
-Holds a websocket open to Discord and runs on the messages it hears, answering in the channel that asked. It is a listener, so it has no path. The bot needs the MESSAGE CONTENT intent enabled in the Discord developer portal.
-
-Namespace: `discord`. No path. Integration type: `discord`.
-
-Each channel has one conversation thread, and a Discord thread counts as a channel of its own.
-
-**Configuration**
-
-| Key | Label | Type | Required | Default | Description |
-|---|---|---|---|---|---|
-| `integration` | Discord bot | integration | Yes | — | The bot this entry connects and answers as. |
-| `chat_types` | Chat types | string list | No | all three | Where a message may arrive from. A thread is its own place, not a property of the channel it hangs under. Values: `guild`, `dm`, `thread`. |
-| `allowed_guilds` | Allowed servers | string list | No | any server | Guild ids this agent answers in. |
-| `allowed_channels` | Allowed channels | string list | No | any channel | Channel ids this agent answers in. |
-| `require_mention` | Require a mention | boolean | No | `false` | Run only when the message mentions the bot. |
-| `ignore_bots` | Ignore bots | boolean | No | `true` | Ignore messages sent by other bots. |
-| `commands` | Commands | string list | No | every message runs the agent | Commands this agent answers, written without the `!` prefix a message carries. |
-| `typing` | Typing indicator | boolean | No | `true` | Show the typing indicator in the channel for the length of the run. |
-| `super_user` | Super user | string | No | none | The Discord user this agent treats as its operator, as a user id or an `@username`. Sets `is_super_user` on each run. An id is the safer of the two. A username can be changed, and a released one can be claimed by somebody else. |
-
-**Variables**
-
-| Key | Type | Description |
-|---|---|---|
-| `content` | string | The message text, with the bot's own mention stripped. |
-| `channel_id` | string | The channel the message arrived in. |
-| `parent_channel_id` | string | The channel a thread hangs under, empty outside a thread. |
-| `guild_id` | string | The server, empty in a DM. |
-| `chat_type` | string | `guild`, `dm`, or `thread`. |
-| `message_id` | string | The message's id. |
-| `author_id` | string | Who sent the message. |
-| `username` | string | The sender's username. |
-| `display_name` | string | The sender's nickname in this server, or their username. |
-| `is_bot` | boolean | Whether the sender is a bot. |
-| `is_super_user` | boolean | Whether the sender is the configured super user. |
-| `mentions_me` | boolean | Whether the message mentions the bot. |
-| `is_command` | boolean | Whether the message starts with a `!command`. |
-| `command` | string | The command name, without the prefix. |
-| `args` | string | Everything after the command. |
-| `reply_to_text` | string | The text of the message this one replies to. |
-| `reply_to_author` | string | Who wrote the message this one replies to. |
-| `message_link` | string | A link to the message. |
-
-## Declaring entries in a config
-
-In an agent config, `entries` is a list with at least one entry. In each entry, `start` names the first sub-agent or context group to run.
+**In a config file**
 
 ```yaml
 entries:
@@ -190,36 +100,210 @@ entries:
     start: agent.review
 ```
 
-A webhook entry leaves `handlerConfig.type` empty and `config` out. A trigger entry replaces `handlerConfig` with `trigger`:
+**Variables**
+
+| Key | Type | Description |
+|---|---|---|
+| `event` | string | The `X-GitHub-Event` the delivery carried. |
+| `action` | string | The delivery's action, such as `opened` or `synchronize`. |
+| `delivery` | string | GitHub's delivery id, for matching a run to a redelivery. |
+| `repo` | string | The repository's full name, `owner/name`. |
+| `installation_id` | number | The App installation this delivery is for. Always the integration's installation. |
+| `is_pr` | boolean | Whether the delivery is about a pull request. |
+| `pr_number` | number | The pull request or issue number. |
+| `is_comment` | boolean | Whether the delivery is a comment. |
+| `comment_body` | string | The comment's text. |
+| `sender_login` | string | Who caused the delivery. |
+| `sender_is_bot` | boolean | Whether the sender is a bot account. |
+| `comment_app_id` | number | The App a comment was written through, when GitHub says. |
+| `app_slug` | string | This App's slug, as GitHub reports it. |
+| `trigger_text` | string | What a comment had to name to reach this agent. |
+
+### gitea_webhook
+
+Runs on a delivery from a Gitea server: an issue or pull request comment, a new pull request, a push. Receiving needs only the secret the webhook was created with in Gitea. When `respond_to` says so, the agent's answer is posted on the pull request or issue that started the run, which needs an integration.
+
+Namespace: `gitea`. Needs a path. Integration type: [`gitea`](/references/integrations#gitea), needed only to reply.
+
+**Settings**
+
+| Key | Dashboard label | Type | Required | Default | Description |
+|---|---|---|---|---|---|
+| `webhook_secret` | Webhook secret | string | Yes | none | The secret the webhook was created with in Gitea. Every delivery is verified against it. Write it as `{{ secret "name" }}`. The secret has to exist when the agent is saved. |
+| `integration` | Answer as | integration | When `respond_to` is set | no account, so the answer only reaches the log | The server and account an answer is posted as. |
+| `events` | Events | string list | No | every event the webhook sends | `X-Gitea-Event` names this entry accepts, such as `issue_comment`, `pull_request`, `issues`, `push`. |
+| `actions` | Only these actions | string list | No | any action | Delivery actions this entry accepts, such as `opened`, `created`, `synchronized`. |
+| `trigger_text` | Trigger text | string | No | every comment runs the agent | What a comment has to say to be talking to this agent, such as `@reviewbot` or `/review`. |
+| `respond_to` | Post the answer back to | string list | No | never posts; the answer only reaches the log | Which kinds of delivery get the agent's answer posted back. Values: `pull_request` (**Pull requests**), `issue` (**Issues**). |
+| `update_pr_comment` | When a push adds commits, under **Advanced settings** | boolean | No | `false` | Edits the comment this agent last left on the pull request instead of posting another one under it. |
+
+**In a config file**
 
 ```yaml
 entries:
-  - type: trigger
-    trigger:
-      cron: "0 0 9 * * 1-5"
-    start: agent.digest
+  - type: handler
+    handlerConfig:
+      type: gitea_webhook
+      path: /hooks/gitea
+      config:
+        webhook_secret: '{{ secret "gitea-webhook-secret" }}'
+        integration: my-gitea
+        events: [pull_request]
+        actions: [opened, synchronized]
+        respond_to: [pull_request]
+    start: agent.review
 ```
 
-A config with more than one entry has to pass three rules.
+**Variables**
 
-| Rule | Message when it is broken |
-|---|---|
-| At most one trigger entry. | `a config can have only one trigger entry` |
-| At most one entry for each handler type, and at most one webhook entry. | `a config can have only one "<name>" handler entry` |
-| No two entries on the same path. | `entries "<name>" and "<name>" both answer on path "<path>"` |
+| Key | Type | Description |
+|---|---|---|
+| `event` | string | The `X-Gitea-Event` the delivery carried, such as `issue_comment`. |
+| `event_type` | string | The more specific `X-Gitea-Event-Type`, such as `pull_request_comment`. |
+| `action` | string | The delivery's action, such as `opened` or `synchronized`. |
+| `delivery` | string | Gitea's delivery id, for matching a run to a redelivery. |
+| `repo` | string | The repository's full name, `owner/name`. |
+| `is_pr` | boolean | Whether the delivery is about a pull request. |
+| `pr_number` | number | The pull request or issue number. |
+| `is_comment` | boolean | Whether the delivery is a comment. |
+| `comment_id` | number | The comment's own id. |
+| `comment_body` | string | The comment's text. |
+| `sender_login` | string | Who caused the delivery. |
+| `trigger_text` | string | What a comment had to name to reach this agent. Empty when any comment does. |
 
-An entry's name is `trigger` for a trigger, the handler's type for an entry handler, and `default` for a webhook. Traces and test runs use it to say which entry a run came in through.
+### telegram_webhook
+
+Runs on a message delivered by the Telegram Bot API, and sends the agent's answer back to the chat it came from. Each chat keeps one conversation, so the agent remembers earlier messages in that chat.
+
+Namespace: `telegram`. Needs a path. Integration type: [`telegram_bot`](/references/integrations#telegram_bot).
+
+**Settings**
+
+| Key | Dashboard label | Type | Required | Default | Description |
+|---|---|---|---|---|---|
+| `integration` | Bot | integration | Yes | none | The bot this entry receives as and answers as. Its secret token authenticates every delivery. |
+| `chat_types` | Chats | string list | No | all three | The kinds of chat this agent answers in. Values: `private` (**Direct messages**), `group` (**Groups**), `supergroup` (**Supergroups**). |
+| `allowed_chats` | Only these chats | string list | No | any chat | Chat ids or `@usernames` this agent answers. Anything else is ignored. |
+| `require_mention` | Require mention | string | No | no mention required | The text a group message must contain to run the agent, such as `@mybot`. Group chats only. |
+| `commands` | Only these commands | string list | No | every message runs the agent | Slash commands this agent answers, written without the slash, such as `ask` for `/ask`. A message that is not one of them is ignored. |
+| `ignore_bots` | Messages from bots | boolean | No | `false` | Ignores messages sent by other bots. |
+| `typing` | While the agent works | boolean | No | `true` | Shows "typing…" in the chat for the length of the run. |
+| `reply_in_thread` | Attach the answer to the question | boolean | No | on in groups, off in private chats | Quotes the message that asked, instead of answering the chat. |
+| `parse_mode` | Formatting, under **Advanced settings** | string | No | plain text | How Telegram renders the answer. Values: `MarkdownV2`, `HTML`. Leave it unset unless the agent is told to write that markup. One unescaped character costs the whole message. |
+
+**In a config file**
+
+```yaml
+entries:
+  - type: handler
+    handlerConfig:
+      type: telegram_webhook
+      path: /hooks/telegram
+      config:
+        integration: my-telegram-bot
+        chat_types: [private, group]
+        require_mention: "@mybot"
+        commands: [ask]
+    start: agent.answer
+```
+
+**Variables**
+
+| Key | Type | Description |
+|---|---|---|
+| `text` | string | The message text. |
+| `chat_id` | number | The chat the message arrived in. |
+| `chat_type` | string | `private`, `group`, or `supergroup`. |
+| `chat_title` | string | The group's title. Empty in a private chat. |
+| `chat_username` | string | The chat's `@username`, when it has one. |
+| `message_id` | number | The message's id. |
+| `update_id` | number | Telegram's update id. |
+| `user_id` | number | Who sent the message. |
+| `username` | string | The sender's `@username`. |
+| `first_name` | string | The sender's first name. |
+| `is_bot` | boolean | Whether the sender is a bot. |
+| `is_command` | boolean | Whether the message starts with a `/command`. |
+| `command` | string | The command name, without the slash. |
+| `args` | string | Everything after the command. |
+| `reply_to_text` | string | The text of the message this one replies to. |
+| `thread_id` | number | The forum topic this message belongs to. `0` outside one. |
+
+### discord_gateway
+
+Connects to Discord as a bot and runs on the messages it hears, answering in the channel that asked. It holds a websocket open to Discord, so it has no path and needs no address Discord can reach. The bot needs the Message Content intent turned on in the Discord developer portal. Each channel keeps one conversation, and a Discord thread counts as a channel of its own.
+
+Namespace: `discord`. No path. Integration type: [`discord`](/references/integrations#discord).
+
+**Settings**
+
+| Key | Dashboard label | Type | Required | Default | Description |
+|---|---|---|---|---|---|
+| `integration` | Bot | integration | Yes | none | The bot this entry connects and answers as. |
+| `super_user` | Super user | string | No | none | The Discord user this agent treats as its operator, as a user id or an `@username`. Sets `is_super_user` on each run. An id is the safer of the two, because a username can change hands. |
+| `chat_types` | Places | string list | No | all three | Where a message may arrive from. Values: `guild` (**Server channels**), `dm` (**Direct messages**), `thread` (**Threads**). |
+| `require_mention` | Require mention | boolean | No | `false` | Runs only when the message mentions the bot. |
+| `typing` | While the agent works | boolean | No | `true` | Shows the typing indicator in the channel for the length of the run. |
+| `allowed_guilds` | Only these servers, under **Advanced settings** | string list | No | any server | Server ids this agent answers in. |
+| `allowed_channels` | Only these channels, under **Advanced settings** | string list | No | any channel | Channel ids this agent answers in. |
+| `ignore_bots` | Messages from bots, under **Advanced settings** | boolean | No | `true` | Ignores messages sent by other bots. |
+| `commands` | Only these ! commands, under **Advanced settings** | string list | No | every message runs the agent | Commands this agent answers, written without the `!` a message carries. |
+
+**In a config file**
+
+```yaml
+entries:
+  - type: handler
+    handlerConfig:
+      type: discord_gateway
+      config:
+        integration: my-discord-bot
+        chat_types: [guild, thread]
+        require_mention: true
+        super_user: "905712398471923849"
+    start: agent.answer
+```
+
+**Variables**
+
+| Key | Type | Description |
+|---|---|---|
+| `content` | string | The message text, with the bot's own mention removed. |
+| `channel_id` | string | The channel the message arrived in. |
+| `parent_channel_id` | string | The channel a thread hangs under. Empty outside a thread. |
+| `guild_id` | string | The server. Empty in a direct message. |
+| `chat_type` | string | `guild`, `dm`, or `thread`. |
+| `message_id` | string | The message's id. |
+| `author_id` | string | Who sent the message. |
+| `username` | string | The sender's username. |
+| `display_name` | string | The sender's nickname in this server, or their username. |
+| `is_bot` | boolean | Whether the sender is a bot. |
+| `is_super_user` | boolean | Whether the sender is the configured super user. |
+| `mentions_me` | boolean | Whether the message mentions the bot. |
+| `is_command` | boolean | Whether the message starts with a `!command`. |
+| `command` | string | The command name, without the `!`. |
+| `args` | string | Everything after the command. |
+| `reply_to_text` | string | The text of the message this one replies to. |
+| `reply_to_author` | string | Who wrote the message this one replies to. |
+| `message_link` | string | A link to the message. |
 
 ## Related
 
 <CardGroup cols={2}>
 
-<Card title="Create an agent" icon="robot" href="/guides/create-an-agent">
-  Set the entry in the dashboard while building an agent.
+<Card title="Entries and entry handlers" icon="right-to-bracket" href="/concepts/entries">
+  What entries are, and how to choose one.
 </Card>
 
-<Card title="Dynamic content" icon="code" href="/references/dynamic-content">
-  The template functions a webhook entry reads the request with.
+<Card title="Available integrations" icon="puzzle-piece" href="/references/integrations">
+  The integration each handler needs.
+</Card>
+
+<Card title="CLI reference" icon="terminal" href="/references/cli#entries">
+  The keys every entry shares, and the rules for several entries.
+</Card>
+
+<Card title="Dynamic content reference" icon="wand-magic-sparkles" href="/references/dynamic-content">
+  The functions a webhook entry reads the request with.
 </Card>
 
 </CardGroup>

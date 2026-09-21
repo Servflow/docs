@@ -1,22 +1,22 @@
 ---
-title: "Providers"
-description: "Every LLM provider type: its configuration fields, how a provider is stored, and the commands that manage providers"
+title: "Available providers"
+description: "Every LLM provider type: its fields and its shape in a config file"
 icon: "cloud"
 ---
 
-A provider is a stored account with a model company, and the model to use, that sub-agents call models through. This page lists every provider type and its fields. Values are taken from the running binary. `servflowai resource provider describe --all` prints the same catalog, with each type's suggested models.
+This page lists every provider type, with its fields and its body in a file. `servflowai resource provider describe --all` prints the same catalog, with the models each type suggests. For what a provider is, see [Providers](/concepts/providers). To add one in the dashboard, see [Manage LLM providers](/guides/manage-llm-providers).
 
-## How a provider is stored
+In a body, `config` holds the type's fields as plain values. `api_key` is the key itself, not the name of a stored secret. The commands that take a body are in the [CLI reference](/references/cli#provider).
 
-- **Identity.** A provider has a numeric `id` and a `name`. A sub-agent refers to it by id, as `providerID`.
-- **Type.** The type is fixed when the provider is created. `update` refuses a change of type.
-- **Model.** The model is a field of the provider. A sub-agent has no model setting of its own.
-- **API key.** `api_key` holds the key itself. It is not a reference to a stored [secret](/references/secrets). `list` and `get` do not return a provider's config.
-- **Encryption.** When `master_key` is set under `[sqlite]`, provider config is encrypted at rest. See the [Configuration reference](/references/configuration).
-- **When a change applies.** A provider is looked up each time an agent runs, so an update applies from the next run.
-- **Deleting.** `delete` does not check whether agents use the provider. An agent that names a deleted provider fails at its next run, and cannot be saved again until it names a provider that exists.
+| Type | Name in the dashboard | Needs an endpoint |
+|---|---|---|
+| [`claude`](#claude) | Claude | No |
+| [`openai`](#openai) | OpenAI | No |
+| [`openrouter`](#openrouter) | OpenRouter | No. It has a default. |
+| [`litellm`](#litellm) | LiteLLM | Yes |
+| [`qwen`](#qwen) | Qwen | No. It has a default. |
 
-## Provider types
+## Types
 
 ### claude
 
@@ -27,6 +27,14 @@ Anthropic Claude models.
 | `api_key` | API Key | password | Yes | The Anthropic API key. |
 | `model` | Model | string | No | The model to call. Defaults to the type's suggested model. |
 
+```json
+{
+  "name": "Claude production",
+  "type": "claude",
+  "config": { "api_key": "sk-ant-...", "model": "claude-sonnet-5" }
+}
+```
+
 ### openai
 
 OpenAI models.
@@ -35,6 +43,14 @@ OpenAI models.
 |---|---|---|---|---|
 | `api_key` | API Key | password | Yes | The OpenAI API key. |
 | `model` | Model | string | No | The model to call. Defaults to the type's suggested model. |
+
+```json
+{
+  "name": "OpenAI production",
+  "type": "openai",
+  "config": { "api_key": "sk-...", "model": "gpt-4.1" }
+}
+```
 
 ### openrouter
 
@@ -47,6 +63,18 @@ OpenRouter, one key for many companies' models through an OpenAI-compatible endp
 | `model` | Model | string | No | The type's suggested model | The model to call, as `company/model`. |
 | `reasoning` | Reasoning | select | No | `default` | One of `default`, `none`, `minimal`, `low`, `medium`, `high`. `default` sends no reasoning setting and lets the model decide. Any other value is sent as the reasoning effort. |
 
+```json
+{
+  "name": "OpenRouter",
+  "type": "openrouter",
+  "config": {
+    "api_key": "<your OpenRouter key>",
+    "model": "anthropic/claude-sonnet-4.5",
+    "reasoning": "low"
+  }
+}
+```
+
 ### litellm
 
 A LiteLLM proxy, a self-hosted OpenAI-compatible gateway.
@@ -56,6 +84,18 @@ A LiteLLM proxy, a self-hosted OpenAI-compatible gateway.
 | `api_key` | API Key | password | Yes | The LiteLLM API key. |
 | `defaultEndpoint` | Base URL | string | Yes | The proxy's chat completions URL, such as `http://localhost:4000/v1/chat/completions`. |
 | `model` | Model | string | No | The model to call. Defaults to the type's suggested model. |
+
+```json
+{
+  "name": "LiteLLM proxy",
+  "type": "litellm",
+  "config": {
+    "api_key": "<your LiteLLM key>",
+    "defaultEndpoint": "http://localhost:4000/v1/chat/completions",
+    "model": "gpt-4o"
+  }
+}
+```
 
 ### qwen
 
@@ -67,50 +107,28 @@ Alibaba Qwen models.
 | `defaultEndpoint` | Endpoint | string | No | `https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions` | The chat completions URL. |
 | `model` | Model | string | No | The type's suggested model | The model to call. |
 
-## Managing providers outside the dashboard
-
-### CLI
-
-| Command | What it does |
-|---|---|
-| `servflowai resource provider list` | Lists providers, without config. |
-| `servflowai resource provider get <id>` | Gets one provider, without config. |
-| `servflowai resource provider create -f <file>` | Creates a provider. |
-| `servflowai resource provider update <id> -f <file>` | Renames a provider and overlays the config fields given onto the stored ones. |
-| `servflowai resource provider delete <id>` | Deletes a provider. |
-| `servflowai resource provider types` | Lists the provider types. |
-| `servflowai resource provider describe [type...]` | Describes types, their fields, and their suggested models. Pass `--all` for every type. |
-
-The body names the provider, its type, and its config:
-
 ```json
 {
-  "name": "OpenAI production",
-  "type": "openai",
-  "config": { "api_key": "sk-...", "model": "gpt-4.1" }
+  "name": "Qwen",
+  "type": "qwen",
+  "config": { "api_key": "<your Qwen key>", "model": "qwen-plus" }
 }
 ```
-
-`create` validates the config by building the client it describes. `--dry-run` validates and prints the result without writing.
-
-### MCP
-
-The management server at `/api/mcp` exposes `list_providers`, `get_provider`, `create_provider`, `update_provider`, `delete_provider`, `list_provider_types`, and `describe_provider_type`.
 
 ## Related
 
 <CardGroup cols={2}>
 
-<Card title="Manage LLM providers" icon="cloud" href="/guides/manage-llm-providers">
-  Add, change, and delete a provider in the dashboard.
-</Card>
-
 <Card title="Providers" icon="cloud" href="/concepts/providers">
   What a provider is and why sub-agents share one.
 </Card>
 
-<Card title="Configuration" icon="gear" href="/references/configuration">
-  The `master_key` setting that encrypts stored keys.
+<Card title="Manage LLM providers" icon="cloud" href="/guides/manage-llm-providers">
+  Add, change, and delete a provider in the dashboard.
+</Card>
+
+<Card title="CLI reference" icon="terminal" href="/references/cli#provider">
+  The commands that create and update a provider.
 </Card>
 
 </CardGroup>
