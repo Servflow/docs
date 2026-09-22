@@ -88,8 +88,8 @@ In the sub-agent's **System prompt**, say which file to use and when:
 
 ```
 You keep your notes in a file called notes.md.
-Before every answer, use read_file to read notes.md. If it does not exist yet, carry on without it.
-When someone asks you to remember something, read notes.md, add the new note, and use write_file to save the whole file.
+Before every answer, use read_memory to read notes.md. If it does not exist yet, carry on without it.
+When someone asks you to remember something, read notes.md, add the new note, and use write_memory to save the whole file.
 ```
 
 The last line asks for the whole file because writing a file replaces what was in it.
