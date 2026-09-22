@@ -152,6 +152,7 @@ docker run -d \
   -e SERVFLOW_SQLITE_PATH=/data/servflow.db \
   -e SERVFLOW_AUTH_MODE=local \
   -v $(pwd)/config.toml:/data/config.toml \
+    # (In vNEXT+, you must provide the config file yourself; the container does not seed one.)
   servflow/servflowai start --config /data/config.toml --dashboard
 ```
 
