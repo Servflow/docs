@@ -72,6 +72,7 @@ Flags on commands that write:
 ### template
 
 `template list` prints the published templates. `template show <slug>` prints a template's inputs and what it requires. `template install <slug>` creates the template's agents and secrets. Nothing is written until every input and requirement has been checked.
+> **Changed in next release:** Secret templates (`{{ secret "name" }}`) resolved by the CLI during template installation and resource creation now read from the same store as the server, matching server behavior. This avoids empty secret values when validating agents that use them. If you pass a --config flag, the resolved secrets come from its SQLite store, just as in production runs.
 
 | Flag | On | Description |
 |---|---|---|
