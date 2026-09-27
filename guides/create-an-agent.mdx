@@ -48,9 +48,12 @@ Choose **Sequential pipeline** and set **Pipeline stages** to `2 sub-agents`. Ea
 
 | Arrangement | What it scaffolds |
 |---|---|
+| Single agent | One sub-agent. This is the default; you can add entries, tools, or more sub-agents later in the editor. |
 | Sequential pipeline | Sub-agents run in a chain. Each one's reply feeds the next. |
 | Supervisor / router | A coordinator sub-agent routes work to specialists and collects results. |
 | Parallel fan-out | One entry sub-agent calls several workers, then hands off to an aggregator. |
+
+When **Single agent** is selected, the page also shows a **Schedule** field. Leave it at **No schedule** to run the agent only when you start it manually or another agent starts it with an Agent Task Tool, or choose a preset schedule to run it at fixed times.
 </Step>
 
 <Step title="Click Create Agent">
