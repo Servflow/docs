@@ -121,6 +121,8 @@ servflowai resource agent create -f agent.yaml --dry-run
 
 Each field of `config` is an object holding a literal, as `value`, or the name of a stored secret, as `secret`. The fields of each type are on [Available integrations](/references/integrations).
 
+OAuth-guided integrations, such as `notion_mcp`, have no config fields in the body. Creating one this way leaves it pending until you complete its sign-in in the dashboard.
+
 ```json
 {
   "integrationId": "vectors",

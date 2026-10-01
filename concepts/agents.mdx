@@ -20,7 +20,7 @@ An agent also has a name, an optional description, and an id.
 
 An entry names where a run starts: a sub-agent, or a context group that leads to one. From there, every sub-agent and context group names what comes next. That is another sub-agent, another context group, or the end of the run.
 
-The dashboard's starting arrangements are patterns of these links. A sequential pipeline chains sub-agents, and each one receives the reply of the one before it. A supervisor routes work to specialists by calling them as tools. A parallel fan-out hands work to several workers and collects their replies in an aggregator.
+The dashboard's starting arrangements are patterns of these links. A single agent starts with one sub-agent that you can expand later. A sequential pipeline chains sub-agents, and each one receives the reply of the one before it. A supervisor routes work to specialists by calling them as tools. A parallel fan-out hands work to several workers and collects their replies in an aggregator.
 
 A run has no separate response step. Its answer is what its sub-agents said, and the entry decides who receives it.
 
