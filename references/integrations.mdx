@@ -21,7 +21,7 @@ In a body, each field of `config` holds either a literal, as `{"value": ...}`, o
 | [`sql`](#sql) | SQL Database | No | `fetch`, `delete`, and `authenticate` actions |
 | [`telegram_bot`](#telegram_bot) | Telegram Bot | No | `telegram_webhook` entry |
 
-A type with a guided setup opens its own set of screens in the dashboard. Every other type opens a form with one input for each field.
+A type with a guided setup opens its own set of screens in the dashboard. Every other type opens a form with one input for each field. OAuth-guided integrations can appear as **Not connected** until the provider approval finishes; use the row's **Connect integration** action to retry the approval.
 
 ## Types
 
@@ -155,7 +155,7 @@ MongoDB database integration for document storage and retrieval.
 
 ### notion_mcp
 
-A Notion workspace connected through Notion's MCP server. It has no fields. The dashboard connects it through Notion's OAuth sign-in, and an MCP server tool sends its token.
+A Notion workspace connected through Notion's MCP server. It has no fields. In the dashboard, give it an id, then connect it through Notion's OAuth sign-in. An MCP server tool sends its token.
 
 ### qdrant
 

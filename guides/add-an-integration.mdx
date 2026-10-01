@@ -16,7 +16,7 @@ This guide adds an integration in the dashboard: a stored credential, such as a 
 <Steps>
 
 <Step title="Open Integrations">
-In the sidebar under **Configure**, open **Integrations**. The page lists every integration by id and type, and each row has edit and delete controls.
+In the sidebar under **Configure**, open **Integrations**. The page lists every integration by id, type, and status. Each row has edit and delete controls, and a **Connect integration** action when a guided OAuth setup still needs to be completed.
 
 <Frame>
   <img src="/images/guides/add-an-integration/01-integrations.png" alt="The Integrations page listing integrations by id and type, with the New Integration button" />
@@ -36,6 +36,8 @@ For a guided setup, see [Connect an agent to Discord](/guides/connect-an-agent-t
 <Step title="Enter an id and the fields">
 Enter an **Id**, for example `orders-db`. Agents reference the integration by this id, and it cannot be changed later, so choose a name that says what it connects to.
 
+For Notion, the guided setup asks for this id before it sends you to Notion to approve the connection.
+
 Fill in the fields. A required field is marked with an asterisk. A select field, such as SQL Database's **Database Type**, lists its allowed values.
 
 <Frame>
@@ -50,7 +52,9 @@ To paste the value into the integration instead, choose **Enter a value directly
 </Step>
 
 <Step title="Add it">
-Click **Add Integration**. The dialog closes, and the integration appears in the list with its type. The server reloads its configs, so the integration is usable at once.
+Click **Add Integration**. The dialog closes, and the integration appears in the list with its type and a **Ready** status. The server reloads its configs, so the integration is usable at once.
+
+A guided OAuth setup such as Notion may create the integration before the approval finishes. Until it is approved, the row shows **Not connected**. Use the row's **Connect integration** action to start the approval again.
 </Step>
 
 </Steps>
@@ -75,7 +79,7 @@ The trash icon deletes the integration. A step or entry that references the dele
 
 ## Verify
 
-The integration appears in the list on the Integrations page. From the terminal, it also appears in:
+The integration appears in the list on the Integrations page with **Ready** status. From the terminal, it also appears in:
 
 ```bash
 servflowai resource integration list
