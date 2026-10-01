@@ -23,7 +23,7 @@ An integration connected through OAuth, such as Notion, has its own connection p
 | [`sql`](#sql) | SQL Database | No | `fetch`, `delete`, and `authenticate` actions |
 | [`telegram_bot`](#telegram_bot) | Telegram Bot | No | `telegram_webhook` entry |
 
-A type with a guided setup opens its own set of screens in the dashboard. Every other type opens a form with one input for each field.
+A type with a guided setup opens its own set of screens in the dashboard. Every other type opens a form with one input for each field. OAuth-guided integrations can appear as **Not connected** until the provider approval finishes; use the row's **Connect integration** action to retry the approval.
 
 ## Types
 
@@ -157,7 +157,7 @@ MongoDB database integration for document storage and retrieval.
 
 ### notion_mcp
 
-A Notion workspace connected through Notion's MCP server. It has no fields in the form. The dashboard creates the integration, sends the browser through Notion's OAuth sign-in, stores the token on that integration id, and marks it complete when Notion returns. An MCP server tool can then send that integration's token.
+A Notion workspace connected through Notion's MCP server. It has no fields in the form. In the dashboard, give it an id. The dashboard creates the integration under that id, sends the browser through Notion's OAuth sign-in, stores the token on that integration id, and marks it complete when Notion returns. An MCP server tool can then send that integration's token.
 
 Each `notion_mcp` integration is one Notion workspace connection. To connect another workspace, create another Notion integration with a different id and complete its sign-in.
 
