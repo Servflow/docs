@@ -8,6 +8,8 @@ This page lists every integration type. Each type's section says what uses it an
 
 In a body, each field of `config` holds either a literal, as `{"value": ...}`, or the name of a stored secret, as `{"secret": "<secret name>"}`. Use a secret for every password field. A secret that a body names has to exist before the integration is created. The commands that take a body are in the [CLI reference](/references/cli#integration).
 
+An integration connected through OAuth, such as Notion, has its own connection per integration id. It is `pending` from creation until the sign-in flow completes, and ServFlow only loads it after it becomes `complete`.
+
 | Type | Name in the dashboard | Guided setup | Used by |
 |---|---|---|---|
 | [`binance`](#binance) | Binance | No | `binance/*` actions |
@@ -155,7 +157,9 @@ MongoDB database integration for document storage and retrieval.
 
 ### notion_mcp
 
-A Notion workspace connected through Notion's MCP server. It has no fields. The dashboard connects it through Notion's OAuth sign-in, and an MCP server tool sends its token.
+A Notion workspace connected through Notion's MCP server. It has no fields in the form. The dashboard creates the integration, sends the browser through Notion's OAuth sign-in, stores the token on that integration id, and marks it complete when Notion returns. An MCP server tool can then send that integration's token.
+
+Each `notion_mcp` integration is one Notion workspace connection. To connect another workspace, create another Notion integration with a different id and complete its sign-in.
 
 ### qdrant
 
