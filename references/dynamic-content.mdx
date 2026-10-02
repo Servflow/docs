@@ -56,7 +56,7 @@ The [Available entry handlers](/references/entry-handlers) lists every variable 
 |---|---|---|
 | `.stepID`, `.stepID.field` | The output of an earlier context step or action, by its id. | `{{ .customer.name }}` |
 | `action(name)` | The same output, looked up by step id, then by display name. | `{{ action "customer" }}` |
-| `secret(name)` | A stored secret, or the environment variable of the same name. See [Secrets](/concepts/secrets). | `{{ secret "weather-api-key" }}` |
+| `secret(name)` | A stored secret, or by default the environment variable of the same name before the stored secret. Set `[secrets].disable_env = true` to skip environment lookup. See [Secrets](/concepts/secrets) and [Configuration](/references/configuration#secrets). | `{{ secret "weather-api-key" }}` |
 | `tool_param(name)` | An argument the model passed to the tool. Available in an action tool's fields, and in the prompts of a sub-agent called by a Call sub-agent tool that declares `params`. | `{{ tool_param "question" }}` |
 
 ## Transform functions
