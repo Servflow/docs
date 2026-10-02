@@ -175,6 +175,8 @@ Click **New payload** and add `"plan": "pro"` to the body. The tool runs as befo
 
 To offer the tools of a Model Context Protocol server, choose **MCP server…**. In the **Server** section, enter the **Server endpoint**. If the server needs a token, choose where it comes from under **Access token**: an **Integration** connected through OAuth, a **Secret**, or a pasted **Token**. Click **Load tools** and select the **Allowed tools**. **Save tool** stays disabled until at least one tool is selected.
 
+When the token comes from an integration, the MCP server is asked with that integration only from agents in the same group. An agent in another group cannot use it.
+
 <Frame>
   <img src="/images/guides/add-a-tool/10-dialog-mcp.png" alt="The Configure MCP server dialog with the Server endpoint, Access token, and Allowed tools fields" />
 </Frame>

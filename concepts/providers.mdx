@@ -31,6 +31,14 @@ To run a quick, low-cost model for a simple stage and a stronger one for a hard 
 | Sort the request | Decide what kind of question this is | `OpenAI small` |
 | Write the answer | Compose the reply | `OpenAI large` |
 
+## Providers are limited to their group
+
+An agent can use only the LLM providers in its own group. An ungrouped agent can use only ungrouped providers.
+
+Provider grouping is internal to storage and agent runs. The dashboard and CLI do not show or set a provider's group directly; a provider keeps the group it was created in.
+
+If an agent asks for a provider from another group, ServFlow treats it as not found.
+
 ## Changes apply from the next run
 
 When you change a provider's key or model, every agent that uses it follows on its next run. You do not reopen or save the agents.
