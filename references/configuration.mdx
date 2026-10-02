@@ -74,6 +74,21 @@ Rows written before `master_key` was set stay in plain text.
 Never commit `master_key` to version control. Set it with `SERVFLOW_SQLITE_MASTER_KEY` in production. Changing it makes previously encrypted values unreadable.
 </Warning>
 
+## `[secrets]`
+
+Controls where `{{ secret "name" }}` resolves from at runtime.
+
+```toml
+[secrets]
+disable_env = false
+```
+
+| Field | Environment variable | Default | Description |
+|---|---|---|---|
+| `disable_env` | `SERVFLOW_SECRETS_DISABLE_ENV` | `false` | When `true`, `{{ secret "name" }}` reads only stored secrets and never the server process environment |
+
+By default, ServFlow checks an environment variable whose name exactly matches the secret name before it checks the stored secret of that name. Set `disable_env = true` on a shared or hosted instance so workflows and agent tools cannot read the instance's own environment variables through `{{ secret }}`.
+
 ## `[authentication]`
 
 Controls how the dashboard and management API are gated.
@@ -131,6 +146,9 @@ env = "production"
 path = "./secrets.db"
 master_key = ""
 
+[secrets]
+disable_env = false
+
 [authentication]
 mode = "local"
 
@@ -157,12 +175,13 @@ docker run -d \
 
 ## Secrets from environment variables
 
-A secret is looked up by name each time it is used. An environment variable whose name is exactly the secret's name, with no prefix and no change of case, is used before the stored secret of that name. A name that matches neither gives an empty value, not an error.
+A secret is looked up by name each time it is used. By default, an environment variable whose name is exactly the secret's name, with no prefix and no change of case, is used before the stored secret of that name. A name that matches neither gives an empty value, not an error. Set `[secrets].disable_env = true` to skip environment lookup completely.
 
-| Order | Where the value comes from |
-|---|---|
-| 1 | An environment variable with exactly the secret's name. |
-| 2 | The secret stored under that name. |
+| When `disable_env` is... | Order | Where the value comes from |
+|---|---:|---|
+| `false` | 1 | An environment variable with exactly the secret's name. |
+| `false` | 2 | The secret stored under that name. |
+| `true` | 1 | The secret stored under that name. |
 
 ## Viewing the active configuration
 
