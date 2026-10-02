@@ -114,6 +114,8 @@ A Gitea server and the account the agent acts as on it. Receiving a Gitea webhoo
 
 A GitHub App's credentials. The GitHub actions mint installation tokens with them, and the App's deliveries are signed with its webhook secret.
 
+The dashboardx27s guided setup starts from the integrationx27s `name`, then returns the generated `integrationId` and the secret names it used so the dashboard can save the finished integration.
+
 | Key | Label | Type | Required | Default |
 |---|---|---|---|---|
 | `base_url` | Base URL | string | No | `https://api.github.com` |
@@ -157,9 +159,9 @@ MongoDB database integration for document storage and retrieval.
 
 ### notion_mcp
 
-A Notion workspace connected through Notion's MCP server. It has no fields in the form. In the dashboard, give it an id. The dashboard creates the integration under that id, sends the browser through Notion's OAuth sign-in, stores the token on that integration id, and marks it complete when Notion returns. An MCP server tool can then send that integration's token.
+A Notion workspace connected through Notion's MCP server. It has no fields in the form. In the dashboard, give it a name. The dashboard creates the integration with a generated id, sends the browser through Notionx27s OAuth sign-in, stores the token on that integration, and marks it complete when Notion returns. An MCP server tool can then send that integration's token.
 
-Each `notion_mcp` integration is one Notion workspace connection. To connect another workspace, create another Notion integration with a different id and complete its sign-in.
+Each `notion_mcp` integration is one Notion workspace connection. To connect another workspace, create another Notion integration with a different name and complete its sign-in.
 
 ### qdrant
 
