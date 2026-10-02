@@ -139,6 +139,9 @@ The management MCP server exposes these tools:
 | Providers | `list_providers`, `get_provider`, `create_provider`, `update_provider`, `delete_provider`, `list_provider_types`, `describe_provider_type` |
 | Secrets | `list_secrets`, `get_secret`, `create_secret`, `update_secret`, `delete_secret` |
 | Workspaces | `list_workspaces`, `get_workspace`, `create_workspace`, `update_workspace`, `delete_workspace` |
+| Discovery | `list_entry_handlers`, `describe_entry_handler`, `list_template_functions` |
+
+`list_entry_handlers` lists every built-in entry type. `describe_entry_handler` describes one or more handler types and returns their fields, injected variables, and whether each is a listener. `list_template_functions` lists the template functions available in dynamic content and tool guards, optionally filtered by category.
 
 ## version
 
