@@ -1,10 +1,10 @@
 ---
 title: "Add an integration"
-description: "Store a third-party credential once in the dashboard so any agent's steps, entries, and tools can use it by id"
+description: "Store a third-party credential once in the dashboard so any agent's steps, entries, and tools can use it by name"
 icon: "puzzle-piece"
 ---
 
-This guide adds an integration in the dashboard: a stored credential, such as a database connection string or a bot token, that agents look up by id. Use it when an action, an entry, or a tool asks for an integration you do not have yet.
+This guide adds an integration in the dashboard: a stored credential, such as a database connection string or a bot token, that agents look up by name. Use it when an action, an entry, or a tool asks for an integration you do not have yet.
 
 ## Before you begin
 
@@ -16,7 +16,7 @@ This guide adds an integration in the dashboard: a stored credential, such as a 
 <Steps>
 
 <Step title="Open Integrations">
-In the sidebar under **Configure**, open **Integrations**. The page lists every integration by id, type, and status. Each row has edit and delete controls, and a **Connect integration** action when a guided OAuth setup still needs to be completed.
+In the sidebar under **Configure**, open **Integrations**. The page lists every integration by name, type, and status. Each row has edit and delete controls, and a **Connect integration** action when a guided OAuth setup still needs to be completed.
 
 <Frame>
   <img src="/images/guides/add-an-integration/01-integrations.png" alt="The Integrations page listing integrations by id and type, with the New Integration button" />
@@ -32,18 +32,18 @@ Click **New Integration** and choose a type. Discord, GitHub App, and Notion are
 
 For a guided setup, see [Connect an agent to Discord](/guides/connect-an-agent-to-discord).
 
-For Notion, the dashboard creates the integration under the id you enter, sends you through Notion sign-in, and marks that integration complete when the sign-in returns. Each Notion integration has its own OAuth connection, so you can add more than one Notion workspace by giving each one a different id.
+For Notion, the dashboard creates the integration after you enter its name, sends you through Notion sign-in, and marks that integration complete when the sign-in returns.
 </Step>
 
-<Step title="Enter an id and the fields">
-Enter an **Id**, for example `orders-db`. Agents reference the integration by this id, and it cannot be changed later, so choose a name that says what it connects to.
+<Step title="Enter a name and the fields">
+Enter a **Name**, for example `Orders DB`. ServFlow generates the integration's id from that name, and keeps that id even if you later rename the integration.
 
-For Notion, the guided setup asks for this id before it sends you to Notion to approve the connection.
+For Notion, the guided setup asks for this name before it sends you to Notion to approve the connection.
 
 Fill in the fields. A required field is marked with an asterisk. A select field, such as SQL Database's **Database Type**, lists its allowed values.
 
 <Frame>
-  <img src="/images/guides/add-an-integration/03-sql-form.png" alt="The New Integration form for SQL Database with the Id, Connection String, and Database Type fields" />
+  <img src="/images/guides/add-an-integration/03-sql-form.png" alt="The New Integration form for SQL Database with the Name, Connection String, and Database Type fields" />
 </Frame>
 </Step>
 
@@ -63,7 +63,7 @@ A guided OAuth setup such as Notion may create the integration before the approv
 
 ## Use the integration from an agent
 
-Any field that takes an integration lists the stored ones by id, filtered to the types that field accepts. In an action step, this is the step's integration field. In an entry, it is a field such as the Discord entry's **Bot**. Choose the integration, or choose **+ New integration…** to add one without leaving the editor.
+Any field that takes an integration lists the stored ones by name, filtered to the types that field accepts. In an action step, this is the step's integration field. In an entry, it is a field such as the Discord entry's **Bot**. Choose the integration, or choose **+ New integration…** to add one without leaving the editor.
 
 <Frame>
   <img src="/images/guides/add-an-integration/05-use-in-entry.png" alt="An agent's entry panel with a stored integration chosen under Bot" />
@@ -71,13 +71,13 @@ Any field that takes an integration lists the stored ones by id, filtered to the
 
 ## Edit or delete an integration
 
-On the Integrations page, the pencil on a row opens the same form with the **Id** locked, because configs reference it. Change the fields and click **Save Changes**. A password field that holds a literal value opens blank. Leave it blank to keep the stored value, or enter a replacement.
+On the Integrations page, the pencil on a row opens the same form. Change the name or the fields and click **Save Changes**. Renaming the integration changes what it is called in the dashboard, but not the generated id that configs reference. A password field that holds a literal value opens blank. Leave it blank to keep the stored value, or enter a replacement.
 
 <Frame>
-  <img src="/images/guides/add-an-integration/04-edit-dialog.png" alt="The edit dialog for an existing integration with the Id field locked" />
+  <img src="/images/guides/add-an-integration/04-edit-dialog.png" alt="The edit dialog for an existing integration" />
 </Frame>
 
-The trash icon deletes the integration. A step or entry that references the deleted id fails until it is pointed at another integration.
+The trash icon deletes the integration. A step or entry that references the deleted integration id fails until it is pointed at another integration.
 
 ## Verify
 
@@ -87,7 +87,7 @@ The integration appears in the list on the Integrations page with **Ready** stat
 servflowai resource integration list
 ```
 
-The list shows ids and types only. Config is never printed.
+The list shows each integration's generated id, name, and type. Config is never printed.
 
 ## Related
 

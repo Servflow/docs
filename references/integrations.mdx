@@ -6,9 +6,9 @@ icon: "puzzle-piece"
 
 This page lists every integration type. Each type's section says what uses it and lists its fields and its body in a file. `servflowai resource integration describe --all` prints the same catalog. For what an integration is, see [Integrations](/concepts/integrations). To add one in the dashboard, see [Add an integration](/guides/add-an-integration).
 
-In a body, each field of `config` holds either a literal, as `{"value": ...}`, or the name of a stored secret, as `{"secret": "<secret name>"}`. Use a secret for every password field. A secret that a body names has to exist before the integration is created. The commands that take a body are in the [CLI reference](/references/cli#integration).
+In a body, set `name` to what people call the integration. ServFlow generates the integration's `integrationId` when it stores the integration and returns that id in the result. Each field of `config` holds either a literal, as `{"value": ...}`, or the name of a stored secret, as `{"secret": "<secret name>"}`. Use a secret for every password field. A secret that a body names has to exist before the integration is created. The commands that take a body are in the [CLI reference](/references/cli#integration).
 
-An integration connected through OAuth, such as Notion, has its own connection per integration id. It is `pending` from creation until the sign-in flow completes, and ServFlow only loads it after it becomes `complete`.
+An integration connected through OAuth, such as `notion_mcp`, has its own connection per integration id. It is `pending` from creation until the sign-in flow completes, and ServFlow only loads it after it becomes `complete`.
 
 | Type | Name in the dashboard | Guided setup | Used by |
 |---|---|---|---|
@@ -40,7 +40,7 @@ Binance cryptocurrency exchange integration for trading operations.
 
 ```json
 {
-  "integrationId": "my-binance",
+  "name": "Binance trading",
   "type": "binance",
   "config": {
     "api_key": { "secret": "binance-api-key" },
@@ -61,7 +61,7 @@ Chromium browser automation integration for web scraping and testing.
 
 ```json
 {
-  "integrationId": "browser",
+  "name": "Browser",
   "type": "chromium",
   "config": {
     "headless": { "value": true },
@@ -81,7 +81,7 @@ A Discord bot for one server. It reads that server, and sends messages anywhere 
 
 ```json
 {
-  "integrationId": "my-discord-bot",
+  "name": "Discord support bot",
   "type": "discord",
   "config": {
     "bot_token": { "secret": "discord-bot-token" },
@@ -101,7 +101,7 @@ A Gitea server and the account the agent acts as on it. Receiving a Gitea webhoo
 
 ```json
 {
-  "integrationId": "my-gitea",
+  "name": "Work Gitea",
   "type": "gitea",
   "config": {
     "base_url": { "value": "https://gitea.example.com" },
@@ -114,6 +114,8 @@ A Gitea server and the account the agent acts as on it. Receiving a Gitea webhoo
 
 A GitHub App's credentials. The GitHub actions mint installation tokens with them, and the App's deliveries are signed with its webhook secret.
 
+In the guided setup, you give the integration a name instead of an id. ServFlow generates the integration id from that name, and uses that generated value as the prefix for the PEM and webhook-secret names it stores.
+
 | Key | Label | Type | Required | Default |
 |---|---|---|---|---|
 | `base_url` | Base URL | string | No | `https://api.github.com` |
@@ -124,7 +126,7 @@ A GitHub App's credentials. The GitHub actions mint installation tokens with the
 
 ```json
 {
-  "integrationId": "my-github-app",
+  "name": "Work GitHub App",
   "type": "github_app",
   "config": {
     "client_id": { "value": "Iv1.0000000000000000" },
@@ -146,7 +148,7 @@ MongoDB database integration for document storage and retrieval.
 
 ```json
 {
-  "integrationId": "app-db",
+  "name": "App DB",
   "type": "mongo",
   "config": {
     "connectionString": { "secret": "mongo-uri" },
@@ -157,9 +159,7 @@ MongoDB database integration for document storage and retrieval.
 
 ### notion_mcp
 
-A Notion workspace connected through Notion's MCP server. It has no fields in the form. In the dashboard, give it an id. The dashboard creates the integration under that id, sends the browser through Notion's OAuth sign-in, stores the token on that integration id, and marks it complete when Notion returns. An MCP server tool can then send that integration's token.
-
-Each `notion_mcp` integration is one Notion workspace connection. To connect another workspace, create another Notion integration with a different id and complete its sign-in.
+A Notion workspace connected through Notion's MCP server. It has no fields in the form. In the dashboard, give it a name. The dashboard creates the integration, sends the browser through Notion's OAuth sign-in, stores the token on that integration id, and marks it complete when Notion returns. Each `notion_mcp` integration is one Notion workspace connection.
 
 ### qdrant
 
@@ -171,7 +171,7 @@ Qdrant vector database for similarity search and vector storage.
 
 ```json
 {
-  "integrationId": "vectors",
+  "name": "Vectors",
   "type": "qdrant",
   "config": {
     "url": { "value": "http://localhost:6333" }
@@ -190,7 +190,7 @@ SQL database integration supporting PostgreSQL and MySQL.
 
 ```json
 {
-  "integrationId": "orders-db",
+  "name": "Orders DB",
   "type": "sql",
   "config": {
     "connectionString": { "secret": "orders-db-url" },
@@ -210,7 +210,7 @@ A Telegram bot: the token BotFather issued, and the secret its webhook is regist
 
 ```json
 {
-  "integrationId": "my-telegram-bot",
+  "name": "Telegram bot",
   "type": "telegram_bot",
   "config": {
     "token": { "secret": "telegram-bot-token" },
