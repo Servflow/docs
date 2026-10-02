@@ -8,7 +8,7 @@ This page lists every integration type. Each type's section says what uses it an
 
 In a body, set `name` to what people call the integration. ServFlow generates the integration's `integrationId` when it stores the integration and returns that id in the result. Each field of `config` holds either a literal, as `{"value": ...}`, or the name of a stored secret, as `{"secret": "<secret name>"}`. Use a secret for every password field. A secret that a body names has to exist before the integration is created. The commands that take a body are in the [CLI reference](/references/cli#integration).
 
-An integration connected through OAuth, such as `notion_mcp`, has its own connection per integration id. It is `pending` from creation until the sign-in flow completes, and ServFlow only loads it after it becomes `complete`.
+An integration connected through OAuth, such as `notion_mcp`, has its own connection per integration. It is `pending` from creation until the sign-in flow completes, and ServFlow only loads it after it becomes `complete`.
 
 | Type | Name in the dashboard | Guided setup | Used by |
 |---|---|---|---|
