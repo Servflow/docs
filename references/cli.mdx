@@ -34,9 +34,9 @@ Reads and writes saved resources and prints the catalogs the server uses.
 |---|---|---|
 | `agent` | `list`, `get`, `create`, `update`, `delete`, `schema` | `config_id` |
 | `integration` | `list`, `get`, `create`, `update`, `delete`, `types`, `describe` | `integrationId` generated from the integration's name at creation |
-| `provider` | `list`, `get`, `create`, `update`, `delete`, `types`, `describe` | `config_id` |
+| `provider` | `list`, `get`, `create`, `update`, `delete`, `types`, `describe` | `providerId` generated from the provider's name at creation |
 | `secret` | `list`, `get`, `create`, `update`, `delete` | `name` |
-| `workspace` | `list`, `get`, `create`, `update`, `delete` | `id` |
+| `workspace` | `list`, `get`, `create`, `update`, `delete` | `uid` |
 
 ### Common flags
 
@@ -85,6 +85,8 @@ OAuth-guided integrations, such as `notion_mcp`, have no config fields in the bo
 
 `config` holds the type's fields as plain values. `api_key` is the key itself, not the name of a secret. The fields of each type are on [Available providers](/references/providers).
 
+Each provider is addressed after creation by its `providerId`, a stable string ServFlow generates from the provider's name. Agent configs also point at providers by this `providerId`, not by a numeric row id.
+
 ```json
 {
   "name": "OpenAI production",
@@ -94,6 +96,8 @@ OAuth-guided integrations, such as `notion_mcp`, have no config fields in the bo
 ```
 
 ### Workspace
+
+Each workspace is addressed after creation by its `uid`, not by a numeric row id. Agent configs also point at workspaces by this `uid`.
 
 ```json
 {
@@ -107,6 +111,8 @@ The server names the workspace's folder and creates it.
 ### Secret
 
 A secret takes flags, not a body.
+
+Secrets are addressed by `name` for get, update, and delete. A secret name may contain letters, digits, `_`, `.`, and `-`, and it cannot be renamed after creation.
 
 ```bash
 servflowai resource secret create --name discord-token --value "<value>" --description "Bot token"
@@ -125,8 +131,8 @@ Installs a template into the running server.
 | `--server <url>` | The server to install into. |
 | `--token <token>` | Bearer token for the server. |
 | `--integration key=integrationId` | The integration that meets one of the template's requirements. Repeatable. |
-| `--provider key=config_id` | The provider that meets one of the template's requirements. Repeatable. |
-| `--workspace key=id` | The workspace that meets one of the template's requirements. Repeatable. |
+| `--provider key=providerId` | The provider that meets one of the template's requirements. Repeatable. |
+| `--workspace key=uid` | The workspace that meets one of the template's requirements. Repeatable. |
 
 ## MCP server tools
 
