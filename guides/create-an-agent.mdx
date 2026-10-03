@@ -189,7 +189,7 @@ servflowai resource agent create -f agent.yaml --dry-run   # check it
 servflowai resource agent create -f agent.yaml            # create it
 ```
 
-The agent from the first section, reduced to one sub-agent, looks like this. Replace `providerID` with an id from `servflowai resource provider list`.
+The agent from the first section, reduced to one sub-agent, looks like this. Replace `providerID` with a `providerId` from `servflowai resource provider list`.
 
 ```yaml
 name: Question answerer
@@ -202,7 +202,7 @@ config:
   agents:
     answer:
       name: Answerer
-      providerID: 2
+      providerID: openai-production-a1b2c3d4
       systemPrompt: Answer the question you are given. Be brief and accurate.
       userPrompt: '{{ body "question" }}'
       next: end
