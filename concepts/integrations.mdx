@@ -38,14 +38,6 @@ When an agent replies through a Discord integration, it replies as that bot, wit
 
 Two agents can use the same Discord bot. Each decides for itself whether a message is for it, using its own entry settings. If both would answer the same message, both do.
 
-## Integrations are limited to their group
-
-An agent can use only the integrations in its own group. An ungrouped agent can use only ungrouped integrations.
-
-This applies everywhere an integration is resolved: an entry before a run starts, a context step, an action, a browser action, an MCP server tool that takes its token from an integration, and dashboard checks such as the GitHub App identity test.
-
-If an agent or request asks for an integration from another group, ServFlow treats it as not found.
-
 ## Integrations and secrets
 
 Each sensitive field of an integration, such as a bot token, can point at a stored secret instead of holding the value. See [Secrets](/concepts/secrets), including what to do after you replace a secret that an integration uses.

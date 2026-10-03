@@ -33,7 +33,7 @@ Reads and writes saved resources and prints the catalogs the server uses.
 | Noun | Verbs | Addressed by |
 |---|---|---|
 | `agent` | `list`, `get`, `create`, `update`, `delete`, `schema` | `config_id` |
-| `integration` | `list`, `get`, `create`, `update`, `delete`, `types`, `describe` | `integrationId` |
+| `integration` | `list`, `get`, `create`, `update`, `delete`, `types`, `describe` | `integrationId` generated from the integration's name at creation |
 | `provider` | `list`, `get`, `create`, `update`, `delete`, `types`, `describe` | `config_id` |
 | `secret` | `list`, `get`, `create`, `update`, `delete` | `name` |
 | `workspace` | `list`, `get`, `create`, `update`, `delete` | `id` |
@@ -67,7 +67,7 @@ servflowai resource agent create -f agent.yaml --dry-run
 
 Each field of `config` is an object holding a literal, as `value`, or the name of a stored secret, as `secret`. The fields of each type are on [Available integrations](/references/integrations).
 
-Each integration body takes a user-facing `name`. ServFlow generates the integration's internal `integrationId` when it is created and returns it in the result.
+Each integration body takes a user-facing `name`. ServFlow generates the integration's internal `integrationId` from that name when it is created and returns it in the result. Updates keep the same `integrationId` even if you rename the integration later.
 
 OAuth-guided integrations, such as `notion_mcp`, have no config fields in the body. Creating one this way leaves it pending until you complete its sign-in in the dashboard.
 
