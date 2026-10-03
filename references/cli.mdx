@@ -34,9 +34,9 @@ Reads and writes saved resources and prints the catalogs the server uses.
 |---|---|---|
 | `agent` | `list`, `get`, `create`, `update`, `delete`, `schema` | `config_id` |
 | `integration` | `list`, `get`, `create`, `update`, `delete`, `types`, `describe` | `integrationId` generated from the integration's name at creation |
-| `provider` | `list`, `get`, `create`, `update`, `delete`, `types`, `describe` | `config_id` |
+| `provider` | `list`, `get`, `create`, `update`, `delete`, `types`, `describe` | `providerId` |
 | `secret` | `list`, `get`, `create`, `update`, `delete` | `name` |
-| `workspace` | `list`, `get`, `create`, `update`, `delete` | `id` |
+| `workspace` | `list`, `get`, `create`, `update`, `delete` | `uid` |
 
 ### Common flags
 
@@ -125,8 +125,8 @@ Installs a template into the running server.
 | `--server <url>` | The server to install into. |
 | `--token <token>` | Bearer token for the server. |
 | `--integration key=integrationId` | The integration that meets one of the template's requirements. Repeatable. |
-| `--provider key=config_id` | The provider that meets one of the template's requirements. Repeatable. |
-| `--workspace key=id` | The workspace that meets one of the template's requirements. Repeatable. |
+| `--provider key=providerId` | The provider that meets one of the template's requirements. Repeatable. |
+| `--workspace key=uid` | The workspace that meets one of the template's requirements. Repeatable. |
 
 ## MCP server tools
 
