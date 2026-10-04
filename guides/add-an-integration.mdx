@@ -54,9 +54,9 @@ To paste the value into the integration instead, choose **Enter a value directly
 </Step>
 
 <Step title="Add it">
-Click **Add Integration**. The dialog closes, and the integration appears in the list with its type and a **Ready** status. It is usable at once.
+Click **Add Integration**. The dialog closes, and the integration appears in the list with its type. A new integration starts disabled, so enable it before an agent can use it.
 
-A guided OAuth setup such as Notion may create the integration before the approval finishes. Until it is approved, the row shows **Not connected**. Use the row's **Connect integration** action to start the approval again.
+A guided OAuth setup such as Notion may create the integration before the approval finishes. Until it is approved, the row shows **Not connected**. Use the row's **Connect integration** action to start the approval again. When the approval finishes, enable the integration to start serving it.
 </Step>
 
 </Steps>
@@ -71,7 +71,7 @@ Any field that takes an integration lists the stored ones by name, filtered to t
 
 ## Edit or delete an integration
 
-On the Integrations page, the pencil on a row opens the same form. Change the **Name** or the fields and click **Save Changes**. A password field that holds a literal value opens blank. Leave it blank to keep the stored value, or enter a replacement.
+On the Integrations page, the pencil on a row opens the same form. Change the **Name** or the fields and click **Save Changes**. A password field that holds a literal value opens blank. Leave it blank to keep the stored value, or enter a replacement. Saving does not replace what an enabled integration is serving yet; enable the integration again to make the saved change live.
 
 <Frame>
   <img src="/images/guides/add-an-integration/04-edit-dialog.png" alt="The edit dialog for an existing integration" />
@@ -81,7 +81,7 @@ The trash icon deletes the integration. A step or entry that references the dele
 
 ## Verify
 
-The integration appears in the list on the Integrations page with **Ready** status. From the terminal, it also appears in:
+The integration appears in the list on the Integrations page. Once you enable it, its status is **Ready**. From the terminal, it also appears in:
 
 ```bash
 servflowai resource integration list

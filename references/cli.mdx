@@ -32,8 +32,8 @@ Reads and writes saved resources and prints the catalogs the server uses.
 
 | Noun | Verbs | Addressed by |
 |---|---|---|
-| `agent` | `list`, `get`, `create`, `update`, `delete`, `schema` | `config_id` |
-| `integration` | `list`, `get`, `create`, `update`, `delete`, `types`, `describe` | `integrationId` generated from the integration's name at creation |
+| `agent` | `list`, `get`, `create`, `update`, `delete`, `enable`, `disable`, `schema` | `config_id` |
+| `integration` | `list`, `get`, `create`, `update`, `delete`, `enable`, `disable`, `types`, `describe` | `integrationId` generated from the integration's name at creation |
 | `provider` | `list`, `get`, `create`, `update`, `delete`, `types`, `describe` | `providerId` |
 | `secret` | `list`, `get`, `create`, `update`, `delete` | `name` |
 | `workspace` | `list`, `get`, `create`, `update`, `delete` | `uid` |
@@ -56,7 +56,7 @@ Reads and writes saved resources and prints the catalogs the server uses.
 | `name` | string | Yes | The agent's name. |
 | `config_id` | string | No | The id the agent is stored and addressed under. Derived from the name when missing. |
 | `description` | string | No | A description shown in lists. |
-| `enabled` | boolean | No | Whether the agent is served. `true` when the key is missing. |
+| `enabled` | boolean | No | Whether the agent is served. Ignored on create and update: save stores the config, and `enable` or `disable` changes what is served. |
 | `config` | object | Yes | The agent itself: `entries`, `agents`, and `contextGroups`. |
 
 ```bash
@@ -69,7 +69,7 @@ Each field of `config` is an object holding a literal, as `value`, or the name o
 
 Each integration body takes a user-facing `name`. ServFlow generates the integration's internal `integrationId` from that name when it is created and returns it in the result. Updates keep the same `integrationId` even if you rename the integration later.
 
-OAuth-guided integrations, such as `notion_mcp`, have no config fields in the body. Creating one this way leaves it pending until you complete its sign-in in the dashboard.
+OAuth-guided integrations, such as `notion_mcp`, have no config fields in the body. Creating one this way leaves it pending until you complete its sign-in in the dashboard. A created integration is stored disabled; `servflowai resource integration enable <integrationId>` is what serves it.
 
 ```json
 {
@@ -134,8 +134,8 @@ The management MCP server exposes these tools:
 
 | Group | Tools |
 |---|---|
-| Agents | `list_agents`, `get_agent`, `create_agent`, `update_agent`, `delete_agent`, `agent_schema` |
-| Integrations | `list_integrations`, `get_integration`, `create_integration`, `update_integration`, `delete_integration`, `list_integration_types`, `describe_integration_type` |
+| Agents | `list_agents`, `get_agent`, `create_agent`, `update_agent`, `delete_agent`, `set_config_enabled`, `agent_schema` |
+| Integrations | `list_integrations`, `get_integration`, `create_integration`, `update_integration`, `delete_integration`, `set_integration_enabled`, `list_integration_types`, `describe_integration_type` |
 | Providers | `list_providers`, `get_provider`, `create_provider`, `update_provider`, `delete_provider`, `list_provider_types`, `describe_provider_type` |
 | Secrets | `list_secrets`, `get_secret`, `create_secret`, `update_secret`, `delete_secret` |
 | Workspaces | `list_workspaces`, `get_workspace`, `create_workspace`, `update_workspace`, `delete_workspace` |

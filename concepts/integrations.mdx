@@ -14,7 +14,7 @@ An integration is your connection to one outside service: a Discord bot, a GitHu
 
 The details are sensitive, so they are entered once and not copied into every agent. And several agents can use the same integration, so replacing a token is one change, not one change per agent.
 
-When you change an integration, a running server applies the change at once. The next agent run, webhook delivery, or live connection uses what is now stored, without a separate restart or reload step.
+An integration is also either enabled or disabled. Saving a new integration stores it disabled. Enabling it is what makes ServFlow start serving it, and enabling it again is how you make a saved change live.
 
 ## Three places an integration is used
 
@@ -52,7 +52,13 @@ The **New Integration** dialog shows every kind of integration your instance sup
 
 **Integrations**, in the sidebar under **Configure**, lists your integrations with their status. Click **New Integration**, choose a kind, and give it a **Name**. ServFlow also gives it an internal id, which configs keep using even if you rename it later.
 
-**Ready** means the integration can be used. **Not connected** means a guided OAuth setup created the integration, but the provider approval did not finish; use the row's **Connect integration** action to complete it.
+**Ready** means the integration is enabled and can be used. **Not connected** means a guided OAuth setup created the integration, but the provider approval did not finish; use the row's **Connect integration** action to complete it. After the approval finishes, enable the integration to start serving it.
+
+## When a change takes effect
+
+Editing an integration only updates what is stored. An enabled integration keeps serving its previous built instance until you enable it again or restart the server.
+
+Agents are not restarted when an integration changes. If an agent holds a live connection opened through that integration, such as a Discord gateway connection, it keeps using the old connection until you enable the agent again.
 
 ## Related
 
