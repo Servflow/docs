@@ -1,0 +1,39 @@
+---
+title: Control-plane tracing
+sidebarTitle: Control-plane tracing
+description: How servflow-server exports the control plane engine's traces and how to enable it in self-hosted deployments.
+---
+
+The control plane's own engine can export traces through the same Tyk OTLP gateway that tenant instances use.
+Unlike tenant instances, the control plane serves many teams, so each span is stamped with the team from the request context and export uses a shared admin key instead of a per-team auth token.
+
+## What it exports
+
+When enabled, `servflow-server` exports spans from the control plane engine with:
+
+- `service.name = "servflow"`
+- `team.id` on each span when the request context carries a team
+
+The engine does not start a heartbeat for this export path.
+
+## Enable it
+
+Set `TRACING_ADMIN_KEY` on `servflow-server` and set the same value as `SERVFLOW_TRACING_ADMIN_KEY` on the Tyk gateway that fronts the OTLP ingest endpoint.
+If either value is unset, the control plane engine stays untraced.
+
+## Environment variables
+
+| Variable | Set on | Required | Description |
+|---|---|---|---|
+| `TRACING_ADMIN_KEY` | `servflow-server` | No | Shared key the control plane engine sends as the OTLP `Authorization` header |
+| `SERVFLOW_TRACING_ADMIN_KEY` | Tyk gateway | No | Shared key Tyk admits without the per-team trace authorize call |
+| `TEMPO_URL` | `servflow-server` | No | Tempo query URL for reading traces back; unchanged by control-plane export |
+
+## Compose deployments
+
+In the provided Compose deployments, the same host-level `TRACING_ADMIN_KEY` value is wired into both services:
+
+- `servflow-server` receives `TRACING_ADMIN_KEY`
+- the Tyk gateway receives `SERVFLOW_TRACING_ADMIN_KEY=${TRACING_ADMIN_KEY:-}`
+
+Leaving `TRACING_ADMIN_KEY` unset disables control-plane engine tracing without affecting tenant trace authorization.
