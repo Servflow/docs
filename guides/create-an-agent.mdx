@@ -170,7 +170,7 @@ The **Run** panel shows **Completed**, a log of each sub-agent's turn, and a **F
 
 </Steps>
 
-Then call it from outside. The response body is the agent's reply:
+Then call it from outside. In a local servflowai instance the webhook is served at the entry path itself, so the response body is the agent's reply:
 
 ```bash
 curl -X POST http://localhost:8080/ask \
@@ -178,7 +178,15 @@ curl -X POST http://localhost:8080/ask \
   -d '{"question": "What is a webhook?"}'
 ```
 
-The `body` function only reads requests sent with `Content-Type: application/json`.
+In the hosted control plane, active paid teams and teams in an active trial serve agent webhooks under `/agents/{team-slug}`, so the same agent would be:
+
+```bash
+curl -X POST http://localhost:8080/agents/acme/ask \
+  -H 'Content-Type: application/json' \
+  -d '{"question": "What is a webhook?"}'
+```
+
+A team whose plan no longer allows serving returns `404` from that hosted route. The `body` function only reads requests sent with `Content-Type: application/json`.
 
 ## Create an agent from the CLI or MCP
 
