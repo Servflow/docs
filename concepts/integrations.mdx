@@ -60,6 +60,8 @@ Editing an integration only updates what is stored. An enabled integration keeps
 
 Agents are not restarted when an integration changes. If an agent holds a live connection opened through that integration, such as a Discord gateway connection, it keeps using the old connection until you enable the agent again.
 
+When ServFlow reloads enabled integrations at startup or on a reload, an integration that no longer builds is disabled automatically instead of staying marked enabled while serving nothing.
+
 ## Related
 
 <CardGroup cols={2}>
