@@ -29,7 +29,7 @@ Open the workspace. You are signed in and ready to build.
 
 </Steps>
 
-In the hosted control plane, the dashboard API is served from ServFlow's shared server host and each entitled team's agent webhooks are served under `/agents/{team-slug}` on that same host.
+In the hosted control plane, the dashboard API is served from ServFlow's shared server host and each entitled team's agent webhooks are served under `/agents/{team-slug}` on that same host. Teams whose trial or subscription has lapsed keep their saved agents and settings, but the hosted agent route returns `404` and the dashboard API refuses requests until the team becomes entitled again.
 
 Next, follow [Create an agent](/guides/create-an-agent).
 
