@@ -29,7 +29,7 @@ servflowai start --config config.toml
 
 ## `[server]`
 
-Controls how the process is hosted. **One port serves everything.** The workflow engine owns the root path, so a workflow listening on `/hello` answers at `http://localhost:8080/hello`. When you pass `--dashboard`, the builder UI is mounted under `/dashboard` on this same port — there is no second port.
+Controls how the process is hosted. **One port serves everything.** The workflow engine owns the root path, so a workflow listening on `/hello` answers at `http://localhost:8080/hello`. The builder UI is mounted under `/dashboard` on this same port, so its pages and assets live there rather than at the origin root.
 
 ```toml
 [server]
