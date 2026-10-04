@@ -64,6 +64,8 @@ Click **Create Agent**. The editor opens on a canvas with four nodes from top to
 
 </Steps>
 
+A new agent is stored disabled. It can be edited and tested in the dashboard, but it does not answer its entry until you enable it.
+
 ### Set the entry
 
 The entry decides how a run starts. A new agent starts as a trigger that runs by hand or on a schedule. To make it answer HTTP requests:
@@ -79,7 +81,7 @@ Under **Entry type**, choose **Webhook — a plain HTTP request starts the agent
 </Step>
 
 <Step title="Enter a path">
-Enter `/ask`. The entry node on the canvas relabels to `/ask`. The agent answers `POST` requests on that path.
+Enter `/ask`. The entry node on the canvas relabels to `/ask`. The agent answers `POST` requests on that path once it is enabled.
 
 <Frame>
   <img src="/images/guides/create-an-agent/07-entry-webhook.png" alt="The Entry panel set to Webhook with the path /ask" />
@@ -133,26 +135,50 @@ Leave its **User prompt** empty. In a pipeline, a stage receives the previous st
 </Step>
 
 <Step title="Save">
-Click **Save** in the top bar. The button reads **Saved**, and the running server picks up the agent without a restart.
+Click **Save** in the top bar. The button reads **Saved**, and the running server picks up the stored change without a restart. If the agent is already enabled, save it again after later edits to make the new version live.
 </Step>
 
 </Steps>
 
-### Verify
+### Enable the agent
+
+When the agent looks right, turn it on from the editor or the CLI.
+
+<Steps>
+
+<Step title="Enable it in the dashboard">
+In the editor's top bar, click **Enable**. The running server starts serving the saved version of the agent.
+</Step>
+
+<Step title="Or enable it from the CLI">
+From a terminal, run:
+
+```bash
+servflowai resource agent enable question-answerer
+```
+
+Use the agent's config id if it differs from the name you typed.
+</Step>
+
+</Steps>
+
+### Test it
 
 Test the agent from the editor first:
 
 <Steps>
 
-<Step title="Click Run">
-Click **Run** in the top bar. The run dialog asks for a **Request body**.
+<Step title="Open Run">
+Click **Run** in the top right.
 </Step>
 
-<Step title="Enter a request body and run">
-Enter the body and click **Run**:
+<Step title="Enter a request body">
+For a webhook entry, the dialog asks for the JSON body. Enter:
 
 ```json
-{ "question": "What is a webhook?" }
+{
+  "question": "What is the capital of Portugal?"
+}
 ```
 
 <Frame>
@@ -160,8 +186,8 @@ Enter the body and click **Run**:
 </Frame>
 </Step>
 
-<Step title="Read the result">
-The **Run** panel shows **Completed**, a log of each sub-agent's turn, and a **Final response** block with the reply, the duration, and the conversation thread id. **New payload** runs it again with a different body.
+<Step title="Run it">
+Click **Run**. The **Run** panel shows **Completed**, a log of each sub-agent's turn, and a **Final response** block with the reply, the duration, and the conversation thread id. **New payload** runs it again with a different body.
 
 <Frame>
   <img src="/images/guides/create-an-agent/13-run-result.png" alt="The Run panel showing a completed run and the final response" />
@@ -175,7 +201,7 @@ Then call it from outside. In a local servflowai instance the webhook is served 
 ```bash
 curl -X POST http://localhost:8080/ask \
   -H 'Content-Type: application/json' \
-  -d '{"question": "What is a webhook?"}'
+  -d '{"question":"What is the capital of Portugal?"}'
 ```
 
 In the hosted control plane, active paid teams and teams in an active trial serve agent webhooks under `/agents/{team-slug}`, so the same agent would be:
@@ -183,10 +209,8 @@ In the hosted control plane, active paid teams and teams in an active trial serv
 ```bash
 curl -X POST http://localhost:8080/agents/acme/ask \
   -H 'Content-Type: application/json' \
-  -d '{"question": "What is a webhook?"}'
+  -d '{"question":"What is the capital of Portugal?"}'
 ```
-
-A team whose plan no longer allows serving returns `404` from that hosted route. The `body` function only reads requests sent with `Content-Type: application/json`.
 
 ## Create an agent from the CLI or MCP
 
@@ -195,25 +219,25 @@ If you keep agents in files, describe the agent in a JSON or YAML document and c
 ```bash
 servflowai resource agent create -f agent.yaml --dry-run   # check it
 servflowai resource agent create -f agent.yaml            # create it
+servflowai resource agent enable question-answerer        # start serving it
 ```
 
 The agent from the first section, reduced to one sub-agent, looks like this. Replace `providerID` with a provider id from `servflowai resource provider list`.
 
 ```yaml
 name: Question answerer
-config:
-  entries:
-    - type: handler
-      handlerConfig:
-        path: /ask
-      start: agent.answer
+entry:
+  type: webhook
+  webhook:
+    path: /ask
+nodes:
+  start: agent.answer
   agents:
     answer:
-      name: Answerer
-      providerID: openai-production
+      name: Answer
+      provider: providerID
       systemPrompt: Answer the question you are given. Be brief and accurate.
       userPrompt: '{{ body "question" }}'
-      next: end
 ```
 
 For every command, the shape of an agent, and the MCP management server, see the [CLI reference](/references/cli).
@@ -222,20 +246,20 @@ For every command, the shape of an agent, and the MCP management server, see the
 
 <CardGroup cols={2}>
 
-<Card title="Available entry handlers" icon="right-to-bracket" href="/references/entry-handlers">
-  Every entry type, its fields, and the variables it injects.
-</Card>
-
 <Card title="Agents" icon="robot" href="/concepts/agents">
   What an agent is made of: entry, sub-agents, and context groups.
 </Card>
 
-<Card title="Dynamic content" icon="code" href="/concepts/dynamic-content">
-  Template functions such as `body`, `param`, and `secret`.
+<Card title="Entry handlers" icon="right-to-bracket" href="/references/entry-handlers">
+  Every way an agent can start.
 </Card>
 
-<Card title="Install ServFlow" icon="download" href="/installation">
-  Get a running instance if you do not have one yet.
+<Card title="Manage LLM providers" icon="bolt" href="/guides/manage-llm-providers">
+  Add the provider each sub-agent needs.
+</Card>
+
+<Card title="Add a tool to an agent" icon="wrench" href="/guides/add-a-tool">
+  Let the agent look things up or act.
 </Card>
 
 </CardGroup>

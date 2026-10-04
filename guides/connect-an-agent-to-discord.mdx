@@ -60,7 +60,7 @@ If the bot is in no server yet, the dialog says so. Go back to the invitation st
 </Step>
 
 <Step title="Add the integration">
-Click **Add integration**. The integration appears in the list on the Integrations page, with the type **Discord**.
+Click **Add integration**. The integration appears in the list on the Integrations page, with the type **Discord**. A new integration is stored disabled, so enable it before the bot can connect.
 </Step>
 
 </Steps>
@@ -128,7 +128,7 @@ Click **Run**. For a Discord entry, the dialog asks for what a message would pro
 </Step>
 
 <Step title="Save">
-Click **Save**. The running server picks up the change without a restart. The agent must be enabled to connect. If it is not, run `servflowai resource agent enable <config_id>`.
+Click **Save**. The running server picks up the stored change without a restart. The agent must be enabled to connect, and later edits do not replace what is being served until you enable it again. If it is not enabled yet, run `servflowai resource agent enable <config_id>`. 
 </Step>
 
 <Step title="Mention the bot in Discord">
