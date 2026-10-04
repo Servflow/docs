@@ -178,7 +178,7 @@ curl -X POST http://localhost:8080/ask \
   -d '{"question": "What is a webhook?"}'
 ```
 
-In the hosted control plane, active paid teams and teams in an active trial serve agent webhooks under `/agents/{team-slug}`, so the same agent would be:
+In the hosted cloud, teams with an active paid plan or active trial serve agent webhooks under `/agents/{team-slug}`, so the same agent would be:
 
 ```bash
 curl -X POST http://localhost:8080/agents/acme/ask \

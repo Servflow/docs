@@ -19,15 +19,17 @@ This guide gets you a running ServFlow instance with a signed-in dashboard. Pick
 Go to [app.servflow.io](https://app.servflow.io) and sign up.
 </Step>
 
-<Step title="Create a deployment">
-Choose a slug for your deployment. The slug names your instance, so pick something you are happy to keep. ServFlow provisions the instance in the background, which takes a few moments.
+<Step title="Create a workspace">
+Choose a slug for your workspace. The slug names your hosted agent routes. The dashboard is available right away.
 </Step>
 
 <Step title="Open the dashboard">
-When the deployment shows as running, open it. You are signed in and ready to build.
+Open the workspace. You are signed in and ready to build.
 </Step>
 
 </Steps>
+
+In the hosted control plane, the dashboard API is served from ServFlow's shared server host and each entitled team's agent webhooks are served under `/agents/{team-slug}` on that same host.
 
 Next, follow [Create an agent](/guides/create-an-agent).
 
