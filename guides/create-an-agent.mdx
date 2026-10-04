@@ -64,8 +64,6 @@ Click **Create Agent**. The editor opens on a canvas with four nodes from top to
 
 </Steps>
 
-A new agent is stored disabled. It can be edited and tested in the dashboard, but it does not answer its entry until you enable it.
-
 ### Set the entry
 
 The entry decides how a run starts. A new agent starts as a trigger that runs by hand or on a schedule. To make it answer HTTP requests:
@@ -135,29 +133,7 @@ Leave its **User prompt** empty. In a pipeline, a stage receives the previous st
 </Step>
 
 <Step title="Save">
-Click **Save** in the top bar. The button reads **Saved**, and the running server picks up the stored change without a restart. If the agent is already enabled, save it again after later edits to make the new version live.
-</Step>
-
-</Steps>
-
-### Enable the agent
-
-When the agent looks right, turn it on from the editor or the CLI.
-
-<Steps>
-
-<Step title="Enable it in the dashboard">
-In the editor's top bar, click **Enable**. The running server starts serving the saved version of the agent.
-</Step>
-
-<Step title="Or enable it from the CLI">
-From a terminal, run:
-
-```bash
-servflowai resource agent enable question-answerer
-```
-
-Use the agent's config id if it differs from the name you typed.
+Click **Save** in the top bar. The button reads **Saved**, and the running server picks up the stored change without a restart.
 </Step>
 
 </Steps>
@@ -219,47 +195,25 @@ If you keep agents in files, describe the agent in a JSON or YAML document and c
 ```bash
 servflowai resource agent create -f agent.yaml --dry-run   # check it
 servflowai resource agent create -f agent.yaml            # create it
-servflowai resource agent enable question-answerer        # start serving it
 ```
 
 The agent from the first section, reduced to one sub-agent, looks like this. Replace `providerID` with a provider id from `servflowai resource provider list`.
 
 ```yaml
 name: Question answerer
-entry:
-  type: webhook
-  webhook:
-    path: /ask
-nodes:
-  start: agent.answer
+config:
+  entries:
+    - type: handler
+      handlerConfig:
+        path: /ask
+      start: agent.answer
   agents:
     answer:
-      name: Answer
-      provider: providerID
+      name: Answerer
+      providerID: openai-production
       systemPrompt: Answer the question you are given. Be brief and accurate.
       userPrompt: '{{ body "question" }}'
+      next: end
 ```
 
 For every command, the shape of an agent, and the MCP management server, see the [CLI reference](/references/cli).
-
-## Related
-
-<CardGroup cols={2}>
-
-<Card title="Agents" icon="robot" href="/concepts/agents">
-  What an agent is made of: entry, sub-agents, and context groups.
-</Card>
-
-<Card title="Entry handlers" icon="right-to-bracket" href="/references/entry-handlers">
-  Every way an agent can start.
-</Card>
-
-<Card title="Manage LLM providers" icon="bolt" href="/guides/manage-llm-providers">
-  Add the provider each sub-agent needs.
-</Card>
-
-<Card title="Add a tool to an agent" icon="wrench" href="/guides/add-a-tool">
-  Let the agent look things up or act.
-</Card>
-
-</CardGroup>
