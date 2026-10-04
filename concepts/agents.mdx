@@ -44,6 +44,8 @@ An agent is either enabled or disabled. A disabled agent stays stored, but nothi
 
 Creating an agent in the dashboard stores it disabled. Enabling it is what makes ServFlow serve that saved version, and enabling an already enabled agent again is how you apply later saved changes.
 
+When ServFlow reloads enabled agents at startup or on a reload, an agent that no longer builds is disabled automatically instead of staying marked enabled while serving nothing.
+
 ## Related
 
 <CardGroup cols={2}>
