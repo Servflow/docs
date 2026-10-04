@@ -14,6 +14,8 @@ An integration is your connection to one outside service: a Discord bot, a GitHu
 
 The details are sensitive, so they are entered once and not copied into every agent. And several agents can use the same integration, so replacing a token is one change, not one change per agent.
 
+When you change an integration, a running server applies the change at once. The next agent run, webhook delivery, or live connection uses what is now stored, without a separate restart or reload step.
+
 ## Three places an integration is used
 
 | Where | What it does there | Example |

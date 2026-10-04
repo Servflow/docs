@@ -182,7 +182,7 @@ The `body` function only reads requests sent with `Content-Type: application/jso
 
 ## Create an agent from the CLI or MCP
 
-If you keep agents in files, describe the agent in a JSON or YAML document and create it with the `resource` command. It writes to the same store the dashboard uses, and a running server picks the change up without a restart.
+If you keep agents in files, describe the agent in a JSON or YAML document and create it with the `resource` command. It writes to the same store the dashboard uses, and a running server starts serving the change without a restart.
 
 ```bash
 servflowai resource agent create -f agent.yaml --dry-run   # check it
