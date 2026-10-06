@@ -47,9 +47,25 @@ Answers `POST` requests on its path. Nothing about the request is checked in adv
 |---|---|
 | `200`, with the agent's final reply as `text/plain` | The agent said something. |
 | `204`, with no body | The run finished and the agent said nothing. |
+| `429` | The request continued a conversation that has already started as many runs in the last hour as the agent's `settings.conversationRunsPerHour` allows. |
 | `500` | The run failed. |
 
-Every response carries an `X-Conversation-Id` header naming the conversation the run used. A request that sends the same header continues that conversation. A request without it starts a new one.
+Every response carries an `X-Conversation-Id` header naming the conversation the run used. A request that sends the same header continues that conversation. A request without it starts a new one. When a request is refused with `429`, that same header still names the conversation it would have continued.
+
+Set the limit on the agent itself:
+
+```yaml
+name: support-bot
+settings:
+  conversationRunsPerHour: 60
+entries:
+  - type: handler
+    handlerConfig:
+      path: /ask
+    start: agent.answer
+```
+
+A value of `0` means no limit, which is the default. The limit applies only to runs that continue a conversation, so a test run or any run with no conversation id is not counted.
 
 ```yaml
 entries:
