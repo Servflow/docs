@@ -178,10 +178,10 @@ curl -X POST http://localhost:8080/ask \
   -d '{"question": "What is a webhook?"}'
 ```
 
-In the hosted cloud, teams with an active paid plan or active trial serve agent webhooks under `/agents/{team-slug}`, so the same agent would be:
+In the hosted cloud, teams with an active paid plan or active trial serve agent webhooks on their own subdomain, so the same agent would be:
 
 ```bash
-curl -X POST http://localhost:8080/agents/acme/ask \
+curl -X POST https://acme.agents.servflow.io/ask \
   -H 'Content-Type: application/json' \
   -d '{"question": "What is a webhook?"}'
 ```
