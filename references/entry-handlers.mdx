@@ -8,7 +8,7 @@ This page lists every entry an agent can have. Each entry's section holds its se
 
 | Entry type in the dashboard | `type` | `handlerConfig.type` | Path | Replies to |
 |---|---|---|---|---|
-| [Trigger — run manually or on a schedule](#trigger) | `trigger` | none | No | Nobody. The reply is logged. |
+| [Trigger — run manually or on a schedule](#trigger) | `trigger` | none | No | Nobody. The reply is logged. The host can still refuse a scheduled run or a task another agent hands over. |
 | [Webhook — a plain HTTP request starts the agent](#webhook) | `handler` | empty | Yes | Whoever sent the request. |
 | [GitHub webhook](#github_webhook) | `handler` | `github_webhook` | Yes | The pull request or issue, when `respond_to` allows. |
 | [Gitea webhook](#gitea_webhook) | `handler` | `gitea_webhook` | Yes | The pull request or issue, when `respond_to` allows. |
@@ -21,11 +21,13 @@ The keys every entry shares, `type` and `start`, and the rules for an agent with
 
 ### Trigger
 
-Starts the agent on a schedule, by hand from the editor, or when another agent hands it a task.
+Starts the agent on a schedule, by hand from the editor, or when another agent hands it a task. A host can still refuse a scheduled run or a task at the moment it would start, for example to enforce a team run limit.
 
 | Key | Dashboard label | Type | Required | Default | Description |
 |---|---|---|---|---|---|
 | `trigger.cron` | Run on a schedule | string | No | empty | A cron expression with six fields, seconds first, such as `0 0 9 * * 1-5` for 09:00 on weekdays. A descriptor such as `@hourly` or `@every 5m` also works. Empty means the agent runs only when it is started. |
+
+A run the host refuses at start time is skipped. For a scheduled run, the next tick asks again. For a task another agent hands over, the refusal goes back to the calling tool.
 
 ```yaml
 entries:
