@@ -85,21 +85,9 @@ An agent remembers the earlier messages of the conversation a run belongs to. Th
 
 This is why a Telegram bot remembers what you said a minute ago with nothing set up, and why a pull request reviewer reads each comment fresh.
 
-### Limiting runs in one conversation
+The dashboard now offers a **Limits** section on entry types that can continue a conversation: the plain webhook, Telegram bot, and Discord bot. **Runs per conversation** sets how many runs one conversation can start in any hour. A webhook counts by the `X-Conversation-Id` the caller sends. Telegram counts by chat, and Discord by channel or thread.
 
-Entries that continue an existing conversation can limit how many runs that conversation starts in one hour. In the **Entry** panel, open **Limits** and set **Runs per conversation**.
-
-This setting is offered on:
-
-- **Webhook**, where the limit is counted per `X-Conversation-Id` the caller sends
-- **Telegram bot**, where the limit is counted per chat
-- **Discord bot**, where the limit is counted per channel
-
-Leave the field empty for no limit.
-
-When a plain webhook request goes past the limit, the request is refused with `429`. A webhook request that sends no conversation id starts a new conversation, so it is not limited by earlier runs. For Telegram and Discord, a message past the limit starts no run and receives no reply.
-
-GitHub and Gitea webhooks do not offer this setting because each delivery starts its own conversation, and triggers do not use conversations.
+GitHub, Gitea, and trigger entries do not offer this setting, because each run already starts in a fresh conversation.
 
 For something an agent should remember beyond one conversation, give it a workspace. See [Workspaces and files](/concepts/workspaces-and-files).
 
@@ -109,7 +97,7 @@ Telegram and Discord receive the reply as a message, in the chat or channel that
 
 GitHub does not wait for an agent. The handler answers GitHub straight away with the status code `202`, which means "received, working on it". When the agent finishes, the handler posts the reply as a comment.
 
-A webhook caller waits for the agent and receives the reply as the response, with the status code `200`. If the agent said nothing, the status code is `204`, which means "done, nothing to return".
+A webhook caller waits for the agent and receives the reply as the response, with the status code `200`. If the agent said nothing, the status code is `204`, which means "done, nothing to return". If the caller tried to continue a conversation that has already started as many runs in the last hour as the limit allows, the handler answers `429` instead.
 
 A trigger has nobody to reply to. For a triggered agent to have an effect, give it [tools](/guides/add-a-tool).
 
