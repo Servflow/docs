@@ -186,7 +186,7 @@ curl -X POST http://localhost:8080/agents/acme/ask \
   -d '{"question": "What is a webhook?"}'
 ```
 
-A team whose plan no longer allows serving returns `404` from that hosted route. The `body` function only reads requests sent with `Content-Type: application/json`.
+A team whose plan no longer allows serving returns `404` from that hosted route. Hosted plans also limit how many agent runs a team may start in each one-minute window. Every webhook request, scheduled run, task run, and listener-triggered run counts, and a webhook request refused at the limit returns `429 Too Many Requests` with a `Retry-After` header. The `body` function only reads requests sent with `Content-Type: application/json`.
 
 ## Create an agent from the CLI or MCP
 
