@@ -85,6 +85,22 @@ An agent remembers the earlier messages of the conversation a run belongs to. Th
 
 This is why a Telegram bot remembers what you said a minute ago with nothing set up, and why a pull request reviewer reads each comment fresh.
 
+### Limiting runs in one conversation
+
+Entries that continue an existing conversation can limit how many runs that conversation starts in one hour. In the **Entry** panel, open **Limits** and set **Runs per conversation**.
+
+This setting is offered on:
+
+- **Webhook**, where the limit is counted per `X-Conversation-Id` the caller sends
+- **Telegram bot**, where the limit is counted per chat
+- **Discord bot**, where the limit is counted per channel
+
+Leave the field empty for no limit.
+
+When a plain webhook request goes past the limit, the request is refused with `429`. A webhook request that sends no conversation id starts a new conversation, so it is not limited by earlier runs. For Telegram and Discord, a message past the limit starts no run and receives no reply.
+
+GitHub and Gitea webhooks do not offer this setting because each delivery starts its own conversation, and triggers do not use conversations.
+
 For something an agent should remember beyond one conversation, give it a workspace. See [Workspaces and files](/concepts/workspaces-and-files).
 
 ## Where the reply goes

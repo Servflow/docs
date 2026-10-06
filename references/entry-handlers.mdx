@@ -42,11 +42,13 @@ Answers `POST` requests on its path. Nothing about the request is checked in adv
 | Key | Dashboard label | Type | Required | Description |
 |---|---|---|---|---|
 | `handlerConfig.path` | Path | string | Yes | The path the agent answers on, such as `/ask`. |
+| `conversationRunsPerHour` | Runs per conversation | number | No | The most runs one conversation can start through this entry in any 60-minute window. Empty, `0`, or absent means no limit. The count is per `X-Conversation-Id` header the caller sends. |
 
 | Response | When |
 |---|---|
 | `200`, with the agent's final reply as `text/plain` | The agent said something. |
 | `204`, with no body | The run finished and the agent said nothing. |
+| `429` | The request would exceed `conversationRunsPerHour` for that conversation id. |
 | `500` | The run failed. |
 
 Every response carries an `X-Conversation-Id` header naming the conversation the run used. A request that sends the same header continues that conversation. A request without it starts a new one.
@@ -56,6 +58,7 @@ entries:
   - type: handler
     handlerConfig:
       path: /ask
+    conversationRunsPerHour: 10
     start: agent.answer
 ```
 
@@ -182,6 +185,7 @@ Namespace: `telegram`. Needs a path. Integration type: [`telegram_bot`](/referen
 | Key | Dashboard label | Type | Required | Default | Description |
 |---|---|---|---|---|---|
 | `integration` | Bot | integration | Yes | none | The bot this entry receives as and answers as. Its secret token authenticates every delivery. |
+| `conversationRunsPerHour` | Runs per conversation | number | No | no limit | The most runs one chat can start through this entry in any 60-minute window. Empty, `0`, or absent means no limit. |
 | `chat_types` | Chats | string list | No | all three | The kinds of chat this agent answers in. Values: `private` (**Direct messages**), `group` (**Groups**), `supergroup` (**Supergroups**). |
 | `allowed_chats` | Only these chats | string list | No | any chat | Chat ids or `@usernames` this agent answers. Anything else is ignored. |
 | `require_mention` | Require mention | string | No | no mention required | The text a group message must contain to run the agent, such as `@mybot`. Group chats only. |
@@ -204,6 +208,7 @@ entries:
         chat_types: [private, group]
         require_mention: "@mybot"
         commands: [ask]
+    conversationRunsPerHour: 10
     start: agent.answer
 ```
 
@@ -239,6 +244,7 @@ Namespace: `discord`. No path. Integration type: [`discord`](/references/integra
 | Key | Dashboard label | Type | Required | Default | Description |
 |---|---|---|---|---|---|
 | `integration` | Bot | integration | Yes | none | The bot this entry connects and answers as. |
+| `conversationRunsPerHour` | Runs per conversation | number | No | no limit | The most runs one channel can start through this entry in any 60-minute window. Empty, `0`, or absent means no limit. A Discord thread counts as its own channel. |
 | `super_user` | Super user | string | No | none | The Discord user this agent treats as its operator, as a user id or an `@username`. Sets `is_super_user` on each run. An id is the safer of the two, because a username can change hands. |
 | `chat_types` | Places | string list | No | all three | Where a message may arrive from. Values: `guild` (**Server channels**), `dm` (**Direct messages**), `thread` (**Threads**). |
 | `require_mention` | Require mention | boolean | No | `false` | Runs only when the message mentions the bot. |
@@ -260,6 +266,7 @@ entries:
         chat_types: [guild, thread]
         require_mention: true
         super_user: "905712398471923849"
+    conversationRunsPerHour: 10
     start: agent.answer
 ```
 
