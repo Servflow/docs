@@ -31,6 +31,8 @@ Open the workspace. You are signed in and ready to build.
 
 In the hosted control plane, the dashboard API is served from ServFlow's shared server host and each entitled team's agent webhooks are served under `/agents/{team-slug}` on that same host.
 
+Hosted plans also limit how many agent runs a team may start in each one-minute window. Every webhook request, scheduled run, task run, and listener-triggered run counts. When a webhook request is refused at the limit, the API returns `429 Too Many Requests` with a `Retry-After` header telling you when the current minute ends.
+
 Next, follow [Create an agent](/guides/create-an-agent).
 
 ## Self-hosted
