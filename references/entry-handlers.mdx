@@ -86,8 +86,8 @@ Answers `POST` requests on its path the same way as a webhook entry, but as a st
 
 | Event or response | When |
 |---|---|
-| `message` | The agent adds an assistant message. The event data is JSON with `id`, optional `parent_id`, and `text`. |
-| `tool_call` | The agent starts a tool call. The event data is JSON with `id`, optional `parent_id`, and `text`, always `calling tool`. Tool arguments and results are not streamed. |
+| `message` | The agent adds an assistant message. The event data is JSON with `id` and `text`. |
+| `tool_call` | The agent starts a tool call. The event data is JSON with `id` and `text`, always `calling tool`. Tool arguments and results are not streamed. |
 | `done` | The run finished. The event data is JSON with `conversation_id` and the final `text`, the same reply a webhook would have returned. |
 | `error` | The run failed after the stream opened. The event data is JSON with `error`. |
 | `429` | The request continued a conversation that has already started as many runs in the last hour as the agent's `settings.conversationRunsPerHour` allows, or the agent could not start another run right now. |
