@@ -35,13 +35,13 @@ The agent's part is to read the message and say something. It needs no tool to r
 
 ## The handlers
 
-There are three. Each is an option under **Entry type** in the dashboard.
+There are four. Each is an option under **Entry type** in the dashboard.
 
 <Frame>
   <img src="/images/concepts/entries/02-entry-type.png" alt="The Entry panel with Entry type set to GitHub webhook, and the handler's settings listed below it" />
 </Frame>
 
-**Entry type** lists **GitHub webhook**, **Telegram bot**, and **Discord bot** after the trigger and the webhook. When you choose one, its settings appear below.
+**Entry type** lists **GitHub webhook**, **Telegram bot**, **Discord bot**, and **Streamable HTTP webhook** after the trigger and the webhook. When you choose one, its settings appear below.
 
 ### GitHub webhook
 
@@ -61,14 +61,20 @@ Starts the agent when someone messages your Discord bot, by default only when th
 
 You need a Discord integration. See [`discord_gateway`](/references/entry-handlers#discord_gateway), and [Connect an agent to Discord](/guides/connect-an-agent-to-discord) for the whole setup.
 
+### Streamable HTTP webhook
+
+Starts the agent from your own application, like the plain webhook, but streams the run back as Server-Sent Events instead of waiting for one final body. Use it when the caller should start showing the answer while the agent is still working.
+
+It needs only a path. Like the plain webhook, it carries the conversation in `X-Conversation-Id`. See [`streamable_http_webhook`](/references/entry-handlers#streamable_http_webhook).
+
 ### Set a handler in the dashboard
 
 The steps are the same for all three.
 
 1. Add the handler's [integration](/guides/add-an-integration), if you do not have one yet.
 2. Open the agent in the editor and click the entry node at the top of the canvas. The **Entry** panel opens.
-3. Under **Entry type**, choose **GitHub webhook**, **Telegram bot**, or **Discord bot**. The handler's settings appear.
-4. Choose the integration. For GitHub and Telegram, enter a **Path**. An entry that already had a path keeps it, and the field is under **Advanced settings**.
+3. Under **Entry type**, choose **GitHub webhook**, **Telegram bot**, **Discord bot**, or **Streamable HTTP webhook**. The handler's settings appear.
+4. Choose the integration if this handler uses one. For GitHub, Telegram, and the streamable HTTP webhook, enter a **Path**. An entry that already had a path keeps it, and the field is under **Advanced settings**.
 5. Click **Save**.
 
 ## What the agent remembers
@@ -81,6 +87,7 @@ An agent remembers the earlier messages of the conversation a run belongs to. Th
 | Telegram bot | One chat. |
 | Discord bot | One channel. A Discord thread counts as its own channel. |
 | Webhook | One request, unless your application asks to continue an earlier conversation. The [reference](/references/entry-handlers#webhook) shows how. |
+| Streamable HTTP webhook | One request, unless your application asks to continue an earlier conversation. The [reference](/references/entry-handlers#streamable_http_webhook) shows how. |
 | Trigger | One run. |
 
 This is why a Telegram bot remembers what you said a minute ago with nothing set up, and why a pull request reviewer reads each comment fresh.
@@ -94,6 +101,8 @@ Telegram and Discord receive the reply as a message, in the chat or channel that
 GitHub does not wait for an agent. The handler answers GitHub straight away with the status code `202`, which means "received, working on it". When the agent finishes, the handler posts the reply as a comment.
 
 A webhook caller waits for the agent and receives the reply as the response, with the status code `200`. If the agent said nothing, the status code is `204`, which means "done, nothing to return".
+
+A streamable HTTP webhook caller receives a Server-Sent Events stream instead. Assistant messages arrive as `message` events, tool calls as `tool_call`, and the stream ends with `done`.
 
 A trigger has nobody to reply to. For a triggered agent to have an effect, give it [tools](/guides/add-a-tool).
 

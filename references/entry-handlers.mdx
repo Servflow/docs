@@ -14,6 +14,7 @@ This page lists every entry an agent can have. Each entry's section holds its se
 | [Gitea webhook](#gitea_webhook) | `handler` | `gitea_webhook` | Yes | The pull request or issue, when `respond_to` allows. |
 | [Telegram bot](#telegram_webhook) | `handler` | `telegram_webhook` | Yes | The chat the message came from. |
 | [Discord bot](#discord_gateway) | `handler` | `discord_gateway` | No | The channel the message came from. |
+| [Streamable HTTP webhook](#streamable_http_webhook) | `handler` | `streamable_http_webhook` | Yes | Whoever sent the request, as a stream. |
 
 The keys every entry shares, `type` and `start`, and the rules for an agent with several entries are in the [CLI reference](/references/cli#entries).
 
@@ -80,6 +81,27 @@ entries:
 An entry handler receives from one outside service and delivers the agent's reply to it. A prompt reads a handler's variables as `{{ .<namespace>.<key> }}`, such as `{{ .github.comment_body }}`.
 
 A handler's settings are read once, when the agent loads. The only template function they accept is `secret`.
+
+### streamable_http_webhook
+
+Answers `POST` requests on its path like the plain webhook, but sends the answer as [Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) while the agent runs. Each assistant message arrives as a `message` event, each tool call as a `tool_call` event whose data is `calling tool`, and the stream ends with a `done` event.
+
+Like the plain webhook, this entry carries the conversation in `X-Conversation-Id`: every response includes it, and a request that sends it continues that conversation.
+
+It reads no extra settings, and it injects no variables beyond the request functions that a plain webhook already gives to prompts: `body`, `param`, `header`, and `urlparam`.
+
+| Key | Dashboard label | Type | Required | Description |
+|---|---|---|---|---|
+| `handlerConfig.path` | Path | string | Yes | The path the agent answers on, such as `/hooks/stream`. |
+
+```yaml
+entries:
+  - type: handler
+    handlerConfig:
+      type: streamable_http_webhook
+      path: /hooks/stream
+    start: agent.answer
+```
 
 ### github_webhook
 
