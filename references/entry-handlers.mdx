@@ -95,7 +95,7 @@ Answers `POST` requests on its path the same way as a webhook entry, but as a st
 
 The stream opens only when the run adds its first message. A refusal before that still comes back as an ordinary HTTP response. Once the stream is open, ServFlow sends keepalive comments so idle proxies do not cut the connection.
 
-Like a webhook, the response carries an `X-Conversation-Id` header naming the conversation the run used. Send the same header on the next request to continue that conversation.
+Like a webhook, the response carries an `X-Conversation-Id` header naming the conversation the run used. Send the same header on the next request to continue that conversation. If the request sends no `X-Conversation-Id`, ServFlow creates one before the run starts and returns it in that header.
 
 ```yaml
 entries:
