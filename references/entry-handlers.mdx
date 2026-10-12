@@ -12,6 +12,7 @@ This page lists every entry an agent can have. Each entry's section holds its se
 | [Webhook — a plain HTTP request starts the agent](#webhook) | `handler` | empty | Yes | Whoever sent the request. |
 | [GitHub webhook](#github_webhook) | `handler` | `github_webhook` | Yes | The pull request or issue, when `respond_to` allows. |
 | [Gitea webhook](#gitea_webhook) | `handler` | `gitea_webhook` | Yes | The pull request or issue, when `respond_to` allows. |
+| [Streamable webhook](#streamable_http_webhook) | `handler` | `streamable_http_webhook` | Yes | Whoever opened the Server-Sent Events stream. |
 | [Telegram bot](#telegram_webhook) | `handler` | `telegram_webhook` | Yes | The chat the message came from. |
 | [Discord bot](#discord_gateway) | `handler` | `discord_gateway` | No | The channel the message came from. |
 
@@ -72,6 +73,36 @@ entries:
   - type: handler
     handlerConfig:
       path: /ask
+    start: agent.answer
+```
+
+### streamable_http_webhook
+
+Answers `POST` requests on its path the same way as a webhook entry, but as a stream of [Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) instead of one response at the end. Use it when your application should receive the agent's messages as they are written. Prompts read the request with the same `body`, `param`, `header`, and `urlparam` functions.
+
+| Key | Dashboard label | Type | Required | Description |
+|---|---|---|---|---|
+| `handlerConfig.path` | Path | string | Yes | The path the agent answers on, such as `/ask-stream`. |
+
+| Event or response | When |
+|---|---|
+| `message` | The agent adds an assistant message. The event data is JSON with `id`, optional `parent_id`, and `text`. |
+| `tool_call` | The agent starts a tool call. The event data is JSON with `id`, optional `parent_id`, and `text`, always `calling tool`. Tool arguments and results are not streamed. |
+| `done` | The run finished. The event data is JSON with `conversation_id` and the final `text`, the same reply a webhook would have returned. |
+| `error` | The run failed after the stream opened. The event data is JSON with `error`. |
+| `429` | The request continued a conversation that has already started as many runs in the last hour as the agent's `settings.conversationRunsPerHour` allows, or the agent could not start another run right now. |
+| `500` | The run failed before the stream opened. |
+
+The stream opens only when the run adds its first message. A refusal before that still comes back as an ordinary HTTP response. Once the stream is open, ServFlow sends keepalive comments so idle proxies do not cut the connection.
+
+Like a webhook, the response carries an `X-Conversation-Id` header naming the conversation the run used. Send the same header on the next request to continue that conversation.
+
+```yaml
+entries:
+  - type: handler
+    handlerConfig:
+      type: streamable_http_webhook
+      path: /ask-stream
     start: agent.answer
 ```
 
