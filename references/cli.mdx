@@ -134,14 +134,14 @@ The management MCP server exposes these tools:
 
 | Group | Tools |
 |---|---|
-| Agents | `list_agents`, `get_agent`, `create_agent`, `update_agent`, `delete_agent`, `set_config_enabled`, `agent_schema` |
+| Configs | `list_configs`, `get_config`, `validate_config`, `create_config`, `update_config`, `delete_config`, `set_config_enabled`, `config_schema`, `config_example` |
 | Integrations | `list_integrations`, `get_integration`, `create_integration`, `update_integration`, `delete_integration`, `set_integration_enabled`, `list_integration_types`, `describe_integration_type` |
 | Providers | `list_providers`, `get_provider`, `create_provider`, `update_provider`, `delete_provider`, `list_provider_types`, `describe_provider_type` |
 | Secrets | `list_secrets`, `get_secret`, `create_secret`, `update_secret`, `delete_secret` |
 | Workspaces | `list_workspaces`, `get_workspace`, `create_workspace`, `update_workspace`, `delete_workspace` |
-| Discovery | `list_entry_handlers`, `describe_entry_handler`, `list_template_functions` |
+| Discovery | `list_actions`, `describe_action`, `list_entry_handlers`, `describe_entry_handler`, `list_template_functions` |
 
-`list_entry_handlers` lists every built-in entry type. `describe_entry_handler` describes one or more handler types and returns their fields, injected variables, and whether each is a listener. `list_template_functions` lists the template functions available in dynamic content and tool guards, optionally filtered by category.
+`list_actions` lists every built-in action type. `describe_action` describes one or more action types and returns their schema and field metadata. `config_schema` returns the stored config shape as JSON Schema, and `config_example` returns a complete example config you can adapt. `list_entry_handlers` lists every built-in entry type. `describe_entry_handler` describes one or more handler types and returns their fields, injected variables, and whether each is a listener. `list_template_functions` lists the template functions available in dynamic content and tool guards, optionally filtered by category. MCP config writes use the same config-name validation and whitespace normalization as the dashboard and CLI.
 
 ## version
 
