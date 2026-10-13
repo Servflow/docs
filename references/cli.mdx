@@ -130,7 +130,33 @@ Installs a template into the running server.
 
 ## MCP server tools
 
-ServFlow serves the management MCP server at `/api/mcp`. In normal modes, send the team's auth token in the `Authorization` header, either as the raw token or as `Bearer <token>`. In `local` mode, the endpoint is unauthenticated. The same machine-auth API also serves `POST /api/ai-assist`, which streams AI assist events for the team the token names, using the Config Assistant team's upstream host and auth token when `AI_UPSTREAM_HOST` and `AI_UPSTREAM_AUTH_TOKEN` are set.
+ServFlow serves the management MCP server at `/api/mcp`. In normal modes, send the team's auth token in the `Authorization` header, either as the raw token or as `Bearer <token>`. In `local` mode, the endpoint is unauthenticated.
+
+The same machine-auth API also serves these AI assist endpoints for the team the token names when `AI_UPSTREAM_HOST` and `AI_UPSTREAM_AUTH_TOKEN` are set:
+
+- `POST /api/ai-assist` starts or continues a conversation and streams AI assist events back as Server-Sent Events.
+- `GET /api/ai-assist-quota` returns the team's monthly AI assist allowance and usage.
+
+The dashboard's studio API also serves these AI assist endpoints for the signed-in team:
+
+- `POST /studio/ai-assist` starts or continues a conversation and streams AI assist events back as Server-Sent Events.
+- `GET /studio/ai-assist/conversations/{conversationID}` returns the stored messages of one conversation, oldest first.
+
+`POST /api/ai-assist` and `POST /studio/ai-assist` accept this JSON body:
+
+```json
+{
+  "query": "Add a webhook entry that answers hello",
+  "config": {"name": "example"},
+  "conversation_id": "optional-existing-conversation-id"
+}
+```
+
+The stream answers with AI assist events such as `message`, `tool_call`, `done`, and `error`. A successful response also carries the conversation id in the `X-Conversation-Id` header.
+
+`GET /api/ai-assist-quota` answers with the current plan, the monthly message limit for that plan, how many messages the team has used in the current UTC calendar month, and the reset date.
+
+The current hosted monthly AI assist quotas are 10 messages on Free, 100 on Starter, and 100 on Pro.
 
 The management MCP server exposes these tools:
 
