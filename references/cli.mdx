@@ -130,7 +130,7 @@ Installs a template into the running server.
 
 ## MCP server tools
 
-ServFlow serves the management MCP server at `/api/mcp`. In normal modes, send the team's auth token in the `Authorization` header, either as the raw token or as `Bearer <token>`. In `local` mode, the endpoint is unauthenticated.
+ServFlow serves the management MCP server at `/api/mcp`. In normal modes, send the team's auth token in the `Authorization` header, either as the raw token or as `Bearer <token>`. In `local` mode, the endpoint is unauthenticated. The same machine-auth API also serves `GET /api/conversations/{conversationID}`, which returns one stored conversation for the team the token names.
 
 The management MCP server exposes these tools:
 
