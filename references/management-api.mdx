@@ -1,0 +1,74 @@
+---
+title: "Management API"
+description: "The dashboard API routes servflow-server serves for managing resources and reading stored conversations"
+icon: "square-terminal"
+---
+
+ServFlow serves a management API under `/api`. The dashboard uses the same routes, and a running `servflow-server` answers them too.
+
+In normal auth modes, send the team's auth token in the `Authorization` header, either as the raw token or as `Bearer <token>`. In `local` mode, the management API is unauthenticated.
+
+## Get a stored conversation
+
+Reads the conversation stored under one conversation id.
+
+```http
+GET /api/conversations/{conversationID}
+```
+
+Returns the newest messages ServFlow has stored for that conversation, in the order they were added. This is the same conversation history the next run of that thread would resume from.
+
+### Response
+
+A successful response is JSON with the conversation id and its messages:
+
+```json
+{
+  "id": "demo-thread",
+  "messages": [
+    {
+      "id": "msg_1",
+      "kind": "text",
+      "created_at": "2026-10-12T22:10:00Z",
+      "text": {
+        "role": "user",
+        "content": "What is a webhook?"
+      }
+    },
+    {
+      "id": "msg_2",
+      "kind": "text",
+      "created_at": "2026-10-12T22:10:02Z",
+      "text": {
+        "role": "assistant",
+        "content": "A webhook is an HTTP callback..."
+      }
+    }
+  ]
+}
+```
+
+Each message has:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `id` | string | The stored message id. |
+| `kind` | string | `text`, `tool_call`, or `tool_response`. |
+| `created_at` | string | When the message was added, in RFC 3339 format. |
+| `text` | object | Present on `text` messages. Holds `role` and `content`. |
+| `tool_call` | object | Present on `tool_call` messages. Holds the tool call's `id`, `name`, and `arguments`. |
+| `tool_result` | object | Present on `tool_response` messages. Holds the tool call's `call_id` and returned `text`. |
+
+For a `text` message, `text.role` is one of `system`, `user`, `assistant`, or `developer`.
+
+### Status codes
+
+| Status | When |
+|---|---|
+| `200` | The conversation was found and returned. |
+| `400` | The conversation id was blank. |
+| `404` | Nothing is stored under that id, or the caller is not allowed to read it. |
+| `503` | The process has no running engine, so conversations are not available. |
+| `500` | ServFlow could not read the conversation. |
+
+A conversation the caller may not read answers the same `404` as one that does not exist, so callers cannot use this route to discover other teams' conversation ids.
