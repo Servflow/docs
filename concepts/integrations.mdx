@@ -48,11 +48,13 @@ Each sensitive field of an integration, such as a bot token, can point at a stor
 
 The **New Integration** dialog shows every kind of integration your instance supports. The [Available integrations](/references/integrations) has a section for each, with its fields and what uses it.
 
+A host can also plug in its own integration types by resolving them at runtime under a prefix it registers, such as `composio:`. Those types are not listed with the built-in ones, but once configured they behave the same way: they are validated, created, and served like any registered type.
+
 ## Integrations in the dashboard
 
 **Integrations**, in the sidebar under **Configure**, lists your integrations with their status. Click **New Integration**, choose a kind, and give it a **Name**. ServFlow also gives it an internal id, which configs keep using even if you rename it later.
 
-**Ready** means the integration is enabled and can be used. **Not connected** means a guided OAuth setup created the integration, but the provider approval did not finish; use the row's **Connect integration** action to complete it. After the approval finishes, enable the integration to start serving it.
+**Ready** means the integration is enabled and can be used. **Not connected** means a guided OAuth setup or a host connect flow created the integration, but the connection did not finish; use the row's **Connect integration** action to complete it. After the connection finishes, enable the integration to start serving it.
 
 ## When a change takes effect
 
