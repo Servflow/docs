@@ -46,7 +46,7 @@ Each sensitive field of an integration, such as a bot token, can point at a stor
 
 ## What kinds there are
 
-The **New Integration** dialog shows every kind of integration your instance supports. The [Available integrations](/references/integrations) has a section for each, with its fields and what uses it.
+The **New Integration** dialog shows every kind of integration your instance supports. ServFlow always lists its built-in types there, and with `COMPOSIO_API_KEY` set it also lists one type per enabled Composio auth config from that environment's Composio project. The [Available integrations](/references/integrations) has a section for each built-in type, and the dashboard shows the fields of each Composio-backed type from the catalog the server serves. The server builds the catalog once at startup, so a change in Composio shows up after the next restart.
 
 ## Integrations in the dashboard
 

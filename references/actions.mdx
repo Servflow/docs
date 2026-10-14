@@ -6,6 +6,8 @@ icon: "table-list"
 
 An action is one thing an agent can do: send a Discord message, fetch a web address, read a pull request. An agent runs an action in two places. A [tool](/concepts/tools) runs one when the agent decides to use it. A [context step](/concepts/context-fetching) runs one every time, before the agent starts. This page lists every action with its fields. `servflowai resource action describe --all` prints the same catalog.
 
+When `COMPOSIO_API_KEY` is set on the server, the action catalog also includes one entry per tool from each enabled Composio toolkit, alongside the built-in actions listed here.
+
 ## All actions
 
 | Name in the dashboard | Type | What it does | Integration it needs |
@@ -401,6 +403,8 @@ Returns the value you write, after its template is filled in. Use it to build a 
 ## Browser
 
 The four browser actions share one browser session, the `chromium` integration. Open a page with `chromium/navigate` first, then read or click it.
+
+<Note>The Chromium browser actions are disabled in the hosted ServFlow studio and cannot be used there.</Note>
 
 ### chromium/navigate
 
