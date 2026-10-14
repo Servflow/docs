@@ -12,7 +12,8 @@ For every setting, see the [Available entry handlers](/references/entry-handlers
 
 | Entry | What starts the agent | Where the reply goes |
 |---|---|---|
-| Entry handler | A message on GitHub, Telegram, or Discord | Back to the pull request, chat, or channel it came from |
+| Entry handler | A message on GitHub, Telegram, or Discord, or an event in a connected app | Back to the pull request, chat, channel, or app it came from |
+| App event | An event in a connected third-party app, such as a new email or message | Nowhere automatically. The agent replies through a tool of the same app. |
 | Webhook | Your own application, by sending a request to the agent's path | Back to your application, as the response |
 | Streamable webhook | Your own application, by opening a Server-Sent Events request to the agent's path | Back to your application, as streamed events while the run is happening |
 | Trigger | You, a schedule, or another agent handing over a task | Nowhere. It is written to the log. |
@@ -36,7 +37,7 @@ The agent's part is to read the message and say something. It needs no tool to r
 
 ## The handlers
 
-There are four. Each is an option under **Entry type** in the dashboard.
+There are five. Each is an option under **Entry type** in the dashboard.
 
 <Frame>
   <img src="/images/concepts/entries/02-entry-type.png" alt="The Entry panel with Entry type set to GitHub webhook, and the handler's settings listed below it" />
@@ -55,6 +56,12 @@ You need a GitHub App integration and a path. See [`github_webhook`](/references
 Starts the agent from your own application like a webhook does, but instead of waiting for one final response, your application receives a stream of events as the run goes. Assistant messages arrive as `message` events, tool starts arrive as `tool_call`, and the last event is `done`.
 
 You need a path. See [`streamable_http_webhook`](/references/entry-handlers#streamable_http_webhook).
+
+### App event
+
+Starts the agent when something happens in a connected third-party app: a new email, a new message, a new page. The server this agent runs on decides which apps and events are available, and every event starts a run of its own. The agent does not reply automatically; to answer, give it a tool of the same app.
+
+You need an integration belonging to the app the event comes from. See [`app_event`](/references/entry-handlers#app_event).
 
 ### Telegram bot
 
@@ -85,6 +92,7 @@ An agent remembers the earlier messages of the conversation a run belongs to. Th
 | Entry | One conversation is |
 |---|---|
 | GitHub webhook | One event. Each comment is handled on its own. |
+| App event | One event. Each delivery is handled on its own. |
 | Telegram bot | One chat. |
 | Discord bot | One channel. A Discord thread counts as its own channel. |
 | Webhook | One request, unless your application asks to continue an earlier conversation. The [reference](/references/entry-handlers#webhook) shows how. |
@@ -109,7 +117,7 @@ A trigger has nobody to reply to. For a triggered agent to have an effect, give 
 
 ## What the prompt can read
 
-A handler gives the prompt the parts of a message by name. A Discord agent reads the message text as `{{ .discord.content }}`, and a GitHub agent reads a comment as `{{ .github.comment_body }}`. A webhook agent reads a field your application sent with `{{ body "question" }}`. The reference lists every name, and [Dynamic content](/concepts/dynamic-content) explains how these work.
+A handler gives the prompt the parts of a message by name. A Discord agent reads the message text as `{{ .discord.content }}`, a GitHub agent reads a comment as `{{ .github.comment_body }}`, and an App event agent reads the event data as `{{ .event.data }}`. A webhook agent reads a field your application sent with `{{ body "question" }}`. The reference lists every name, and [Dynamic content](/concepts/dynamic-content) explains how these work.
 
 ## More than one way in
 
