@@ -19,6 +19,7 @@ An integration connected through OAuth, such as Notion, has its own connection p
 | [`github_app`](#github_app) | GitHub App | Yes | `github_fetch` and `github_post` actions, `github_webhook` entry |
 | [`mongo`](#mongo) | MongoDB | No | `fetch`, `delete`, `authenticate`, and `mongoquery` actions |
 | [`notion_mcp`](#notion_mcp) | Notion | Yes | MCP server tools |
+| [`composio:*`](#composio) | Composio | Yes | `external:*` actions |
 | [`qdrant`](#qdrant) | Qdrant | No | `storevector` and `fetchvectors` actions |
 | [`sql`](#sql) | SQL Database | No | `fetch`, `delete`, and `authenticate` actions |
 | [`telegram_bot`](#telegram_bot) | Telegram Bot | No | `telegram_webhook` entry |
@@ -162,6 +163,24 @@ MongoDB database integration for document storage and retrieval.
 A Notion workspace connected through Notion's MCP server. It has no fields in the form. In the dashboard, give it a name. The dashboard creates the integration with a generated id, sends the browser through Notionx27s OAuth sign-in, stores the token on that integration, and marks it complete when Notion returns. An MCP server tool can then send that integration's token.
 
 Each `notion_mcp` integration is one Notion workspace connection. To connect another workspace, create another Notion integration with a different name and complete its sign-in.
+
+### composio
+
+A service loaded from a configured Composio project. Each enabled auth config in the project becomes its own integration type, named `composio:<auth_config_id>`. The type is what the catalog and the dashboard show, and it also names the group that the service's actions accept.
+
+A Composio integration has no fields you fill in by hand. The dashboard creates it with a name, stores the service's toolkit slug, then starts a sign-in flow. When the sign-in finishes, the server saves the connected account id and the account's display name. Until then the integration is pending.
+
+```json
+{
+  "integrationId": "my-composio-service",
+  "type": "composio:<auth_config_id>",
+  "config": {
+    "toolkit": { "value": "<toolkit_slug>" },
+    "connected_account_id": { "value": "<account_id>" },
+    "display_name": { "value": "<account_name>" }
+  }
+}
+```
 
 ### qdrant
 
