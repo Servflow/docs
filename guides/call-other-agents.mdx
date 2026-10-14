@@ -36,7 +36,7 @@ Under **Tools**, open **Add a tool…** and choose **Call sub-agent…**. The **
 </Step>
 
 <Step title="Name the tool">
-In **Display name**, enter `ask_researcher`. Use letters, numbers, and underscores, with no spaces. Some model companies reject a tool whose name contains a space.
+In **Display name**, enter `Ask the researcher`. The display name is for you; the model sees a slug derived from it (`Ask_the_researcher`).
 </Step>
 
 <Step title="Say when to use it">
@@ -59,7 +59,7 @@ Click **Save tool**. The tool appears under **Tools**.
 In the **System prompt** of `Support`, say when to use the tool:
 
 ```
-You answer customer questions. Always ask the researcher for the facts first, then reply to the customer in a friendly sentence or two.
+You answer customer questions. Always call the Ask_the_researcher tool for the facts first, then reply to the customer in a friendly sentence or two.
 ```
 
 Without this, the model may answer on its own and never call the tool.
@@ -138,7 +138,7 @@ Open the Helpdesk agent and click its sub-agent. Under **Tools**, open **Add a t
 </Step>
 
 <Step title="Name the tool and say when to use it">
-In **Display name**, enter `start_weekly_report`. In **When to use**, enter `Hand over writing the weekly report. Say what it should cover.`
+In **Display name**, enter `Start weekly report`. In **When to use**, enter `Hand over writing the weekly report. Say what it should cover.`
 </Step>
 
 <Step title="Choose the agent">
@@ -153,7 +153,7 @@ Under **Agent**, choose Weekly report. The list shows enabled agents whose entry
 Click **Save tool**. In the sub-agent's **System prompt**, say when to use the tool and what to say afterwards:
 
 ```
-When someone asks for the weekly report, you must use the start_weekly_report tool to hand the job over. Only say it has been started after the tool has been used.
+When someone asks for the weekly report, you must use the Start_weekly_report tool to hand the job over. Only say it has been started after the tool has been used.
 ```
 
 Without the second sentence, the model may say the report has started without starting it.
