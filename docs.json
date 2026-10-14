@@ -65,7 +65,8 @@
               "references/providers",
               "references/dynamic-content",
               "references/cli",
-              "references/configuration"
+              "references/configuration",
+              "references/go-sdk"
             ]
           }
         ]

@@ -1,0 +1,79 @@
+---
+title: "Go SDK"
+description: "Embed the ServFlow engine in your own Go program and resolve actions or integrations at runtime."
+icon: "golang"
+---
+
+The ServFlow engine is a Go package you can import into your own binary. Most users start the `servflowai` server, but the same engine can be embedded when you need to serve agents from an existing process or add types that are only known at runtime.
+
+## Register the built-in engine
+
+Call `Register` once, before building an engine, to add every built-in action, integration, and provider to the registries.
+
+```go
+import "git.servflow.io/servflow/servflowai/engine"
+
+if err := engine.Register(); err != nil {
+    log.Fatal(err)
+}
+```
+
+After registration, create an engine with `engine.New` and serve it.
+
+## Resolve action types at runtime
+
+Use `RegisterActionResolver` when your host learns action types at runtime. A resolver answers for every type that starts with a given prefix, such as `external:`. Saving, validating, planning, and running a step or agent tool of such a type then works the same as for a registered action.
+
+```go
+import (
+    "context"
+    "encoding/json"
+
+    "git.servflow.io/servflow/servflowai/engine"
+    "github.com/Servflow/servflow/pkg/engine/actions"
+)
+
+err := engine.RegisterActionResolver("external:", func(actionType string) (actions.Definition, bool) {
+    if actionType != "external:lookup" {
+        return actions.Definition{}, false
+    }
+    return actions.Definition{
+        Type:   "external:lookup",
+        Name:   "External lookup",
+        Fields: map[string]actions.FieldInfo{
+            "query": {Type: actions.FieldTypeString, Required: true},
+        },
+        NewV2: func(ctx context.Context, config json.RawMessage) (actions.ActionExecutableV2, error) {
+            // Build and return the action.
+        },
+    }, true
+})
+```
+
+The resolver is asked on every save, enable, and agent session, so it should answer from memory. The prefix must end with `:`, must not overlap another resolver's prefix, and must not start a type already registered. Resolved types are not listed by the engine's registered actions.
+
+## Resolve integration types at runtime
+
+`RegisterIntegrationResolver` is the integration equivalent. Use it when your host learns integration types at runtime.
+
+```go
+err := engine.RegisterIntegrationResolver("composio:", func(integrationType string) (integrations.Definition, bool) {
+    // Return the definition, or false if the type is unknown.
+})
+```
+
+The same prefix rules apply: it must end with `:`, not overlap another resolver, and not start a type already registered. Resolved integration types are not listed by `IntegrationTypes`.
+
+## Related
+
+<CardGroup cols={2}>
+
+<Card title="Available actions" icon="table-list" href="/references/actions">
+  The built-in action types that ship with the engine.
+</Card>
+
+<Card title="Available integrations" icon="puzzle-piece" href="/references/integrations">
+  The built-in integration types that ship with the engine.
+</Card>
+
+</CardGroup>
