@@ -134,14 +134,13 @@ collector_endpoint = ""
 Tracing can also be configured during [first-run setup](/installation#create-the-first-account), which offers a hosted collector, a custom endpoint, or disabling it.
 ## `COMPOSIO_*`
 
-Adds Composio-backed integration types to the dashboard's integration catalog. With `COMPOSIO_API_KEY` unset, the catalog contains only ServFlow's built-in integration types.
+Adds Composio-backed apps to the dashboard's integration and action catalogs. With `COMPOSIO_API_KEY` unset, the catalogs contain only ServFlow's built-in entries.
 
 | Environment variable | Default | Description |
 |---|---|---|
-| `COMPOSIO_API_KEY` | empty | API key of this environment's Composio project. Each enabled auth config in that project appears in the integration catalog as its own integration type. |
-| `COMPOSIO_BASE_URL` | `https://backend.composio.dev` | Base URL of the Composio API to read auth configs and toolkit metadata from. |
+| `COMPOSIO_API_KEY` | empty | API key of this environment's Composio project. Each enabled auth config in that project becomes one integration type, and that toolkit's tools become actions in the catalog. |
 
-If Composio is configured but unavailable when the catalog is read, ServFlow still serves the built-in integration types and leaves the Composio-backed ones out until Composio answers again.
+The server builds both catalogs once at startup. If Composio is configured but unavailable at that time, the server starts with only the built-in entries and logs the failure. A change in Composio, such as a newly enabled auth config, shows up after the next restart.
 
 ## Complete example
 
