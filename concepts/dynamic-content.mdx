@@ -66,7 +66,11 @@ A misspelt function name is different. In a guard, ServFlow refuses it when you 
 
 ## Dynamic content in the dashboard
 
-Every field that accepts dynamic content has two small buttons in its corner. **Insert a variable** opens a menu of what the field can read, such as the results of context steps and your secrets, and writes the braces for you. **Expand editor** opens the field in a larger window. Typing inside braces suggests names as you go.
+Every field that accepts dynamic content has two small buttons in its corner. **Insert a variable** opens a menu of what the field can read.
+
+The **Entry data** section suggests the functions your entry supports. A webhook entry offers request functions such as `body`, `header`, `param`, and `urlparam`; a trigger entry offers `input` and `trigger_value`. Handler entries, such as Discord or GitHub, list their namespace fields instead.
+
+The menu also lists the results of context steps and sub-agents, plus your secrets, and writes the braces for you. **Expand editor** opens the field in a larger window. Typing inside braces suggests names as you go.
 
 <Frame>
   <img src="/images/concepts/dynamic-content/01-insert-variable.png" alt="The Insert a variable menu open on a prompt, listing the results of two context steps" />
