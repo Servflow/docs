@@ -19,6 +19,7 @@ An integration connected through OAuth, such as Notion, has its own connection p
 | [`github_app`](#github_app) | GitHub App | Yes | `github_fetch` and `github_post` actions, `github_webhook` entry |
 | [`mongo`](#mongo) | MongoDB | No | `fetch`, `delete`, `authenticate`, and `mongoquery` actions |
 | [`notion_mcp`](#notion_mcp) | Notion | Yes | MCP server tools |
+| `composio:<id>` | Composio service (name from the catalog) | Yes | `external:<tool>` actions |
 | [`qdrant`](#qdrant) | Qdrant | No | `storevector` and `fetchvectors` actions |
 | [`sql`](#sql) | SQL Database | No | `fetch`, `delete`, and `authenticate` actions |
 | [`telegram_bot`](#telegram_bot) | Telegram Bot | No | `telegram_webhook` entry |
@@ -220,6 +221,14 @@ A Telegram bot: the token BotFather issued, and the secret its webhook is regist
   }
 }
 ```
+
+### Composio service
+
+A third-party service exposed through the Composio catalog. The server's integration catalog lists one Composio type for each available service; each of its type keys begins with `composio:` followed by the service's id and shows the service's name in the dashboard.
+
+A Composio integration has no config fields. The guided setup asks for a **Name**, creates the integration, and sends the browser through Composio sign-in. When Composio returns to the dashboard, the integration is marked complete and you can enable it. Each Composio connection is stored on its own integration id, so you can add the same service more than once by giving each connection a different name.
+
+Composio services are used by Composio toolkit actions whose type begins with `external:`. The action picker groups these actions under their Composio app.
 
 ## Related
 

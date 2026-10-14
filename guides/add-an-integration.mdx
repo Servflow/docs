@@ -24,7 +24,7 @@ In the sidebar under **Configure**, open **Integrations**. The page lists every 
 </Step>
 
 <Step title="Choose a type">
-Click **New Integration** and choose a type. Discord, GitHub App, and Notion are marked **Guided setup** and open a flow of their own. Every other type opens a form with one input per field.
+Click **New Integration** and choose a type. Discord, GitHub App, Notion, and services from Composio are marked **Guided setup** and open a flow of their own. Every other type opens a form with one input per field.
 
 <Frame>
   <img src="/images/guides/add-an-integration/02-type-picker.png" alt="The New Integration dialog listing every integration type" />
@@ -33,6 +33,8 @@ Click **New Integration** and choose a type. Discord, GitHub App, and Notion are
 For a guided setup, see [Connect an agent to Discord](/guides/connect-an-agent-to-discord).
 
 For Notion, the dashboard creates the integration under the name you enter, sends you through Notion sign-in, and marks that integration complete when the sign-in returns. Each Notion integration has its own OAuth connection, so you can add more than one Notion workspace by giving each one a different name.
+
+For a Composio service, the guided setup asks for a name and then sends you through the Composio sign-in page to connect the account. Composio services can also be reconnected from the row menu if the signed-in account needs to change.
 </Step>
 
 <Step title="Enter a name and the fields">
@@ -56,7 +58,7 @@ To paste the value into the integration instead, choose **Enter a value directly
 <Step title="Add it">
 Click **Add Integration**. The dialog closes, and the integration appears in the list with its type. A new integration starts disabled, so enable it before an agent can use it.
 
-A guided OAuth setup such as Notion may create the integration before the approval finishes. Until it is approved, the row shows **Not connected**. Use the row's **Connect integration** action to start the approval again. When the approval finishes, enable the integration to start serving it.
+A guided setup such as Notion or a Composio service may create the integration before the approval finishes. Until it is approved, the row shows **Not connected**. Use the row's **Connect integration** action to start the approval again. When the approval finishes, enable the integration to start serving it.
 </Step>
 
 </Steps>
