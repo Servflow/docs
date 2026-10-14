@@ -26,11 +26,11 @@ In a **System prompt** and a **User prompt**, in a tool's settings, in a context
 
 | The agent is started by | Read the message with | Example |
 |---|---|---|
-| A webhook | `body`, `param`, `header` | `{{ body "question" }}` |
+| A webhook or streamable webhook | `body`, `param`, `header`, `urlparam` | `{{ body "question" }}` |
 | A Discord bot entry | `.discord` | `{{ .discord.content }}` |
 | A Telegram bot entry | `.telegram` | `{{ .telegram.text }}` |
-| A GitHub entry | `.github`, and `body` for the rest of what GitHub sent | `{{ .github.repo }}`, `{{ body "issue.title" }}` |
-| A trigger, handed a task by another agent | `input` | `{{ input "instruction" }}` |
+| A GitHub entry | `.github` | `{{ .github.repo }}` |
+| A trigger, handed a task by another agent | `input`, `trigger_value` | `{{ input "instruction" }}` |
 
 Three things to watch:
 
