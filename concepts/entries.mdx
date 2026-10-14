@@ -8,11 +8,12 @@ An entry is a way into an agent: something that starts it and, usually, somewher
 
 For every setting, see the [Available entry handlers](/references/entry-handlers).
 
-## The three kinds of entry
+## The kinds of entry
 
 | Entry | What starts the agent | Where the reply goes |
 |---|---|---|
-| Entry handler | A message on GitHub, Telegram, or Discord | Back to the pull request, chat, or channel it came from |
+| Entry handler | A message on GitHub, Telegram, Discord, or a connected app | Back to the pull request, chat, channel, or app it came from |
+| App event | An event from a connected app | Nowhere automatically. Give the agent a tool of the same app to act. |
 | Webhook | Your own application, by sending a request to the agent's path | Back to your application, as the response |
 | Streamable webhook | Your own application, by opening a Server-Sent Events request to the agent's path | Back to your application, as streamed events while the run is happening |
 | Trigger | You, a schedule, or another agent handing over a task | Nowhere. It is written to the log. |
@@ -36,13 +37,13 @@ The agent's part is to read the message and say something. It needs no tool to r
 
 ## The handlers
 
-There are four. Each is an option under **Entry type** in the dashboard.
+There are five. Each is an option under **Entry type** in the dashboard.
 
 <Frame>
   <img src="/images/concepts/entries/02-entry-type.png" alt="The Entry panel with Entry type set to GitHub webhook, and the handler's settings listed below it" />
 </Frame>
 
-**Entry type** lists **GitHub webhook**, **Telegram bot**, **Discord bot**, and **Streamable webhook** after the trigger and the webhook. When you choose one, its settings appear below.
+**Entry type** lists **GitHub webhook**, **Telegram bot**, **Discord bot**, **Streamable webhook**, and **App event** after the trigger and the webhook. When you choose one, its settings appear below.
 
 ### GitHub webhook
 
@@ -68,14 +69,22 @@ Starts the agent when someone messages your Discord bot, by default only when th
 
 You need a Discord integration. See [`discord_gateway`](/references/entry-handlers#discord_gateway), and [Connect an agent to Discord](/guides/connect-an-agent-to-discord) for the whole setup.
 
+### App event
+
+Starts the agent when something happens in a connected app: a new email, a new message, a new page. Each event starts a new conversation, and the event's own fields reach prompts as `{{ .event.data }}`. Nothing is sent back automatically: to reply, give the agent a tool of the same app.
+
+Some events are **poll** events. The app is checked for new events about every 15 minutes, so a run can start a few minutes after the event.
+
+You need a connected account integration for that app, and the app has to offer events in your ServFlow organization. See [`app_event`](/references/entry-handlers#app_event).
+
 ### Set a handler in the dashboard
 
-The steps are the same for all four path-based entries, apart from Discord not needing a path.
+The steps are the same for the entries that use a path, apart from Discord and App event not needing one.
 
 1. Add the handler's [integration](/guides/add-an-integration), if you do not have one yet.
 2. Open the agent in the editor and click the entry node at the top of the canvas. The **Entry** panel opens.
-3. Under **Entry type**, choose **GitHub webhook**, **Telegram bot**, **Discord bot**, or **Streamable webhook**. The handler's settings appear.
-4. Choose the integration if this entry type uses one. For GitHub, Telegram, and Streamable webhook, enter a **Path**. An entry that already had a path keeps it, and the field is under **Advanced settings**.
+3. Under **Entry type**, choose **GitHub webhook**, **Telegram bot**, **Discord bot**, **Streamable webhook**, or **App event**. The handler's settings appear.
+4. Choose the integration if this entry type uses one. For GitHub, Telegram, and Streamable webhook, enter a **Path**. Discord and App event have no **Path** field. An entry that already had a path keeps it, and the field is under **Advanced settings**.
 5. Click **Save**.
 
 ## What the agent remembers
@@ -89,6 +98,7 @@ An agent remembers the earlier messages of the conversation a run belongs to. Th
 | Discord bot | One channel. A Discord thread counts as its own channel. |
 | Webhook | One request, unless your application asks to continue an earlier conversation. The [reference](/references/entry-handlers#webhook) shows how. |
 | Streamable webhook | One request, unless your application asks to continue an earlier conversation. The [reference](/references/entry-handlers#streamable_http_webhook) shows how. |
+| App event | One event. |
 | Trigger | One run. |
 
 This is why a Telegram bot remembers what you said a minute ago with nothing set up, and why a pull request reviewer reads each comment fresh.
@@ -105,11 +115,13 @@ A webhook caller waits for the agent and receives the reply as the response, wit
 
 A streamable webhook caller opens one HTTP request and receives Server-Sent Events while the run is happening. The final reply comes in the `done` event instead of as the whole response body.
 
+An app event also has nobody to reply to automatically. The agent can use a tool of the same app to act on the event.
+
 A trigger has nobody to reply to. For a triggered agent to have an effect, give it [tools](/guides/add-a-tool).
 
 ## What the prompt can read
 
-A handler gives the prompt the parts of a message by name. A Discord agent reads the message text as `{{ .discord.content }}`, and a GitHub agent reads a comment as `{{ .github.comment_body }}`. A webhook agent reads a field your application sent with `{{ body "question" }}`. The reference lists every name, and [Dynamic content](/concepts/dynamic-content) explains how these work.
+A handler gives the prompt the parts of a message by name. A Discord agent reads the message text as `{{ .discord.content }}`, and a GitHub agent reads a comment as `{{ .github.comment_body }}`. A webhook agent reads a field your application sent with `{{ body "question" }}`. An app-event agent reads a field from the event with `{{ .event.data.subject }}`. The reference lists every name, and [Dynamic content](/concepts/dynamic-content) explains how these work.
 
 ## More than one way in
 

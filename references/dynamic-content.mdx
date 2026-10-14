@@ -29,6 +29,7 @@ What is available depends on the entry the run came in through.
 | `github_webhook` | `body`, `param`, `header`, `urlparam` | `.github.*` |
 | `telegram_webhook` | `body`, `param`, `header`, `urlparam` | `.telegram.*` |
 | `discord_gateway` | none. Using one is a template error, because a Discord run has no HTTP request. | `.discord.*` |
+| `app_event` | none | `.event.*` |
 | Trigger, run by hand or handed a task | `input`, `trigger_value` | none |
 | Trigger, run on a schedule | none. `input` and `trigger_value` are not defined on a scheduled run. | none |
 
