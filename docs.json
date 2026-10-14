@@ -180,7 +180,7 @@
     "primary": {
       "type": "button",
       "label": "Get Started",
-      "href": "https://servflow.mintlify.app/guides/create-an-agent"
+      "href": "https://docs.servflow.io/guides/create-an-agent"
     }
   },
   "contextual": {
