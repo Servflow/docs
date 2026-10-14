@@ -26,7 +26,9 @@ Open the agent in the editor and click the sub-agent that needs the tool. In its
 </Step>
 
 <Step title="Choose Run action">
-Under **Add a tool…**, choose **Run action…**. A row appears in the section, and the **Configure Run action** dialog opens. The dialog has three sections, listed on its left edge: **Tool**, **Action**, and **Guards**.
+Under **Add a tool…**, choose **Run action…**. The **Choose action** popup opens and lists every action the server registers as a searchable grid. Each card shows the action's name, the app it belongs to (for example **ServFlow** or an integration such as **Discord**), and a short description. Use the search box to filter by name, description, type, or app.
+
+Find and select **HTTP Request**. The **Configure Run action** dialog opens. The dialog has three sections, listed on its left edge: **Tool**, **Action**, and **Guards**.
 </Step>
 
 <Step title="Name the tool and say when to use it">
@@ -44,7 +46,9 @@ When the user asks about a GitHub repository, such as its description, stars, or
 </Step>
 
 <Step title="Choose the action">
-In the **Action** section, under **Action**, choose **HTTP Request**. The action's fields appear below it. Each field holds a value you set, and most have a **Let the model set this** link under them.
+In the **Action** section, the chosen action is shown in a card. To change it, click **Change** and pick another one from the popup. Changing the action resets its fields, because each action has its own set of fields.
+
+The action's fields appear below the card. Each field holds a value you set, and most have a **Let the model set this** link under them.
 </Step>
 
 <Step title="Set the fields and the model's input">
