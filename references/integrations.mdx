@@ -8,12 +8,13 @@ This page lists every integration type. Each type's section says what uses it an
 
 In a body, each field of `config` holds either a literal, as `{"value": ...}`, or the name of a stored secret, as `{"secret": "<secret name>"}`. Use a secret for every password field. A secret that a body names has to exist before the integration is created. The commands that take a body are in the [CLI reference](/references/cli#integration).
 
-An integration connected through OAuth, such as Notion, has its own connection per integration id. It is `pending` from creation until the sign-in flow completes, and ServFlow only loads it after it becomes `complete`.
+An integration connected through OAuth or sign-in, such as Notion or a Composio service, has its own connection per integration id. It is `pending` from creation until the sign-in flow completes, and ServFlow only loads it after it becomes `complete`.
 
 | Type | Name in the dashboard | Guided setup | Used by |
 |---|---|---|---|
 | [`binance`](#binance) | Binance | No | `binance/*` actions |
 | [`chromium`](#chromium) | Chromium | No | `chromium/*` actions |
+| [`composio:<auth_config_id>`](#composio) | Composio service | Yes | Actions provided through Composio |
 | [`discord`](#discord) | Discord | Yes | `discord/*` actions, `discord_gateway` entry |
 | [`gitea`](#gitea) | Gitea | No | `gitea/*` actions, replies from a `gitea_webhook` entry |
 | [`github_app`](#github_app) | GitHub App | Yes | `github_fetch` and `github_post` actions, `github_webhook` entry |
@@ -23,7 +24,7 @@ An integration connected through OAuth, such as Notion, has its own connection p
 | [`sql`](#sql) | SQL Database | No | `fetch`, `delete`, and `authenticate` actions |
 | [`telegram_bot`](#telegram_bot) | Telegram Bot | No | `telegram_webhook` entry |
 
-A type with a guided setup opens its own set of screens in the dashboard. Every other type opens a form with one input for each field. OAuth-guided integrations can appear as **Not connected** until the provider approval finishes; use the row's **Connect integration** action to retry the approval.
+A type with a guided setup opens its own set of screens in the dashboard. Every other type opens a form with one input for each field. OAuth- or sign-in-guided integrations such as Notion and Composio services can appear as **Not connected** until the provider approval finishes; use the row's **Connect integration** action to retry the approval.
 
 ## Types
 
@@ -67,6 +68,18 @@ Chromium browser automation integration for web scraping and testing.
     "headless": { "value": true },
     "timeout": { "value": 30 }
   }
+}
+```
+
+### composio
+
+A service available through Composio, such as Gmail or Slack. The exact type key is `composio:<auth_config_id>`, where `<auth_config_id>` comes from the Composio catalog. In the dashboard, choosing a Composio service opens a guided setup that asks for a name and then sends the browser to Composio to sign in. Composio fills the integration config from its catalog, so there are no fields to enter.
+
+```json
+{
+  "integrationId": "work-gmail",
+  "type": "composio:ac_gmail",
+  "config": {}
 }
 ```
 

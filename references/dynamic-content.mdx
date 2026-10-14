@@ -26,11 +26,15 @@ What is available depends on the entry the run came in through.
 | Entry | Functions | Variables |
 |---|---|---|
 | Webhook | `body`, `param`, `header`, `urlparam` | none |
-| `github_webhook` | `body`, `param`, `header`, `urlparam` | `.github.*` |
-| `telegram_webhook` | `body`, `param`, `header`, `urlparam` | `.telegram.*` |
-| `discord_gateway` | none. Using one is a template error, because a Discord run has no HTTP request. | `.discord.*` |
+| Streamable webhook | `body`, `param`, `header`, `urlparam` | none |
+| `github_webhook` | none | `.github.*` |
+| `gitea_webhook` | none | `.gitea.*` |
+| `telegram_webhook` | none | `.telegram.*` |
+| `discord_gateway` | none | `.discord.*` |
 | Trigger, run by hand or handed a task | `input`, `trigger_value` | none |
 | Trigger, run on a schedule | none. `input` and `trigger_value` are not defined on a scheduled run. | none |
+
+A function that is not suggested can still be written by hand. A GitHub entry's run still has `body`, for example, but the menu lists the parsed `.github` fields instead.
 
 The [Available entry handlers](/references/entry-handlers) lists every variable of each handler.
 
