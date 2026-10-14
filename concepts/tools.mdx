@@ -8,7 +8,9 @@ A tool is something a sub-agent can decide to do while it works: look something 
 
 ## The agent chooses when to use a tool
 
-You give a tool a name and a description of when to use it. The agent reads both. While it works out its answer, it decides for itself whether the tool would help, and uses it if so. It can use a tool several times in one run, or not at all.
+You give a tool a display name and a description of when to use it. The agent reads both. While it works out its answer, it decides for itself whether the tool would help, and uses it if so. It can use a tool several times in one run, or not at all.
+
+The display name is for you; the model knows the tool by a slug derived from it. Any run of characters that a provider does not allow in a tool name is replaced with one underscore, leading and trailing underscores are removed, and the result is cut to 64 characters. `GitHub repo lookup` becomes `GitHub_repo_lookup`.
 
 That is the difference between a tool and everything else you set up. An entry always starts the agent. A prompt is always read. A tool is an option the agent has.
 
@@ -57,7 +59,7 @@ Anyone who can talk to your agent can ask it to use its tools. A guard is a cond
 
 An agent that has a tool will still often answer without it. AI models lean towards answering from what they already know, and a tool's description alone is a weak hint. While these guides were written, agents said they had started a report without using the tool for it, and answered questions without asking the researcher they were given.
 
-What works is saying so in the sub-agent's **System prompt**, in plain and firm words: name the tool, and say when it must be used. "You must use the `github_repo` tool before you answer a question about a repository" works where "you can look repositories up" does not.
+What works is saying so in the sub-agent's **System prompt**, in plain and firm words: name the tool by the slug the model will see, and say when it must be used. "You must use the `github_repo` tool before you answer a question about a repository" works where "you can look repositories up" does not.
 
 A specific **When to use** helps too. "When the user asks about a GitHub repository, such as its stars or default branch" is better than "GitHub lookup".
 

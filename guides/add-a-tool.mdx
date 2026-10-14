@@ -30,7 +30,7 @@ Under **Add a tool…**, choose **Run action…**. A row appears in the section,
 </Step>
 
 <Step title="Name the tool and say when to use it">
-In the **Tool** section, enter a **Display name**, for example `github_repo`. The model calls the tool by this name, so use letters, digits, and underscores.
+In the **Tool** section, enter a **Display name**, for example `GitHub repo lookup`. The model calls the tool by a slug derived from this name, so use any readable name you like.
 
 Under **When to use**, describe the situation the tool is for. The model reads this to decide whether to call it:
 
@@ -70,7 +70,9 @@ To hand a whole field to the model instead, click **Let the model set this** und
 </Step>
 
 <Step title="Save the tool">
-Click **Save tool**. The row in the **Tools** section reads `github_repo`, with `http` under it, and the tool appears on the canvas beside the sub-agent. The gear on the row opens the dialog again, and the trash icon removes the tool.
+Click **Save tool**. The row in the **Tools** section reads `GitHub_repo_lookup` (the slug of the display name), with `http` under it, and the tool appears on the canvas beside the sub-agent. The gear on the row opens the dialog again, and the trash icon removes the tool.
+
+If the display name has no letter or digit, or another tool on this sub-agent has a different display name that folds to the same slug, the save is rejected. Use unique names and change spaces or punctuation to underscores in the slug you expect the model to use.
 
 <Frame>
   <img src="/images/guides/add-a-tool/05-tools-row.png" alt="The Tools section listing github_repo, and the tool shown on the canvas next to the sub-agent" />
@@ -81,7 +83,7 @@ Click **Save tool**. The row in the **Tools** section reads `github_repo`, with 
 In the same panel, set the sub-agent's **System prompt** so the model knows to use the tool:
 
 ```
-Answer questions about GitHub repositories. Use the github_repo tool to look a repository up, and answer from what it returns.
+Answer questions about GitHub repositories. Use the GitHub_repo_lookup tool to look a repository up, and answer from what it returns.
 ```
 
 Click **Save** in the top bar. The button reads **Saved**.
