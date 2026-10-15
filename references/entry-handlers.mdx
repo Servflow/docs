@@ -15,6 +15,7 @@ This page lists every entry an agent can have. Each entry's section holds its se
 | [Streamable webhook](#streamable_http_webhook) | `handler` | `streamable_http_webhook` | Yes | Whoever opened the Server-Sent Events stream. |
 | [Telegram bot](#telegram_webhook) | `handler` | `telegram_webhook` | Yes | The chat the message came from. |
 | [Discord bot](#discord_gateway) | `handler` | `discord_gateway` | No | The channel the message came from. |
+| [App event](#app_event) | `handler` | `app_event` | No | Nobody. The event is logged; a tool is needed to reply. |
 
 The keys every entry shares, `type` and `start`, and the rules for an agent with several entries are in the [CLI reference](/references/cli#entries).
 
@@ -332,6 +333,47 @@ entries:
 | `reply_to_text` | string | The text of the message this one replies to. |
 | `reply_to_author` | string | Who wrote the message this one replies to. |
 | `message_link` | string | A link to the message. |
+
+### app_event
+
+Runs on an event in a connected third-party app: a new message, file, or other change the app reports. The server decides which apps and events are available, so an instance that offers none cannot serve this entry. Use `list_app_events` to see the apps that have events and `describe_app_event` to see an event's settings and variables.
+
+Namespace: `event`. No path. Integration type: the app the event comes from. The integration must belong to the app that owns the event.
+
+**Settings**
+
+| Key | Dashboard label | Type | Required | Default | Description |
+|---|---|---|---|---|---|
+| `integration` | Account | integration | Yes | none | The connected account whose events start this agent. It must belong to the app the event comes from. |
+| `trigger` | Event | string | Yes | none | The event to listen for, as the server names it, e.g. `GMAIL_NEW_GMAIL_MESSAGE`. |
+| `settings` | Settings | object | No | the event's own defaults | The event's settings, such as which label or channel to watch. The available keys depend on the event; use `describe_app_event` before writing a config. |
+
+**In a config file**
+
+```yaml
+entries:
+  - type: handler
+    handlerConfig:
+      type: app_event
+      config:
+        integration: my-gmail
+        trigger: GMAIL_NEW_GMAIL_MESSAGE
+        settings:
+          label: inbox
+    start: agent.handle
+```
+
+**Variables**
+
+| Key | Type | Description |
+|---|---|---|
+| `trigger` | string | The event's name, e.g. `GMAIL_NEW_GMAIL_MESSAGE`. |
+| `trigger_id` | string | The id of the watch that fired. |
+| `event_id` | string | This event's own id. A retried delivery keeps it. |
+| `integration` | string | The integration the entry names. |
+| `timestamp` | string | When the event happened. |
+| `data` | object | The event itself, in the shape the event declares. Read a field as `{{ .event.data.<path> }}`. |
+| `json` | string | `data` as JSON text, for a prompt that passes the whole event on. |
 
 ## Related
 
