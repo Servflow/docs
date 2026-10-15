@@ -36,6 +36,7 @@
               "guides/manage-llm-providers",
               "guides/set-up-memory-and-file-access",
               "guides/call-other-agents",
+              "guides/inspect-traces",
               "guides/connect-an-agent-to-discord"
             ]
           },
