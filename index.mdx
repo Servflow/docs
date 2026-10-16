@@ -35,7 +35,7 @@ A workflow is a graph of tools: call a model, query a database, hit an API, bran
 
 **It bends to your systems, not the other way around.** Integrations connect agents to the infrastructure you already run: your PostgreSQL, your MongoDB, your vector store, your internal APIs. And because every agent is a plain JSON or YAML config underneath, you can customize any part of it and manage it like the rest of your code.
 
-**It's self-contained.** A single binary serves your agents, the API, and the dashboard, with SQLite for storage. There's no cluster to stand up and no fleet of services to keep alive.
+**It's self-contained.** A single binary serves your agents, the API, and the dashboard. There's no cluster to stand up and no fleet of services to keep alive.
 
 **It's light and fast.** The engine is compiled Go: one process, a low memory footprint, and near-instant startup. It stays fast under real traffic, so your agents' latency comes from the models they call, not from the platform running them. The same binary is comfortable on a laptop, in a container, or on a small VM.
 

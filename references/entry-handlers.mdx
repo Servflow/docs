@@ -277,7 +277,7 @@ entries:
 
 ### discord_gateway
 
-Connects to Discord as a bot and runs on the messages it hears, answering in the channel that asked. It holds a websocket open to Discord, so it has no path and needs no address Discord can reach. The bot needs the Message Content intent turned on in the Discord developer portal. Each channel keeps one conversation, and a Discord thread counts as a channel of its own.
+Connects to Discord as a bot and runs on the messages it hears, answering in the channel that asked. It connects out to Discord, so it has no path and needs no address Discord can reach. The bot needs the Message Content intent turned on in the Discord developer portal. Each channel keeps one conversation, and a Discord thread counts as a channel of its own.
 
 Namespace: `discord`. No path. Integration type: [`discord`](/references/integrations#discord).
 
