@@ -58,8 +58,6 @@ An action is one thing an agent can do: send a Discord message, fetch a web addr
 | Binance Futures Order | [`binance/futuresorder`](#binance%2Ffuturesorder) | Places a futures order. | `binance` |
 | **ServFlow** | | | |
 | Servflow Validate | [`servflowvalidate`](#servflowvalidate) | Checks a ServFlow YAML config for mistakes. | none |
-| AI Agent | [`agent`](#agent-and-parallel) | How a sub-agent is stored. Not added by hand. | none |
-| Run In Parallel | [`parallel`](#agent-and-parallel) | How a parallel context group is stored. Not added by hand. | none |
 
 ## How an action is written in a config file
 
@@ -962,15 +960,6 @@ Checks a ServFlow YAML config for mistakes in its syntax and structure.
   config:
     yamlContent: '{{ body "config" }}'
 ```
-
-### agent and parallel
-
-The binary lists two more action types. You do not add them by hand. They are how ServFlow stores parts of an agent.
-
-| Type | Name | What it is |
-|---|---|---|
-| `agent` | AI Agent | A sub-agent. Its fields are the sub-agent's keys. See the [CLI reference](/references/cli#agents). |
-| `parallel` | Run In Parallel | A context group with **Run steps in parallel** turned on. See the [CLI reference](/references/cli#contextgroups). |
 
 ## Related
 

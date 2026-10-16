@@ -29,26 +29,24 @@ servflowai start --config config.toml
 
 ## `[server]`
 
-Controls how the process is hosted. **One port serves everything.** The workflow engine owns the root path, so a workflow listening on `/hello` answers at `http://localhost:8080/hello`. The builder UI is mounted under `/dashboard` on this same port, so its pages and assets live there rather than at the origin root.
+Controls how the process is hosted. **One port serves everything.** Agent paths are served from the root, so an agent listening on `/ask` answers at `http://localhost:8080/ask`. The dashboard is under `/dashboard` on the same port.
 
 ```toml
 [server]
 port = "8080"
 config_folder = "./configs"
-engine_config_file = "./integrations.yaml"
 env = "production"
 ```
 
 | Field | Environment variable | Default | Description |
 |---|---|---|---|
-| `port` | `SERVFLOW_SERVER_PORT` | `8080` | Port serving the engine, the API, and (with `--dashboard`) the UI |
+| `port` | `SERVFLOW_SERVER_PORT` | `8080` | Port serving agents, the API, and (with `--dashboard`) the dashboard |
 | `config_folder` | `SERVFLOW_SERVER_CONFIG_FOLDER` | — | **Required.** Directory holding workflow configuration files |
-| `engine_config_file` | `SERVFLOW_SERVER_ENGINE_CONFIG_FILE` | — | Path to the engine integrations YAML file |
 | `env` | `SERVFLOW_SERVER_ENV` | `production` | Environment mode: `production` or `development` |
 
 ## `[sqlite]`
 
-The store. Agents, integrations, providers, secrets, workspaces, and user accounts are rows in one SQLite file.
+Where ServFlow keeps agents, integrations, providers, secrets, workspaces, and user accounts.
 
 ```toml
 [sqlite]
@@ -58,17 +56,10 @@ master_key = ""
 
 | Field | Environment variable | Default | Description |
 |---|---|---|---|
-| `path` | `SERVFLOW_SQLITE_PATH` | `secrets.db` | Path to the SQLite file. A relative path is resolved against the folder that holds the settings file, so the default is `~/.servflow/secrets.db`. |
+| `path` | `SERVFLOW_SQLITE_PATH` | `secrets.db` | Path to the database file. A relative path is resolved against the folder that holds the settings file, so the default is `~/.servflow/secrets.db`. |
 | `master_key` | `SERVFLOW_SQLITE_MASTER_KEY` | empty | The key that encrypts stored credentials. Empty stores them as plain text. |
 
-When `master_key` is set, these are encrypted in the store:
-
-- the value of every [secret](/concepts/secrets)
-- the config of every [integration](/concepts/integrations)
-- the config of every [provider](/concepts/providers), which holds its API key
-- the tokens of integrations connected through a sign-in, such as Notion
-
-Rows written before `master_key` was set stay in plain text.
+When `master_key` is set, stored [secrets](/concepts/secrets), [integration](/concepts/integrations) credentials, and [provider](/concepts/providers) API keys are encrypted. Set it before you store any credentials.
 
 <Warning>
 Never commit `master_key` to version control. Set it with `SERVFLOW_SQLITE_MASTER_KEY` in production. Changing it makes previously encrypted values unreadable.
@@ -101,7 +92,7 @@ domain = "your-domain.com"
 
 | Field | Environment variable | Default | Description |
 |---|---|---|---|
-| `mode` | `SERVFLOW_AUTH_MODE` | `local` | `local` gates the dashboard behind username/password accounts stored in SQLite. `none` disables the gate entirely |
+| `mode` | `SERVFLOW_AUTH_MODE` | `local` | `local` gates the dashboard behind username and password accounts. `none` disables the gate entirely |
 | `domain` | `SERVFLOW_AUTH_DOMAIN` | — | Public base URL of this instance, used to build OAuth integration callback URLs |
 
 **`mode` defaults to `local`.** A config file that omits this section is still gated — the first time you open the dashboard you are asked to create an account. See [First run](/installation#create-the-first-account).
@@ -109,8 +100,6 @@ domain = "your-domain.com"
 <Warning>
 `mode = "none"` leaves the dashboard and management API open to anyone who can reach the port. Use it only on a trusted local machine.
 </Warning>
-
-Sessions are opaque tokens stored in the database, so they survive restarts and can be revoked by logging out.
 
 ## `[tracing]`
 
@@ -128,10 +117,10 @@ collector_endpoint = ""
 |---|---|---|---|
 | `enabled` | `SERVFLOW_TRACING_ENABLED` | `false` | Enable OpenTelemetry tracing |
 | `service_name` | `SERVFLOW_TRACING_SERVICE_NAME` | — | Service name attached to every span |
-| `org_id` | `SERVFLOW_TRACING_ORG_ID` | — | Organization ID for multi-tenant collectors |
+| `org_id` | `SERVFLOW_TRACING_ORG_ID` | — | Organization ID sent with exported traces |
 | `collector_endpoint` | `SERVFLOW_TRACING_COLLECTOR_ENDPOINT` | — | Base URL of the OTLP/HTTP ingest endpoint. The `/v1/traces` path is appended automatically, so give a full URL including scheme |
 
-Tracing can also be configured during [first-run setup](/installation#create-the-first-account), which offers a hosted collector, a custom endpoint, or disabling it.
+Tracing can also be configured during [first-run setup](/installation#create-the-first-account).
 
 ## Complete example
 
@@ -139,7 +128,6 @@ Tracing can also be configured during [first-run setup](/installation#create-the
 [server]
 port = "8080"
 config_folder = "./configs"
-engine_config_file = "./integrations.yaml"
 env = "production"
 
 [sqlite]

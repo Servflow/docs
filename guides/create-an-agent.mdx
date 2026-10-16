@@ -178,15 +178,9 @@ curl -X POST http://localhost:8080/ask \
   -d '{"question": "What is a webhook?"}'
 ```
 
-In the hosted cloud, teams with an active paid plan or active trial serve agent webhooks under `/agents/{team-slug}`, so the same agent would be:
+In the hosted cloud, the agent has its own address. Open the entry panel and copy the full URL from the **Path** field.
 
-```bash
-curl -X POST http://localhost:8080/agents/acme/ask \
-  -H 'Content-Type: application/json' \
-  -d '{"question": "What is a webhook?"}'
-```
-
-A team whose plan no longer allows serving returns `404` from that hosted route. The `body` function only reads requests sent with `Content-Type: application/json`.
+The `body` function only reads requests sent with `Content-Type: application/json`.
 
 ## Create an agent from the CLI or MCP
 

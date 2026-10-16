@@ -69,7 +69,7 @@ Each field of `config` is an object holding a literal, as `value`, or the name o
 
 Each integration body takes a user-facing `name`. ServFlow generates the integration's internal `integrationId` from that name when it is created and returns it in the result. Updates keep the same `integrationId` even if you rename the integration later.
 
-OAuth-guided integrations, such as `notion_mcp`, have no config fields in the body. Creating one this way leaves it pending until you complete its sign-in in the dashboard. A created integration is stored disabled; `servflowai resource integration enable <integrationId>` is what serves it.
+OAuth-guided integrations, such as `notion_mcp`, have no config fields in the body. Creating one this way leaves it unusable until you complete its sign-in in the dashboard. A created integration is stored disabled; `servflowai resource integration enable <integrationId>` is what serves it.
 
 ```json
 {
@@ -130,7 +130,7 @@ Installs a template into the running server.
 
 ## MCP server tools
 
-ServFlow serves the management MCP server at `/api/mcp`. In normal modes, send the team's auth token in the `Authorization` header, either as the raw token or as `Bearer <token>`. In `local` mode, the endpoint is unauthenticated. The same machine-auth API also serves `POST /api/ai-assist`, which streams AI assist events for the team the token names, using the Config Assistant team's upstream host and auth token when `AI_UPSTREAM_HOST` and `AI_UPSTREAM_AUTH_TOKEN` are set.
+ServFlow serves the management MCP server at `/api/mcp`. Send your auth token in the `Authorization` header, as `Bearer <token>`.
 
 The management MCP server exposes these tools:
 
@@ -143,7 +143,7 @@ The management MCP server exposes these tools:
 | Workspaces | `list_workspaces`, `get_workspace`, `create_workspace`, `update_workspace`, `delete_workspace` |
 | Discovery | `list_actions`, `describe_action`, `list_entry_handlers`, `describe_entry_handler`, `list_template_functions` |
 
-`list_actions` lists every built-in action type. `describe_action` describes one or more action types and returns their schema and field metadata. `config_schema` returns the stored config shape as JSON Schema, and `config_example` returns a complete example config you can adapt. `list_entry_handlers` lists every built-in entry type. `describe_entry_handler` describes one or more handler types and returns their fields, injected variables, and whether each is a listener. `list_template_functions` lists the template functions available in dynamic content and tool guards, optionally filtered by category. MCP config writes use the same config-name validation and whitespace normalization as the dashboard and CLI.
+`list_actions` lists every built-in action type. `describe_action` describes one or more action types and returns their schema and field metadata. `config_schema` returns the stored config shape as JSON Schema, and `config_example` returns a complete example config you can adapt. `list_entry_handlers` lists every built-in entry type. `describe_entry_handler` describes one or more handler types and returns their fields, injected variables, and whether each is a listener. `list_template_functions` lists the template functions available in dynamic content and tool guards, optionally filtered by category.
 
 ## version
 
