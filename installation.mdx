@@ -31,6 +31,8 @@ Open the workspace. You are signed in and ready to build.
 
 Hosted plans limit how many agent runs a team may start in each one-minute window. Every webhook request, scheduled run, task run, and listener-triggered run counts. When a webhook request is refused at the limit, the API returns `429 Too Many Requests` with a `Retry-After` header telling you when the current minute ends.
 
+Hosted plans can also refuse dashboard features such as enabling agents, viewing traces, or sending AI assist messages. When that happens, the dashboard opens a paywall with the reason and shows the plans that include the feature. Subscribe directly from the paywall, or choose **Manage subscription** if your team already pays through Stripe.
+
 Next, follow [Create an agent](/guides/create-an-agent).
 
 ## Self-hosted
