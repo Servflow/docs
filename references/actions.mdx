@@ -653,12 +653,11 @@ Stores a value under a key. The value stays until it is replaced.
 
 ### get_key
 
-Reads the value stored under a key.
+Reads the value stored under a key. If nothing is stored under the key, the action fails. When an agent calls `get_key` as a tool, the agent receives the `key not found` error and can decide what to do next.
 
 | Key | Label | Type | Required | Default | Values |
 |---|---|---|---|---|---|
 | `key` | Key | string | Yes | none | The key to read |
-| `failIfEmpty` | Fail if Empty | boolean | No | `false` | Treats a missing key as a failure |
 
 ```yaml
 - id: last
