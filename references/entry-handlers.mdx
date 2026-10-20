@@ -90,7 +90,7 @@ Answers `POST` requests on its path the same way as a webhook entry, but as a st
 | `tool_call` | The agent starts a tool call. The event data is JSON with `id`, optional `parent_id`, and `text`, always `calling tool`. Tool arguments and results are not streamed. |
 | `done` | The run finished. The event data is JSON with `conversation_id` and the final `text`, the same reply a webhook would have returned. |
 | `error` | The run failed after the stream opened. The event data is JSON with `error`. |
-| `429` | The request continued a conversation that has already started as many runs in the last hour as the agent's `settings.conversationRunsPerHour` allows, or the agent could not start another run right now. |
+| `429` | The request continued a conversation that has already started as many runs in the last hour as the agent's `settings.conversationRunsPerHour` allows. |
 | `500` | The run failed before the stream opened. |
 
 The stream opens only when the run adds its first message. A refusal before that still comes back as an ordinary HTTP response. Once the stream is open, ServFlow sends keepalive comments so idle proxies do not cut the connection.
