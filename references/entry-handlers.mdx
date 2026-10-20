@@ -86,8 +86,8 @@ Answers `POST` requests on its path the same way as a webhook entry, but as a st
 
 | Event or response | When |
 |---|---|
-| `message` | The agent adds an assistant message. The event data is JSON with `id`, optional `parent_id`, and `text`. |
-| `tool_call` | The agent starts a tool call. The event data is JSON with `id`, optional `parent_id`, and `text`, always `calling tool`. Tool arguments and results are not streamed. |
+| `message` | The agent adds an assistant message. The event data is JSON with `id` and `text`. |
+| `tool_call` | The agent starts a tool call. The event data is JSON with `id` and `text`, always `calling tool`. Tool arguments and results are not streamed. |
 | `done` | The run finished. The event data is JSON with `conversation_id` and the final `text`, the same reply a webhook would have returned. |
 | `error` | The run failed after the stream opened. The event data is JSON with `error`. |
 | `429` | The request continued a conversation that has already started as many runs in the last hour as the agent's `settings.conversationRunsPerHour` allows, or the agent could not start another run right now. |
@@ -95,7 +95,7 @@ Answers `POST` requests on its path the same way as a webhook entry, but as a st
 
 The stream opens only when the run adds its first message. A refusal before that still comes back as an ordinary HTTP response. Once the stream is open, ServFlow sends keepalive comments so idle proxies do not cut the connection.
 
-Like a webhook, the response carries an `X-Conversation-Id` header naming the conversation the run used. Send the same header on the next request to continue that conversation.
+Like a webhook, the response carries an `X-Conversation-Id` header naming the conversation the run used. Send the same header on the next request to continue that conversation. If the request sends no `X-Conversation-Id`, ServFlow creates one before the run starts and returns it in that header.
 
 ```yaml
 entries:
