@@ -16,7 +16,7 @@ This guide adds an integration in the dashboard: a stored credential, such as a 
 <Steps>
 
 <Step title="Open Integrations">
-In the sidebar under **Configure**, open **Integrations**. The page lists every integration by name, type, and status. Each row has edit and delete controls, and a **Connect integration** action when a guided OAuth setup still needs to be completed.
+In the sidebar under **Configure**, open **Integrations**. The page lists every integration by name, type, and status. Each row has edit and delete controls, **Enable integration** or **Disable integration** when the integration is ready to be served, and a **Connect integration** action when a guided OAuth setup still needs to be completed.
 
 <Frame>
   <img src="/images/guides/add-an-integration/01-integrations.png" alt="The Integrations page listing integrations by name and type, with the New Integration button" />
@@ -56,7 +56,9 @@ To paste the value into the integration instead, choose **Enter a value directly
 <Step title="Add it">
 Click **Add Integration**. The dialog closes, and the integration appears in the list with its type. A new integration starts disabled, so enable it before an agent can use it.
 
-A guided OAuth setup such as Notion may create the integration before the approval finishes. Until it is approved, the row shows **Not connected**. Use the row's **Connect integration** action to start the approval again. When the approval finishes, enable the integration to start serving it.
+For a non-OAuth integration, the row then shows **Disabled** and offers **Enable integration**. Once you enable it, the status changes to **Enabled**.
+
+A guided OAuth setup such as Notion may create the integration before the approval finishes. Until it is approved, the row shows **Not connected**. Use the row's **Connect integration** action to start the approval again. When the approval finishes, ServFlow enables the integration for you. If the build fails, the row stays disabled and the page shows why.
 </Step>
 
 </Steps>
@@ -71,7 +73,7 @@ Any field that takes an integration lists the stored ones by name, filtered to t
 
 ## Edit or delete an integration
 
-On the Integrations page, the pencil on a row opens the same form. Change the **Name** or the fields and click **Save Changes**. A password field that holds a literal value opens blank. Leave it blank to keep the stored value, or enter a replacement. Saving does not replace what an enabled integration is serving yet; enable the integration again to make the saved change live.
+On the Integrations page, the pencil on a row opens the same form. Change the **Name** or the fields and click **Save Changes**. A password field that holds a literal value opens blank. Leave it blank to keep the stored value, or enter a replacement. Saving does not replace what an enabled integration is serving yet; the row then shows **Enabled · changes not applied**, and **Apply changes** enables it again to make the saved change live.
 
 <Frame>
   <img src="/images/guides/add-an-integration/04-edit-dialog.png" alt="The edit dialog for an existing integration" />
@@ -81,7 +83,7 @@ The trash icon deletes the integration. A step or entry that references the dele
 
 ## Verify
 
-The integration appears in the list on the Integrations page. Once you enable it, its status is **Ready**. From the terminal, it also appears in:
+The integration appears in the list on the Integrations page. Once you enable it, its status is **Enabled**. From the terminal, it also appears in:
 
 ```bash
 servflowai resource integration list

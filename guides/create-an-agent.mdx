@@ -55,7 +55,7 @@ Choose **Sequential pipeline** and set **Pipeline stages** to `2 sub-agents`. Ea
 </Step>
 
 <Step title="Click Create Agent">
-Click **Create Agent**. The editor opens on a canvas with four nodes from top to bottom: the entry, labelled **Manual trigger**, the sub-agents **Analyze request** and **Compose response**, and **Final response**. The agent is saved, and its id, `question-answerer`, is derived from the name.
+Click **Create Agent**. The editor opens on a canvas with four nodes from top to bottom: the entry, labelled **Manual trigger**, the sub-agents **Analyze request** and **Compose response**, and **Final response**. The agent is saved disabled, and its id, `question-answerer`, is derived from the name.
 
 <Frame>
   <img src="/images/guides/create-an-agent/05-editor.png" alt="The editor canvas showing the entry, two sub-agent nodes, and the final response" />
@@ -133,7 +133,7 @@ Leave its **User prompt** empty. In a pipeline, a stage receives the previous st
 </Step>
 
 <Step title="Save">
-Click **Save** in the top bar. The button reads **Saved**, and the running server picks up the agent without a restart.
+Click **Save** in the top bar. The button reads **Saved**. Saving only stores the change. If the agent is already enabled, click **Apply saved changes** beside **Enabled** to make the running server serve the saved version.
 </Step>
 
 </Steps>
