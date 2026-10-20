@@ -15,6 +15,7 @@ This page lists every entry an agent can have. Each entry's section holds its se
 | [Streamable webhook](#streamable_http_webhook) | `handler` | `streamable_http_webhook` | Yes | Whoever opened the Server-Sent Events stream. |
 | [Telegram bot](#telegram_webhook) | `handler` | `telegram_webhook` | Yes | The chat the message came from. |
 | [Discord bot](#discord_gateway) | `handler` | `discord_gateway` | No | The channel the message came from. |
+| [App event](#app_event) | `handler` | `app_event` | No | Nobody. The agent replies through a tool. |
 
 The keys every entry shares, `type` and `start`, and the rules for an agent with several entries are in the [CLI reference](/references/cli#entries).
 
@@ -332,6 +333,47 @@ entries:
 | `reply_to_text` | string | The text of the message this one replies to. |
 | `reply_to_author` | string | Who wrote the message this one replies to. |
 | `message_link` | string | A link to the message. |
+
+### app_event
+
+Runs when an event happens in a connected app through Composio, such as **Gmail > New message**. The event can be pushed by the app (`webhook`) or checked for on a schedule (`poll`), in which case it is usually read within about 15 minutes. The agent starts directly from the event, not from an HTTP request, so it has no path and no built-in reply; to answer, give the agent a tool that posts back through the same app.
+
+Namespace: `event`. No path. Integration type: a Composio app integration, such as a connected Gmail account.
+
+**Settings**
+
+| Key | Dashboard label | Type | Required | Default | Description |
+|---|---|---|---|---|---|
+| `integration` | App / Account | integration | Yes | none | The connected app whose events start this agent. |
+| `trigger` | Event | string | Yes | none | The app event to watch, such as `GMAIL_NEW_GMAIL_MESSAGE`. The dashboard lists the events the app offers. |
+| `settings` | Settings | object | No | empty | Event-specific settings from the trigger type's schema. For example, Gmail new-message can be filtered by label. |
+
+**In a config file**
+
+```yaml
+entries:
+  - type: handler
+    handlerConfig:
+      type: app_event
+      config:
+        integration: my-gmail
+        trigger: GMAIL_NEW_GMAIL_MESSAGE
+        settings:
+          labelIds: INBOX
+    start: agent.inbox-triage
+```
+
+**Variables**
+
+| Key | Type | Description |
+|---|---|---|
+| `event.trigger` | string | The trigger slug, such as `GMAIL_NEW_GMAIL_MESSAGE`. |
+| `event.trigger_id` | string | The Composio trigger instance id that fired. |
+| `event.event_id` | string | The id of this delivery. |
+| `event.integration` | string | The integration id this entry names. |
+| `event.timestamp` | string | The event timestamp. |
+| `event.data` | object | The event payload, in the shape the trigger type declares. Numbers keep their original JSON encoding. |
+| `event.json` | string | The payload as JSON text, for prompts that pass the whole event. |
 
 ## Related
 
