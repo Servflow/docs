@@ -1,0 +1,32 @@
+---
+title: "Inspect traces"
+description: "Open a recorded run and read every model call, tool call, and span to debug or refine an agent"
+icon: "magnifying-glass"
+---
+
+Every run of an agent is recorded as a trace. The trace shows each span of work, how long it took, and whether it succeeded. Use it to understand why an agent returned the answer it did, or to find the step that failed.
+
+## Open a trace
+
+In the sidebar under **Account**, open **Traces**. The list shows recent runs with their entry, status, duration, and time. Click a row to open the trace viewer.
+
+The viewer shows the trace as a tree of spans on the left. Select a span to see its details and attributes on the right. Error spans are highlighted so you can jump straight to the failure.
+
+## Tool calls
+
+When a span executed a tool, the details include a **Tool calls** table. Each row is one tool invocation.
+
+| Column | What it shows |
+| --- | --- |
+| **Tool** | The tool that ran. For action tools this is the action name; for other tools it is the name recorded by the engine. |
+| **Type** | The kind of tool. Values include `mcp`, `workflow`, `builtin`, `action`, and `agent_task`. |
+| **Arguments** | The arguments passed to the tool. Objects are shown as `key=value` pairs; plain text returned by the engine is shown as-is. |
+| **Output** | What the tool gave back. Objects are shown as `key=value` pairs and plain text is shown as-is. A failed call leaves this cell empty. |
+| **Time** | How long the tool call took. |
+| **Status** | Whether the call succeeded or failed. |
+
+Output is recorded only when the tool returned a value. If the call failed, the row still shows the arguments and status, but **Output** is `—`.
+
+## Spans and attributes
+
+Traces follow the OpenTelemetry standard. Every span records attributes such as the model name, token counts, and prompts. Use the attributes to inspect exactly what the model was sent and what it replied with.
