@@ -122,6 +122,14 @@ collector_endpoint = ""
 
 Tracing can also be configured during [first-run setup](/installation#create-the-first-account).
 
+## Composio
+
+If `COMPOSIO_API_KEY` is set, ServFlow loads the enabled services and tools from that Composio project. Each service becomes a guided-setup integration type, and its tools become `external:*` actions. Without it, no Composio integrations or actions are offered.
+
+| Environment variable | Default | Description |
+|---|---|---|
+| `COMPOSIO_API_KEY` | — | The Composio project API key. Read access to auth configs and toolkits is required. |
+
 ## Complete example
 
 ```toml
