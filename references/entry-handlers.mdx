@@ -15,6 +15,7 @@ This page lists every entry an agent can have. Each entry's section holds its se
 | [Streamable webhook](#streamable_http_webhook) | `handler` | `streamable_http_webhook` | Yes | Whoever opened the Server-Sent Events stream. |
 | [Telegram bot](#telegram_webhook) | `handler` | `telegram_webhook` | Yes | The chat the message came from. |
 | [Discord bot](#discord_gateway) | `handler` | `discord_gateway` | No | The channel the message came from. |
+| [App event](#app_event) | `handler` | `app_event` | No | Nothing automatically. Give the agent a tool of the same app to act. |
 
 The keys every entry shares, `type` and `start`, and the rules for an agent with several entries are in the [CLI reference](/references/cli#entries).
 
@@ -332,6 +333,49 @@ entries:
 | `reply_to_text` | string | The text of the message this one replies to. |
 | `reply_to_author` | string | Who wrote the message this one replies to. |
 | `message_link` | string | A link to the message. |
+
+### app_event
+
+Runs when something happens in a connected app: a new email, a new message, a new page. The event reaches prompts as `{{ .event.data }}` and its own fields, and each event starts a new conversation. Nothing is sent back automatically: to reply, give the agent a tool of the same app.
+
+Some events are **poll** events. The app is checked for new events about every 15 minutes, so a run can start a few minutes after the event.
+
+Namespace: `event`. No path. Integration: the connected account of the app whose event you chose.
+
+**Settings**
+
+| Key | Dashboard label | Type | Required | Default | Description |
+|---|---|---|---|---|---|
+| `integration` | Account | integration | Yes | none | The connected app account whose events start this agent. |
+| `trigger` | Event | string | Yes | none | The app event this entry watches, such as `GMAIL_NEW_GMAIL_MESSAGE`. |
+| `settings` | Settings | object | No | empty | Event-specific settings, such as a label or folder to watch. The fields depend on the chosen event. |
+
+**In a config file**
+
+```yaml
+entries:
+  - type: handler
+    handlerConfig:
+      type: app_event
+      config:
+        integration: my-gmail
+        trigger: GMAIL_NEW_GMAIL_MESSAGE
+        settings:
+          label: INBOX
+    start: agent.answer
+```
+
+**Variables**
+
+| Key | Type | Description |
+|---|---|---|
+| `trigger` | string | The event's name, e.g. `GMAIL_NEW_GMAIL_MESSAGE`. |
+| `trigger_id` | string | The id of the watch that fired. |
+| `event_id` | string | This event's own id. A retried delivery keeps it the same. |
+| `integration` | string | The integration the entry names. |
+| `timestamp` | string | When the event happened. |
+| `json` | string | The whole event as JSON text. |
+| `data.*` | varies | The event's own fields, listed under **Variables** in the dashboard. Use `{{ .event.data.<field> }}`. |
 
 ## Related
 
