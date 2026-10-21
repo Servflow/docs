@@ -18,7 +18,33 @@ ServFlow can talk to five kinds of provider: Claude, OpenAI, OpenRouter, LiteLLM
 
 ## Built-in model access on ServFlow Cloud
 
-ServFlow Cloud includes model access, so a new agent runs without an API key. A sub-agent with no provider chosen calls Claude Sonnet 5.5 (`anthropic/claude-sonnet-5.5`) through OpenRouter, and ServFlow pays for the calls out of your team's credit: the monthly credit your plan includes, then any credit you buy. The model is fixed; you cannot change it.
+ServFlow Cloud includes model access, so a new agent runs without an API key. A sub-agent with no provider chosen calls your team's built-in model through OpenRouter, and ServFlow pays for the calls out of your team's credit: the monthly credit your plan includes, then any credit you buy.
+
+### Default model
+
+A new team starts on a sensible default model. You can change the default in **Settings** > **Billing** under **Built-in model**. The section only appears when your ServFlow Cloud instance has built-in model access enabled.
+
+### Change the built-in model
+
+Teams on ServFlow Cloud can pick the model their built-in credit runs on:
+
+<Steps>
+
+<Step title="Open Billing settings">
+Open **Settings** > **Billing**.
+</Step>
+
+<Step title="Choose a model">
+Under **Built-in model**, choose a model from the list. The picker shows each model's price per million input and output tokens and its context window.
+</Step>
+
+<Step title="Save">
+Click **Save**. The change takes effect from the next run of any sub-agent that uses built-in access.
+</Step>
+
+</Steps>
+
+To choose a model that is not in the built-in list, add a provider of your own and select it for the sub-agent.
 
 Built-in access is not a provider. It does not appear on the **Providers** page, in provider lists, in the CLI, or in MCP. It is what a sub-agent uses when its **Provider** setting is empty. A self-hosted instance has no built-in access, so there every sub-agent must have a provider.
 
@@ -77,7 +103,7 @@ To run a quick, low-cost model for a simple stage and a stronger one for a hard 
 
 ## Changes apply from the next run
 
-When you change a provider's key or model, every agent that uses it follows on its next run. You do not reopen or save the agents.
+When you change a provider's key or model, every agent that uses it follows on its next run. When you change the built-in model, every sub-agent on built-in access follows on its next run too. You do not reopen or save the agents.
 
 ## If a provider is deleted
 

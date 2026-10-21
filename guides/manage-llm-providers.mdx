@@ -85,6 +85,28 @@ Click **Save** in the top bar.
 
 On ServFlow Cloud, to switch a sub-agent back to built-in model access, clear its **Provider** setting and save.
 
+## Change the built-in model on ServFlow Cloud
+
+Teams on ServFlow Cloud can pick the model their built-in credit pays for, instead of using the default:
+
+<Steps>
+
+<Step title="Open Billing settings">
+Open **Settings** > **Billing**.
+</Step>
+
+<Step title="Open the Built-in model section">
+Under **Built-in model**, the picker shows every OpenRouter model that calls tools. Each entry lists the price per million input and output tokens and the context window.
+</Step>
+
+<Step title="Choose a model and save">
+Pick a model and click **Save**. Sub-agents with no provider use it from their next run.
+</Step>
+
+</Steps>
+
+A sub-agent panel that uses built-in access also links to **Settings** > **Billing** as **Change the built-in model**.
+
 ## Use a different model for one sub-agent
 
 The model belongs to the provider, not to the sub-agent, so a sub-agent's panel has no model setting. To give one sub-agent a different model, add a second provider of the same type with the other model, and choose it in that sub-agent. The same API key works for both.
