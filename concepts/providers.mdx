@@ -1,6 +1,6 @@
 ---
 title: "Providers"
-description: "What a provider is, why sub-agents share one, where an agent's model is chosen, and the built-in model access on ServFlow Cloud"
+description: "What a provider is, why sub-agents share one, where an agent's model is chosen, and the built-in model access and credit on ServFlow Cloud"
 icon: "cloud"
 ---
 
@@ -18,7 +18,7 @@ ServFlow can talk to five kinds of provider: Claude, OpenAI, OpenRouter, LiteLLM
 
 ## Built-in model access on ServFlow Cloud
 
-ServFlow Cloud includes model access, so a new agent runs without an API key. A sub-agent with no provider chosen calls Claude Sonnet 5.5 (`anthropic/claude-sonnet-5.5`) through OpenRouter, and ServFlow pays for the calls out of your team's monthly credit. The model is fixed; you cannot change it.
+ServFlow Cloud includes model access, so a new agent runs without an API key. A sub-agent with no provider chosen calls Claude Sonnet 5.5 (`anthropic/claude-sonnet-5.5`) through OpenRouter, and ServFlow pays for the calls out of your team's credit: the monthly credit your plan includes, then any credit you buy. The model is fixed; you cannot change it.
 
 Built-in access is not a provider. It does not appear on the **Providers** page, in provider lists, in the CLI, or in MCP. It is what a sub-agent uses when its **Provider** setting is empty. A self-hosted instance has no built-in access, so there every sub-agent must have a provider.
 
@@ -26,15 +26,27 @@ Built-in access is not a provider. It does not appear on the **Providers** page,
 
 | Plan | Monthly credit |
 |---|---|
-| Free | None. Built-in access is not available; add your own provider. |
+| Free | None. [Buy credit](#bought-credit) to use built-in access, or add your own provider. |
 | Starter | $10 |
 | Pro | $30 |
 
 The credit resets at the start of each calendar month, UTC, not on your billing date. What you have spent shows as a usage row in your plan's billing usage.
 
+### Bought credit
+
+Any team can buy credit, on any plan, Free included. To buy credit, go to **Settings** > **Billing** and choose an amount under **Model credit**: $10, $25, or $50. Checkout adds a processing fee of 5.5%, so $10 of credit costs $10.55. The credit is added to your team when the payment goes through.
+
+Bought credit works as follows:
+
+- It is used only after the month's plan credit is spent.
+- It does not expire, and it does not reset at the start of the month.
+- It stays when you upgrade, downgrade, or cancel your plan.
+
+What is left shows as a **Bought model credit** row in your billing usage.
+
 ### When the credit runs out
 
-When your team has spent the month's credit, runs that use built-in access fail with a prompt to upgrade. They work again at the start of the next month, or as soon as you upgrade. Sub-agents with their own provider keep running.
+When your team has spent the month's plan credit, runs that use built-in access move on to your bought credit. When that is spent too, or you have none, runs that use built-in access fail with a prompt to buy credit. They work again as soon as you buy credit, at the start of the next month, or when you upgrade. Sub-agents with their own provider keep running.
 
 ### When you change plan
 
@@ -42,7 +54,7 @@ Plan changes apply at once:
 
 - **Upgrade.** The month's credit rises to the new plan's amount. What you already spent this month still counts.
 - **Downgrade.** The month's credit falls to the new plan's amount. If you already spent more than that, built-in access is blocked until the next month.
-- **Cancel.** Built-in access stops right away.
+- **Cancel.** The plan's monthly credit stops right away. Bought credit you have left keeps working.
 
 ### Use your own key instead
 
