@@ -26,7 +26,7 @@ A run has no separate response step. Its answer is what its sub-agents said, and
 
 ## Sub-agents
 
-A sub-agent is one model with one job. Its **provider** is a stored connection to an AI service, and the model belongs to the provider. Two sub-agents that need different models use two providers.
+A sub-agent is one model with one job. Its **provider** is a stored connection to an AI service, and the model belongs to the provider. Two sub-agents that need different models use two providers. On ServFlow Cloud, a sub-agent with no provider uses [built-in model access](/concepts/providers#built-in-model-access-on-servflow-cloud).
 
 The **system prompt** sets the sub-agent's role. The **user prompt** is a template filled in on every run from what the entry delivered, such as `{{ body "question" }}` for a webhook or `{{ .discord.content }}` for a Discord message.
 

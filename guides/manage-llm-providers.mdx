@@ -6,6 +6,8 @@ icon: "cloud"
 
 A provider is the account your agents call an AI model through, such as your OpenAI or Anthropic account, together with the model to use. This guide adds a provider, points a sub-agent at it, and shows how to change and delete one.
 
+On a self-hosted instance, every sub-agent needs a provider. On ServFlow Cloud, a sub-agent with no provider uses built-in model access paid from your team's monthly credit, so you add a provider only to use your own key or another model. See [Built-in model access on ServFlow Cloud](/concepts/providers#built-in-model-access-on-servflow-cloud).
+
 ## Before you begin
 
 - A running instance with the dashboard open. See [Install ServFlow](/installation).
@@ -80,6 +82,8 @@ Click **Save** in the top bar.
 </Step>
 
 </Steps>
+
+On ServFlow Cloud, to switch a sub-agent back to built-in model access, clear its **Provider** setting and save.
 
 ## Use a different model for one sub-agent
 
