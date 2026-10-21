@@ -4,7 +4,7 @@ description: "What a provider is, why sub-agents share one, and where an agent's
 icon: "cloud"
 ---
 
-A provider is your account with a company that runs AI models, such as OpenAI or Anthropic, together with the model you want to use. Every sub-agent thinks with a provider, so an agent cannot run without one. This page explains how providers work. To add one, see [Manage LLM providers](/guides/manage-llm-providers).
+A provider is your account with a company that runs AI models, such as OpenAI or Anthropic, together with the model you want to use. Every sub-agent thinks with a provider, so a self-hosted agent cannot run without one. On the hosted ServFlow cloud, an agent can also run on ServFlow's models by leaving the provider unset. This page explains how providers work. To add one, see [Manage LLM providers](/guides/manage-llm-providers).
 
 <Frame>
   <img src="/images/guides/manage-llm-providers/01-providers-page.png" alt="The Providers page listing providers with their type and model" />
@@ -12,13 +12,15 @@ A provider is your account with a company that runs AI models, such as OpenAI or
 
 ## Your account, not ours
 
-ServFlow does not come with a model. You bring a key from the model company, and that company bills you for what your agents use. That includes test runs from the editor.
+On a self-hosted ServFlow instance, you bring a key from the model company, and that company bills you for what your agents use. That includes test runs from the editor.
+
+On the hosted ServFlow cloud, ServFlow's models are available by default. Leave the provider unset to run on them, or add your own provider to use a different model.
 
 ServFlow can talk to five kinds of provider: Claude, OpenAI, OpenRouter, LiteLLM, and Qwen. OpenRouter and LiteLLM are services that give access to many companies' models through one account.
 
 ## One provider, many sub-agents
 
-You set a provider up once. Each sub-agent then chooses one. Most instances need only one or two providers.
+You set a provider up once. Each sub-agent then chooses one, or leaves the provider unset to run on ServFlow's models in the hosted cloud. Most instances need only one or two providers.
 
 ## The model belongs to the provider
 
