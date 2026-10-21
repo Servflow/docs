@@ -18,9 +18,23 @@ ServFlow can talk to five kinds of provider: Claude, OpenAI, OpenRouter, LiteLLM
 
 ## Built-in model access on ServFlow Cloud
 
-ServFlow Cloud includes model access, so a new agent runs without an API key. A sub-agent with no provider chosen calls Claude Sonnet 5.5 (`anthropic/claude-sonnet-5.5`) through OpenRouter, and ServFlow pays for the calls out of your team's credit: the monthly credit your plan includes, then any credit you buy. The model is fixed; you cannot change it.
+ServFlow Cloud includes model access, so a new agent runs without an API key. A sub-agent with no provider chosen calls your team's built-in model through OpenRouter, and ServFlow pays for the calls out of your team's credit: the monthly credit your plan includes, then any credit you buy. A new team's built-in model is Claude Sonnet 5.5 (`anthropic/claude-sonnet-5.5`), and you can [change it](#choose-the-built-in-model).
 
 Built-in access is not a provider. It does not appear on the **Providers** page, in provider lists, in the CLI, or in MCP. It is what a sub-agent uses when its **Provider** setting is empty. A self-hosted instance has no built-in access, so there every sub-agent must have a provider.
+
+### Choose the built-in model
+
+The built-in model belongs to your team, so every sub-agent with no provider uses the same one. Anyone on your team can change it.
+
+To change the built-in model, follow these steps:
+
+1. Go to **Settings** > **Billing**.
+2. Under **Built-in model**, search for a model by name and choose it. The list holds every model on OpenRouter that can call tools, since agents act through their tools.
+3. Click **Save**.
+
+Runs that start after you save use the new model. A run already in progress finishes on the model it started with.
+
+Models cost very different amounts. Under the list, **Billing** shows the chosen model's price for a million input and output tokens. A cheaper model makes the same credit last longer, and a more expensive one spends it faster.
 
 ### Monthly credit by plan
 
