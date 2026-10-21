@@ -11,7 +11,7 @@ The example is a two-stage pipeline named Question answerer. The first stage ans
 ## Before you begin
 
 - A running instance with the dashboard open. See [Install ServFlow](/installation).
-- An LLM provider. In the sidebar under **Configure**, open **Providers** and add one if the list is empty. See [Manage LLM providers](/guides/manage-llm-providers). A sub-agent without a provider cannot run.
+- An LLM provider. In the sidebar under **Configure**, open **Providers** and add one if the list is empty. See [Manage LLM providers](/guides/manage-llm-providers). A sub-agent without a provider cannot run on a self-hosted instance; on the hosted ServFlow cloud, leave the provider unset to run on ServFlow's models.
 
 ## Create an agent in the UI
 
@@ -100,6 +100,8 @@ Click the **Analyze request** node. Its panel opens.
 
 <Step title="Choose a provider">
 Under **Provider**, choose your provider. The panel confirms with "Calls" and the provider's name.
+
+On the hosted ServFlow cloud, you can leave the provider as **No provider selected** to run this sub-agent on ServFlow's models.
 </Step>
 
 <Step title="Write the prompts">
