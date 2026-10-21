@@ -70,6 +70,8 @@ In the sidebar under **Build**, open **Agents** and open an agent. Click a sub-a
 <Step title="Choose the provider">
 Under **Provider**, choose the provider. The panel confirms with "Calls" and the provider's name.
 
+If your deployment offers built-in model access, you can also leave **Provider** unset. The sub-agent then runs on the built-in provider instead of one you added.
+
 <Frame>
   <img src="/images/guides/manage-llm-providers/05-subagent-provider.png" alt="A sub-agent panel with a provider chosen under Provider" />
 </Frame>
@@ -80,6 +82,12 @@ Click **Save** in the top bar.
 </Step>
 
 </Steps>
+
+## Use the built-in provider
+
+In deployments that include built-in model access, ServFlow maintains the model account. A sub-agent that has no provider selected uses that account, and its usage counts against the team's plan limit. You do not need to add or manage this provider yourself.
+
+If built-in model access is not available in your deployment, every sub-agent must have a provider selected before it can run.
 
 ## Use a different model for one sub-agent
 

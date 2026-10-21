@@ -4,7 +4,7 @@ description: "What a provider is, why sub-agents share one, and where an agent's
 icon: "cloud"
 ---
 
-A provider is your account with a company that runs AI models, such as OpenAI or Anthropic, together with the model you want to use. Every sub-agent thinks with a provider, so an agent cannot run without one. This page explains how providers work. To add one, see [Manage LLM providers](/guides/manage-llm-providers).
+A provider is your account with a company that runs AI models, such as OpenAI or Anthropic, together with the model you want to use. Every sub-agent thinks with a provider, unless the deployment offers built-in model access. Without a provider or built-in access, an agent cannot run. This page explains how providers work. To add one, see [Manage LLM providers](/guides/manage-llm-providers).
 
 <Frame>
   <img src="/images/guides/manage-llm-providers/01-providers-page.png" alt="The Providers page listing providers with their type and model" />
@@ -15,6 +15,12 @@ A provider is your account with a company that runs AI models, such as OpenAI or
 ServFlow does not come with a model. You bring a key from the model company, and that company bills you for what your agents use. That includes test runs from the editor.
 
 ServFlow can talk to five kinds of provider: Claude, OpenAI, OpenRouter, LiteLLM, and Qwen. OpenRouter and LiteLLM are services that give access to many companies' models through one account.
+
+## Built-in model access
+
+Some ServFlow deployments include a built-in model provider. In those deployments ServFlow maintains the model account, and a sub-agent with no provider of its own runs on that account. Usage is counted against the team's plan limit, and the provider is created and managed by the deployment rather than by you.
+
+If your deployment does not offer built-in model access, you must still add a provider and bring your own key.
 
 ## One provider, many sub-agents
 
