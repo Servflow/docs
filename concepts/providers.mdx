@@ -1,10 +1,10 @@
 ---
 title: "Providers"
-description: "What a provider is, why sub-agents share one, and where an agent's model is chosen"
+description: "What a provider is, why sub-agents share one, where an agent's model is chosen, and the built-in model access on ServFlow Cloud"
 icon: "cloud"
 ---
 
-A provider is your account with a company that runs AI models, such as OpenAI or Anthropic, together with the model you want to use. Every sub-agent thinks with a provider, so an agent cannot run without one. This page explains how providers work. To add one, see [Manage LLM providers](/guides/manage-llm-providers).
+A provider is your account with a company that runs AI models, such as OpenAI or Anthropic, together with the model you want to use. On a self-hosted instance, every sub-agent needs a provider to run. On ServFlow Cloud, a sub-agent with no provider uses ServFlow's [built-in model access](#built-in-model-access-on-servflow-cloud) instead. This page explains how providers work. To add one, see [Manage LLM providers](/guides/manage-llm-providers).
 
 <Frame>
   <img src="/images/guides/manage-llm-providers/01-providers-page.png" alt="The Providers page listing providers with their type and model" />
@@ -12,9 +12,41 @@ A provider is your account with a company that runs AI models, such as OpenAI or
 
 ## Your account, not ours
 
-ServFlow does not come with a model. You bring a key from the model company, and that company bills you for what your agents use. That includes test runs from the editor.
+A provider uses your own key. The model company bills you for what your agents use through it, including test runs from the editor. Those calls do not spend ServFlow credit.
 
 ServFlow can talk to five kinds of provider: Claude, OpenAI, OpenRouter, LiteLLM, and Qwen. OpenRouter and LiteLLM are services that give access to many companies' models through one account.
+
+## Built-in model access on ServFlow Cloud
+
+ServFlow Cloud includes model access, so a new agent runs without an API key. A sub-agent with no provider chosen calls Claude Sonnet 5.5 (`anthropic/claude-sonnet-5.5`) through OpenRouter, and ServFlow pays for the calls out of your team's monthly credit. The model is fixed; you cannot change it.
+
+Built-in access is not a provider. It does not appear on the **Providers** page, in provider lists, in the CLI, or in MCP. It is what a sub-agent uses when its **Provider** setting is empty. A self-hosted instance has no built-in access, so there every sub-agent must have a provider.
+
+### Monthly credit by plan
+
+| Plan | Monthly credit |
+|---|---|
+| Free | None. Built-in access is not available; add your own provider. |
+| Starter | $10 |
+| Pro | $30 |
+
+The credit resets at the start of each calendar month, UTC, not on your billing date. What you have spent shows as a usage row in your plan's billing usage.
+
+### When the credit runs out
+
+When your team has spent the month's credit, runs that use built-in access fail with a prompt to upgrade. They work again at the start of the next month, or as soon as you upgrade. Sub-agents with their own provider keep running.
+
+### When you change plan
+
+Plan changes apply at once:
+
+- **Upgrade.** The month's credit rises to the new plan's amount. What you already spent this month still counts.
+- **Downgrade.** The month's credit falls to the new plan's amount. If you already spent more than that, built-in access is blocked until the next month.
+- **Cancel.** Built-in access stops right away.
+
+### Use your own key instead
+
+To use your own key for a sub-agent, add a provider and choose it under the sub-agent's **Provider** setting. That sub-agent then calls the model through your account and spends none of your ServFlow credit. To go back to built-in access, clear the setting. See [Manage LLM providers](/guides/manage-llm-providers).
 
 ## One provider, many sub-agents
 
