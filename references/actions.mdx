@@ -34,7 +34,7 @@ An action is one thing an agent can do: send a Discord message, fetch a web addr
 | **Databases** | | | |
 | Fetch Data | [`fetch`](#fetch) | Reads rows from a table. | [`sql`](/references/integrations#sql) or [`mongo`](/references/integrations#mongo) |
 | Delete Data | [`delete`](#delete) | Deletes rows from a table. | `sql` or `mongo` |
-| MongoDB Query | [`mongoquery`](#mongoquery) | Runs a MongoDB query. | `mongo` |
+| MongoDB Query | [`mongoquery`](#mongoquery) | Reads a MongoDB database: finds documents, runs pipelines, or lists collections. | `mongo` |
 | Firestore | [`firestore`](#firestore) | Stores a document in Google Cloud Firestore. | none |
 | **Vectors** | | | |
 | Store Vectors | [`storevector`](#storevector) | Stores vectors for similarity search. | [`qdrant`](/references/integrations#qdrant) |
@@ -545,15 +545,27 @@ actionConfig:
 
 ### mongoquery
 
-Runs a query against a MongoDB collection.
+Reads a MongoDB database. It finds documents in a collection, runs an aggregation pipeline, or lists the collections. It never writes.
 
 | Key | Label | Type | Required | Default | Values |
 |---|---|---|---|---|---|
 | `integration` | MongoDB Integration | integration | Yes | none | A `mongo` integration |
-| `collection` | Collection | string | Yes | none | The collection to query |
-| `filterQuery` | Filter Query | string | Yes | none | A MongoDB filter, as JSON |
-| `projection` | Projection | string | No | none | A MongoDB projection, as JSON |
+| `operation` | Operation | string | No | `find` | `find`, `aggregate`, or `listCollections` |
+| `collection` | Collection | string | For `find` and `aggregate` | none | The collection to read |
+| `filterQuery` | Filter Query | string | No | none | For `find`: a MongoDB filter, as extended JSON |
+| `projection` | Projection | string | No | none | For `find`: a MongoDB projection, as extended JSON |
+| `pipeline` | Pipeline | text area | For `aggregate` | none | An aggregation pipeline, as an extended JSON array of stages |
 | `failIfEmpty` | Fail if Empty | boolean | No | `true` | Treats no results as a failure |
+
+The operations return the following:
+
+- `find`: the matching documents.
+- `aggregate`: the documents the pipeline outputs. `$lookup` and `$unionWith` read other collections, so one pipeline can join data from across the database.
+- `listCollections`: the database's collection names, sorted.
+
+The action refuses a filter, projection, or pipeline that contains `$out` or `$merge`, which write, or `$where`, `$function`, or `$accumulator`, which run JavaScript on the server. It refuses them at any depth, including inside a `$lookup` or `$facet` sub-pipeline, and the error names the refused key. This check applies to this action only. To make the database itself read-only, connect the integration as a MongoDB user that has only the `read` role.
+
+Find one customer by email:
 
 ```yaml
 - id: customer
@@ -563,6 +575,20 @@ Runs a query against a MongoDB collection.
     collection: customers
     filterQuery: '{"email": "{{ body "email" }}"}'
 ```
+
+Join each customer to their orders:
+
+```yaml
+- id: customer_orders
+  type: mongoquery
+  config:
+    integration: app-db
+    operation: aggregate
+    collection: customers
+    pipeline: '[{"$lookup": {"from": "orders", "localField": "_id", "foreignField": "customerId", "as": "orders"}}]'
+```
+
+To let an agent query the whole database, add `mongoquery` as an action tool. Set `integration` yourself, make `operation`, `collection`, `filterQuery`, and `pipeline` tool parameters, and set `failIfEmpty` to `false` so that an empty result reaches the model as an answer, not an error. In the tool description, tell the model to call `listCollections` first.
 
 ### firestore
 
