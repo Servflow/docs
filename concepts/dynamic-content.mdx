@@ -20,7 +20,7 @@ Everything outside the braces is sent as written. Each pair of braces is replace
 
 ## Where you can use it
 
-In a **System prompt** and a **User prompt**, in a tool's settings, in a context step's settings, and in a guard's condition. A field that accepts dynamic content shows `Supports {{ }} templates` under its label.
+In a **System prompt** and a **User prompt**, in a tool's settings, in a step's settings, and in a guard's condition. A field that accepts dynamic content shows `Supports {{ }} templates` under its label.
 
 ## What you can read depends on how the agent was started
 
@@ -42,7 +42,7 @@ The [Available entry handlers](/references/entry-handlers) lists every name unde
 
 ## What you can read from any agent
 
-- **What an earlier context step found.** `{{ .customer.name }}` reads `name` from a step called `customer`. See [Context fetching](/concepts/context-fetching).
+- **What an earlier step found.** `{{ .customer.name }}` reads `name` from a step called `customer`. See [Steps before the agent](/concepts/entries#steps-before-the-agent).
 - **A stored secret.** `{{ secret "weather-api-key" }}`. See [Secrets](/concepts/secrets).
 - **Inside a tool, what the agent passed to it.** `{{ tool_param "question" }}`. See [Add a tool to an agent](/guides/add-a-tool).
 
@@ -66,14 +66,18 @@ A misspelt function name is different. In a guard, ServFlow refuses it when you 
 
 ## Dynamic content in the dashboard
 
-Every field that accepts dynamic content has two small buttons in its corner. **Insert a variable** opens a menu of what the field can read, such as the results of context steps and your secrets, and writes the braces for you. **Expand editor** opens the field in a larger window. Typing inside braces suggests names as you go.
+Every field that accepts dynamic content has two small buttons. A short field keeps them in its corner; a prompt, or a field whose value has grown long, shows them in a row under the field. Typing inside braces suggests names as you go.
+
+**Insert a variable** opens a menu of what the field can read, such as the results of steps and your secrets, and writes the braces for you.
+
+**Open editor** opens the field in a larger window. A prompt opens as Markdown, with a preview beside the text that shows each pair of braces as a placeholder. A field that can hold other kinds of text has a **Text**, **Markdown**, and **HTML** switch; it only changes how the text is shown, and what is saved is what you typed. In a tool's fields, the window also offers **Tags**: one for each input the model sends the tool, which writes `{{ tool_param "..." }}` for you. **Done** closes the window.
 
 <Frame>
-  <img src="/images/concepts/dynamic-content/01-insert-variable.png" alt="The Insert a variable menu open on a prompt, listing the results of two context steps" />
+  <img src="/images/concepts/dynamic-content/01-insert-variable.png" alt="The Insert a variable menu open on a prompt, listing the results of two steps" />
 </Frame>
 
 <Frame>
-  <img src="/images/concepts/dynamic-content/02-expand-editor.png" alt="The expanded editor showing a User prompt that reads two context steps and the request body" />
+  <img src="/images/concepts/dynamic-content/02-expand-editor.png" alt="The open editor showing a User prompt that reads two steps and the request body, with its preview beside it" />
 </Frame>
 
 ## Related
@@ -92,8 +96,8 @@ Every field that accepts dynamic content has two small buttons in its corner. **
   Conditions that decide whether a tool may run.
 </Card>
 
-<Card title="Context fetching" icon="magnifying-glass" href="/concepts/context-fetching">
-  Steps whose results a prompt can read.
+<Card title="Entries and entry handlers" icon="right-to-bracket" href="/concepts/entries#steps-before-the-agent">
+  The steps an entry runs, whose results a prompt can read.
 </Card>
 
 </CardGroup>

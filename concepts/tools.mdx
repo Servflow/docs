@@ -20,7 +20,7 @@ That is the difference between a tool and everything else you set up. An entry a
 
 In a sub-agent's panel, **Add a tool…** offers four kinds.
 
-**Run action.** The tool does one thing from the list of [available actions](/references/actions): send a Discord message, fetch a web address, read a pull request. Use it when the agent needs to reach a service or look something up. To set one up, see [Add a tool to an agent](/guides/add-a-tool).
+**Run action.** The tool does one thing: send a Discord message, fetch a web address, read a pull request. It can be a [built-in action](/references/actions) or an action of one of the [apps ServFlow connects to](https://servflow.io/integrations). Use it when the agent needs to reach a service or look something up. To set one up, see [Add a tool to an agent](/guides/add-a-tool).
 
 **MCP server.** An MCP server is a service that offers a set of ready-made tools to AI agents. Notion runs one, for example. You give the server's address and pick which of its tools the agent may use. Use it when the service you want already has one. See [Add a tool to an agent](/guides/add-a-tool#mcp-server).
 
@@ -38,16 +38,16 @@ An action has fields. A tool that sends a Discord message has the channel to sen
 Fix everything you can. Each field you hand to the agent is one more thing it can get wrong, and one more thing a person could talk it into. A tool that can post anywhere is more dangerous than one that can post in a single channel.
 
 <Frame>
-  <img src="/images/guides/add-a-tool/02-dialog-tool.png" alt="The Configure Run action dialog with the Display name and When to use fields filled in" />
+  <img src="/images/guides/add-a-tool/02-dialog-tool.png" alt="The Configure Run action dialog with the Display name and When to use fields filled in, and HTTP Request shown under Action" />
 </Frame>
 
 ## File abilities are not tools you add
 
 A sub-agent with a [workspace](/concepts/workspaces-and-files) can list, read, and write the files in it. It gets these three abilities as soon as you choose a workspace under **Memory**. They do not appear in the **Tools** list, and there is nothing to set up.
 
-## A tool or a context step
+## A tool or a step
 
-A tool runs only if the agent decides to use it. A context step always runs, before the agent starts. Use a step for what the agent needs every time, such as who the customer is. Use a tool for what it needs only sometimes. [Context fetching](/concepts/context-fetching) compares the two.
+A tool runs only if the agent decides to use it. A step always runs, before the agent starts, because the entry runs it. Use a step for what the agent needs every time, such as who the customer is. Use a tool for what it needs only sometimes. [Steps before the agent](/concepts/entries#steps-before-the-agent) compares the two.
 
 ## Limiting a tool
 

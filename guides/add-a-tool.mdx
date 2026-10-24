@@ -25,8 +25,14 @@ Open the agent in the editor and click the sub-agent that needs the tool. In its
 </Frame>
 </Step>
 
-<Step title="Choose Run action">
-Under **Add a tool…**, choose **Run action…**. A row appears in the section, and the **Configure Run action** dialog opens. The dialog has three sections, listed on its left edge: **Tool**, **Action**, and **Guards**.
+<Step title="Choose Run action and pick the action">
+Under **Add a tool…**, choose **Run action…**. The **Choose action** dialog opens. It lists the built-in actions and the actions of every app ServFlow connects to, grouped by app, so search for what the tool should do. Type `http request` and click **HTTP Request**.
+
+<Frame>
+  <img src="/images/guides/add-a-tool/02-choose-action.png" alt="The Choose action dialog with a search box, an app filter, and a grid of action cards" />
+</Frame>
+
+A row appears in the **Tools** section, and the **Configure Run action** dialog opens. The dialog has three sections, listed on its left edge: **Tool**, **Action**, and **Guards**.
 </Step>
 
 <Step title="Name the tool and say when to use it">
@@ -39,12 +45,12 @@ When the user asks about a GitHub repository, such as its description, stars, or
 ```
 
 <Frame>
-  <img src="/images/guides/add-a-tool/02-dialog-tool.png" alt="The Configure Run action dialog with the Display name and When to use fields filled in" />
+  <img src="/images/guides/add-a-tool/02-dialog-tool.png" alt="The Configure Run action dialog with the Display name and When to use fields filled in, and HTTP Request shown under Action" />
 </Frame>
 </Step>
 
-<Step title="Choose the action">
-In the **Action** section, under **Action**, choose **HTTP Request**. The action's fields appear below it. Each field holds a value you set, and most have a **Let the model set this** link under them.
+<Step title="Open the action's fields">
+In the **Action** section, the action you picked is shown under **Action**, with a **Change** link to pick another. Its fields are listed below it. Each field holds a value you set, and most have a **Let the model set this** link under them.
 </Step>
 
 <Step title="Set the fields and the model's input">
@@ -54,23 +60,19 @@ Leave **HTTP Method** at `GET`. Under **URL**, enter the address with the model'
 https://api.github.com/repos/{{ tool_param "repo" }}
 ```
 
-The `tool_param` function reads an input the model sends when it calls the tool. With the rest of the URL fixed, the model chooses a repository and cannot point the request at another host.
+The `tool_param` function reads an input the model sends when it calls the tool. With the rest of the URL fixed, the model chooses a repository and cannot point the request at another host. If you open the field with **Open editor**, the tool's inputs are offered under **Tags**, and clicking one writes the call for you.
 
 <Frame>
   <img src="/images/guides/add-a-tool/03-dialog-action.png" alt="The Action section with HTTP Request chosen and a URL that contains a tool_param call" />
 </Frame>
 
-Scroll to **Additional inputs** and enter `repo`. The section's summary line now reads "HTTP Request · sends repo", which is everything the model sends when it calls this tool.
-
-<Frame>
-  <img src="/images/guides/add-a-tool/04-dialog-additional.png" alt="The Additional inputs field holding repo, above the Guards section" />
-</Frame>
+Every `tool_param` call in a field becomes an input the model is asked for, so `repo` is now everything the model sends when it calls this tool.
 
 To hand a whole field to the model instead, click **Let the model set this** under it. The field then holds the name of the input, and **Set a fixed value instead** switches it back.
 </Step>
 
 <Step title="Save the tool">
-Click **Save tool**. The row in the **Tools** section reads `github_repo`, with `http` under it, and the tool appears on the canvas beside the sub-agent. The gear on the row opens the dialog again, and the trash icon removes the tool.
+Click **Save tool**. The row in the **Tools** section reads `github_repo`, and the tool appears on the canvas beside the sub-agent, marked **Action**. The gear on the row opens the dialog again, and the trash icon removes the tool.
 
 <Frame>
   <img src="/images/guides/add-a-tool/05-tools-row.png" alt="The Tools section listing github_repo, and the tool shown on the canvas next to the sub-agent" />

@@ -4,7 +4,7 @@ description: "Every integration type: what uses it, its fields, and its shape in
 icon: "puzzle-piece"
 ---
 
-This page lists every integration type. Each type's section says what uses it and lists its fields and its body in a file. `servflowai resource integration describe --all` prints the same catalog. For what an integration is, see [Integrations](/concepts/integrations). To add one in the dashboard, see [Add an integration](/guides/add-an-integration).
+This page lists every integration type built into ServFlow. The apps ServFlow connects to, such as Slack, Gmail, or Jira, are listed in the [integrations directory](https://servflow.io/integrations). Each type's section says what uses it and lists its fields and its body in a file. `servflowai resource integration describe --all` prints the same catalog. For what an integration is, see [Integrations](/concepts/integrations). To add one in the dashboard, see [Add an integration](/guides/add-an-integration).
 
 In a body, each field of `config` holds either a literal, as `{"value": ...}`, or the name of a stored secret, as `{"secret": "<secret name>"}`. Use a secret for every password field. A secret that a body names has to exist before the integration is created. The commands that take a body are in the [CLI reference](/references/cli#integration).
 

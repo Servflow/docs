@@ -1,6 +1,6 @@
 ---
 title: "Entries and entry handlers"
-description: "The ways an agent can be started, and how entry handlers let it receive messages from GitHub, Telegram, and Discord and reply where they came from"
+description: "The ways an agent can be started, the steps an entry runs before its agent, and how entry handlers let it receive messages from GitHub, Telegram, and Discord"
 icon: "right-to-bracket"
 ---
 
@@ -111,9 +111,78 @@ A trigger has nobody to reply to. For a triggered agent to have an effect, give 
 
 A handler gives the prompt the parts of a message by name. A Discord agent reads the message text as `{{ .discord.content }}`, and a GitHub agent reads a comment as `{{ .github.comment_body }}`. A webhook agent reads a field your application sent with `{{ body "question" }}`. The reference lists every name, and [Dynamic content](/concepts/dynamic-content) explains how these work.
 
+## Steps before the agent
+
+Sometimes an agent needs to know something before it starts: which customer is writing, what a pull request changed, what is in stock. An entry can run steps for that. A step is an action that runs every time the entry fires, before the sub-agent, and hands what it returns to the sub-agent's prompt.
+
+<Frame>
+  <img src="/images/concepts/entries/03-steps.png" alt="The canvas with a badge on the line from the GitHub webhook entry to the Reviewer sub-agent, and the entry panel listing one step named pull_request_diff" />
+</Frame>
+
+### A step always runs. A tool runs if the agent decides to.
+
+A step and a [tool](/guides/add-a-tool) can do the same job, such as looking something up in a database. The difference is who decides.
+
+| | A step | A tool |
+|---|---|---|
+| When it runs | Every time, before the sub-agent | Only when the agent decides it needs it |
+| Who decides | You | The agent |
+| Good for | What every answer needs | What only some answers need |
+| Example | Look up the customer who is writing | Search the orders when asked about an order |
+
+Use a step for what you always need. It costs nothing in model decisions, and the agent cannot forget to do it. Use a tool for what you sometimes need.
+
+### Reading what a step found
+
+Each step has a name, and a prompt reads the step's result by that name. A name is lowercase letters, digits, and underscores. The dashboard names a step after its action until you type a name of your own: a step you call "Look up customer" is named `look_up_customer`. No two steps or sub-agents in an agent share a name, across all of its entries.
+
+In this **User prompt**, `customer` is a step that looked the customer up from the email address in the message:
+
+```
+The customer is {{ .customer.name }}, on the {{ .customer.plan }} plan.
+
+Their message: {{ body "message" }}
+```
+
+You do not have to remember a step's name. In any prompt, **Insert a variable** lists every step by its name under **Step & agent outputs** and writes the braces for you.
+
+Steps run one after another, in the order the entry lists them, and each can use what the ones before it found: look up the customer, then read that customer's orders with `{{ .customer.id }}` in the second step's address.
+
+If a step cannot finish, the run stops there and the sub-agent is not called. If an agent with steps goes quiet, check its steps first. If a step finished but did not return the field a prompt reads, that part of the prompt is left empty, so write prompts that still read sensibly.
+
+### Add a step in the dashboard
+
+1. On the canvas, click **+** on the line from the entry to its sub-agent. If the entry already has steps, the badge shows how many; click it, or open the entry and, under **Before the agent**, click **Add step**.
+2. Under **Action**, search for what the step does and click it.
+3. Under **Name**, keep the name the step was given or type your own. The line under the field shows how a prompt reads it.
+4. Under **Fields**, fill in the action's settings. The heading says when a required field is still empty.
+5. Click **Add step**, then click **Save**.
+
+A new step goes to the end of the list. To change a step, open the entry and click the gear on it; if you rename it, the dialog reminds you that prompts reading the old name need the new one. To remove a step, click the bin. To change the order, remove a step and add it again.
+
+### Steps in a config file
+
+In a config file, steps go under the entry, before its `start`. A step is an `id`, an action `type`, and the action's `config`:
+
+```yaml
+entries:
+  - type: handler
+    handlerConfig:
+      path: /support
+    steps:
+      - id: customer
+        type: http
+        config:
+          method: GET
+          url: 'https://crm.example.com/customers?email={{ body "email" }}'
+    start: agent.reply
+```
+
+A trigger entry takes the same `steps` list. An `id` is lowercase letters, digits, and underscores, and cannot start with a digit. Each field in `config` takes the type its action expects: a string, a boolean, a list, or a map. Every string is a template. The fields of each built-in action are in [Available actions](/references/actions).
+
 ## More than one way in
 
-An agent can have several entries. A common pairing is a webhook, so your application can ask the agent questions, and a trigger, so other agents can hand it tasks.
+An agent can have several entries. A common pairing is a webhook, so your application can ask the agent questions, and a trigger, so other agents can hand it tasks. Each entry has its own steps, so a pull request webhook can fetch the diff while the trigger fetches nothing.
 
 <Frame>
   <img src="/images/concepts/entries/01-two-entries.png" alt="An agent on the canvas with a webhook entry and a trigger entry, both starting at the same sub-agent" />
@@ -145,6 +214,10 @@ Several agents can share one integration. With Discord, take care: every agent o
 
 <Card title="Agents" icon="robot" href="/concepts/agents">
   What an agent is made of, and where entries fit.
+</Card>
+
+<Card title="Available actions" icon="play" href="/references/actions">
+  Every built-in action a step can run, and its fields.
 </Card>
 
 </CardGroup>

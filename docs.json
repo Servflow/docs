@@ -47,7 +47,6 @@
               "concepts/tools",
               "concepts/entries",
               "concepts/guard-rails",
-              "concepts/context-fetching",
               "concepts/workspaces-and-files",
               "concepts/providers",
               "concepts/secrets",
@@ -85,6 +84,10 @@
     ]
   },
   "redirects": [
+    {
+      "source": "/concepts/context-fetching",
+      "destination": "/concepts/entries"
+    },
     {
       "source": "/references/concepts/dynamic-content",
       "destination": "/concepts/dynamic-content"

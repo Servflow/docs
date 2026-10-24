@@ -57,7 +57,7 @@ Reads and writes saved resources and prints the catalogs the server uses.
 | `config_id` | string | No | The id the agent is stored and addressed under. Derived from the name when missing. |
 | `description` | string | No | A description shown in lists. |
 | `enabled` | boolean | No | Whether the agent is served. Ignored on create and update: save stores the config, and `enable` or `disable` changes what is served. |
-| `config` | object | Yes | The agent itself: `entries`, `agents`, and `contextGroups`. |
+| `config` | object | Yes | The agent itself: `entries`, each with its optional `steps`, and `agents`. |
 
 ```bash
 servflowai resource agent create -f agent.yaml --dry-run
