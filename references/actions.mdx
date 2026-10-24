@@ -1,12 +1,14 @@
 ---
 title: "Available actions"
-description: "Every action a tool or a step can run: what it does, its fields, and its shape in a config file"
+description: "Every action built into ServFlow: what it does, its fields, and its shape in a config file"
 icon: "table-list"
 ---
 
-An action is one thing an agent can do: send a Discord message, fetch a web address, read a pull request. An agent runs an action in two places. A [tool](/concepts/tools) runs one when the agent decides to use it. A [step](/concepts/steps-before-the-agent) runs one every time its entry fires, before the agent starts. This page lists every action with its fields. `servflowai resource action describe --all` prints the same catalog.
+An action is one thing an agent can do: send a Discord message, fetch a web address, read a pull request. An agent runs an action in two places. A [tool](/concepts/tools) runs one when the agent decides to use it. A [step](/concepts/entries#steps-before-the-agent) runs one every time its entry fires, before the agent starts. This page lists every built-in action with its fields. `servflowai resource action describe --all` prints the same catalog.
 
-## All actions
+An agent can also run the actions of the apps ServFlow connects to, such as Slack, Gmail, or Jira. The [integrations directory](https://servflow.io/integrations) lists every app with its actions and events. In the dashboard, those actions appear in the same **Search actions** box as the built-in ones, grouped by app.
+
+## Built-in actions
 
 | Name in the dashboard | Type | What it does | Integration it needs |
 |---|---|---|---|
@@ -61,7 +63,7 @@ An action is one thing an agent can do: send a Discord message, fetch a web addr
 
 ## How an action is written in a config file
 
-As a step, an action is an `id`, a `type`, and a `config` that maps each field to a value of the type the action expects. Every string is a template. A step goes under its entry's `steps`, and its `id` is lowercase letters, digits, and underscores.
+As a step, an action is an `id`, a `type`, and a `config` that maps each field to a value of the type the action expects. Every string is a template. A step goes under its entry's `steps`, and its `id` is lowercase letters, digits, and underscores, not starting with a digit.
 
 ```yaml
 - id: repo
@@ -90,7 +92,7 @@ Two differences follow from this:
 - **Field values.** A step's value is written as it is. A tool's value is wrapped in `type` and `value`.
 - **Who fills a field.** Only a tool has `param`.
 
-The examples below show each action as a step. An action with a required `map` field is shown as a tool. The rest of a step and of a tool is in the [CLI reference](/references/cli#the-shape-of-an-agent).
+The examples below show each action as a step. A few also show it as a tool, where the agent filling in a field is the point. The rest of a step and of a tool is in the [CLI reference](/references/cli#the-shape-of-an-agent).
 
 In the field tables, **Type** is the binary's field type: `string`, `text_area` (a long string), `boolean`, `map`, `file`, or `integration` (the id of a stored integration).
 
@@ -526,21 +528,15 @@ Deletes the rows of a table that meet the filters.
 | `datasourceOptions` | Datasource Options | map | No | none | Extra options for the database |
 
 ```yaml
-actionConfig:
+- id: cleared
   type: delete
   config:
-    integration:
-      type: raw
-      value: orders-db
-    table:
-      type: raw
-      value: drafts
+    integration: orders-db
+    table: drafts
     filters:
-      type: raw
-      value:
-        - field: id
-          operation: "=="
-          comparator: '{{ tool_param "draft_id" }}'
+      - field: id
+        operation: "=="
+        comparator: '{{ body "draft_id" }}'
 ```
 
 ### mongoquery
@@ -625,19 +621,13 @@ Stores vectors in a vector database, for similarity search.
 | `options` | Options | map | No | none | Extra storage options |
 
 ```yaml
-actionConfig:
+- id: stored
   type: storevector
   config:
-    integration:
-      type: raw
-      value: vectors
-    vectors:
-      type: raw
-      value: '{{ .embedding }}'
+    integration: vectors
+    vectors: '{{ .embedding }}'
     fields:
-      type: raw
-      value:
-        text: '{{ tool_param "text" }}'
+      text: '{{ body "text" }}'
 ```
 
 ### fetchvectors
@@ -728,31 +718,19 @@ Sends an email through an SMTP server.
 | `auth` | Server Configuration | map | Yes | none | The SMTP server: `serverHostname`, `serverPort`, `username`, `password` |
 
 ```yaml
-actionConfig:
+- id: receipt
   type: email
   config:
-    senderEmail:
-      type: raw
-      value: support@example.com
-    name:
-      type: raw
-      value: Support
-    recipientEmail:
-      type: param
-      value: recipient
-    subject:
-      type: param
-      value: subject
-    content:
-      type: param
-      value: message
+    senderEmail: support@example.com
+    name: Support
+    recipientEmail: '{{ body "email" }}'
+    subject: We received your request
+    content: 'Thanks {{ body "name" }}, we will reply within a day.'
     auth:
-      type: raw
-      value:
-        serverHostname: smtp.example.com
-        serverPort: "587"
-        username: support@example.com
-        password: '{{ secret "smtp-password" }}'
+      serverHostname: smtp.example.com
+      serverPort: "587"
+      username: support@example.com
+      password: '{{ secret "smtp-password" }}'
 ```
 
 ## Sign-in and tokens
@@ -914,21 +892,13 @@ Places a spot order. This action spends money on a live account. Put a [guard](/
 | `time_in_force` | Time In Force | string | No | `GTC` | `GTC`, `IOC`, `FOK` |
 
 ```yaml
-actionConfig:
+- id: order
   type: binance/spotorder
   config:
-    integration:
-      type: raw
-      value: my-binance
-    symbol:
-      type: raw
-      value: BTCUSDT
-    side:
-      type: param
-      value: side
-    quantity:
-      type: param
-      value: quantity
+    integration: my-binance
+    symbol: BTCUSDT
+    side: '{{ body "side" }}'
+    quantity: '{{ body "quantity" }}'
 ```
 
 ### binance/futuresorder
@@ -949,24 +919,14 @@ Places a futures order. This action spends money on a live account. Put a [guard
 | `leverage` | Leverage | string | No | none | The leverage to use |
 
 ```yaml
-actionConfig:
+- id: order
   type: binance/futuresorder
   config:
-    integration:
-      type: raw
-      value: my-binance
-    symbol:
-      type: raw
-      value: BTCUSDT
-    side:
-      type: param
-      value: side
-    quantity:
-      type: param
-      value: quantity
-    position_side:
-      type: raw
-      value: BOTH
+    integration: my-binance
+    symbol: BTCUSDT
+    side: '{{ body "side" }}'
+    quantity: '{{ body "quantity" }}'
+    position_side: BOTH
 ```
 
 ## ServFlow
@@ -994,8 +954,8 @@ Checks a ServFlow YAML config for mistakes in its syntax and structure.
   How an agent uses an action when it decides to.
 </Card>
 
-<Card title="Steps before the agent" icon="layer-group" href="/concepts/steps-before-the-agent">
-  How an agent runs an action every time, before it starts.
+<Card title="Entries and entry handlers" icon="right-to-bracket" href="/concepts/entries#steps-before-the-agent">
+  How an entry runs an action every time, before the agent starts.
 </Card>
 
 <Card title="Available integrations" icon="puzzle-piece" href="/references/integrations">
