@@ -26,7 +26,7 @@ A guard can look at:
 
 - **Who sent a Discord, Telegram, or GitHub message.** For example `{{ .discord.is_super_user }}`, or `{{ eq .github.sender_login "octocat" }}`.
 - **What a webhook request contained.** For example `{{ eq (body "plan") "pro" }}`.
-- **What an earlier step looked up.** For example `{{ .customer.is_admin }}`, where `customer` is a [step](/concepts/steps-before-the-agent).
+- **What an earlier step looked up.** For example `{{ .customer.is_admin }}`, where `customer` is a [step](/concepts/entries#steps-before-the-agent).
 
 [Dynamic content](/concepts/dynamic-content) lists what each kind of entry makes available.
 
