@@ -4,7 +4,7 @@ description: "What an integration is: your connection to one outside service, se
 icon: "puzzle-piece"
 ---
 
-An integration is your connection to one outside service: a Discord bot, a GitHub App, a database. It holds what ServFlow needs to reach that service as you. You set it up once, give it a name, and choose it by that name wherever an agent needs it. To add one, see [Add an integration](/guides/add-an-integration).
+An integration is your connection to one outside service: a Discord bot, a GitHub App, a database. It holds what ServFlow needs to reach that service as you. You set it up once, give it a name, and choose it by that name wherever an agent needs it. To add one, see [Add an integration](/guides/add-an-integration). The apps ServFlow connects to are listed in the [integrations directory](https://servflow.io/integrations); the built-in types are in [Available integrations](/references/integrations).
 
 <Frame>
   <img src="/images/guides/add-an-integration/01-integrations.png" alt="The Integrations page listing integrations with their type" />
@@ -22,7 +22,7 @@ An integration is also either enabled or disabled. Saving a new integration stor
 |---|---|---|
 | An entry | Lets the agent receive messages from the service, and reply as that bot or app | A Discord bot entry |
 | A tool | Lets the agent act on the service when it decides to | A tool that sends a Discord message |
-| A step | Lets a step look something up before the agent answers | A step that reads your database |
+| A step | Lets the entry look something up before the agent answers | A step that reads your database |
 
 In each place, you pick the integration from a list by its name.
 
