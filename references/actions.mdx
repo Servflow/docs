@@ -1,10 +1,10 @@
 ---
 title: "Available actions"
-description: "Every action a tool or a context step can run: what it does, its fields, and its shape in a config file"
+description: "Every action a tool or a step can run: what it does, its fields, and its shape in a config file"
 icon: "table-list"
 ---
 
-An action is one thing an agent can do: send a Discord message, fetch a web address, read a pull request. An agent runs an action in two places. A [tool](/concepts/tools) runs one when the agent decides to use it. A [context step](/concepts/context-fetching) runs one every time, before the agent starts. This page lists every action with its fields. `servflowai resource action describe --all` prints the same catalog.
+An action is one thing an agent can do: send a Discord message, fetch a web address, read a pull request. An agent runs an action in two places. A [tool](/concepts/tools) runs one when the agent decides to use it. A [step](/concepts/steps-before-the-agent) runs one every time its entry fires, before the agent starts. This page lists every action with its fields. `servflowai resource action describe --all` prints the same catalog.
 
 ## All actions
 
@@ -61,7 +61,7 @@ An action is one thing an agent can do: send a Discord message, fetch a web addr
 
 ## How an action is written in a config file
 
-As a context step, an action is an `id`, a `type`, and a `config` that maps each field to a string. Every string is a template.
+As a step, an action is an `id`, a `type`, and a `config` that maps each field to a value of the type the action expects. Every string is a template. A step goes under its entry's `steps`, and its `id` is lowercase letters, digits, and underscores.
 
 ```yaml
 - id: repo
@@ -87,10 +87,10 @@ actionConfig:
 
 Two differences follow from this:
 
-- **Field types.** A step's values are all strings, so a field of type `map` cannot be written as a map in a step. A tool's `raw` value can be a string, a number, a boolean, a list, or a map.
+- **Field values.** A step's value is written as it is. A tool's value is wrapped in `type` and `value`.
 - **Who fills a field.** Only a tool has `param`.
 
-The examples below show each action as a step. An action with a required `map` field is shown as a tool. The rest of a step and of a tool is in the [CLI reference](/references/cli#contextgroups).
+The examples below show each action as a step. An action with a required `map` field is shown as a tool. The rest of a step and of a tool is in the [CLI reference](/references/cli#the-shape-of-an-agent).
 
 In the field tables, **Type** is the binary's field type: `string`, `text_area` (a long string), `boolean`, `map`, `file`, or `integration` (the id of a stored integration).
 
@@ -994,7 +994,7 @@ Checks a ServFlow YAML config for mistakes in its syntax and structure.
   How an agent uses an action when it decides to.
 </Card>
 
-<Card title="Context fetching" icon="layer-group" href="/concepts/context-fetching">
+<Card title="Steps before the agent" icon="layer-group" href="/concepts/steps-before-the-agent">
   How an agent runs an action every time, before it starts.
 </Card>
 

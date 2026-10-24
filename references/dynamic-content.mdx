@@ -14,7 +14,7 @@ Templates use Go's [`text/template`](https://pkg.go.dev/text/template) syntax wi
 |---|---|
 | A sub-agent's system prompt and user prompt | All |
 | An action tool's fields | All |
-| A context step's fields | All |
+| A step's fields | All |
 | A guard's expression | All except `tool_param`. A guard never sees the model's arguments. |
 | An entry handler's settings | `secret` only. Settings are resolved when configs load, not on each run. |
 | An MCP tool's settings | `secret` only |
@@ -54,7 +54,7 @@ The [Available entry handlers](/references/entry-handlers) lists every variable 
 
 | Expression | Returns | Example |
 |---|---|---|
-| `.stepID`, `.stepID.field` | The output of an earlier context step or action, by its id. | `{{ .customer.name }}` |
+| `.stepID`, `.stepID.field` | The output of an earlier step or action, by its id. | `{{ .customer.name }}` |
 | `action(name)` | The same output, looked up by step id, then by display name. | `{{ action "customer" }}` |
 | `secret(name)` | A stored secret, or by default the environment variable of the same name before the stored secret. Set `[secrets].disable_env = true` to skip environment lookup. See [Secrets](/concepts/secrets) and [Configuration](/references/configuration#secrets). | `{{ secret "weather-api-key" }}` |
 | `tool_param(name)` | An argument the model passed to the tool. Available in an action tool's fields, and in the prompts of a sub-agent called by a Call sub-agent tool that declares `params`. | `{{ tool_param "question" }}` |

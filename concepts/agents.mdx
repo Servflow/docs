@@ -1,6 +1,6 @@
 ---
 title: "Agents"
-description: "What an agent is made of: entries, sub-agents, context groups, and the path a run takes between them"
+description: "What an agent is made of: entries, the steps they run, sub-agents, and the path a run takes between them"
 icon: "robot"
 ---
 
@@ -12,13 +12,13 @@ An agent is the unit you build, store, and run in ServFlow. It holds how a run s
 |---|---|
 | **Entries** | How the agent is started: by a service such as Discord, by your own application through a webhook, by a schedule, or by you. An agent has at least one. See [Entries and entry handlers](/concepts/entries). |
 | **Sub-agents** | The model calls. Each has a provider, a system prompt, a user prompt, and its own tools. |
-| **Context groups** | Steps that run before a sub-agent to gather what its prompt needs, such as looking something up in a database or another service. |
+| **Steps** | Actions an entry runs before its sub-agent, every time, such as looking something up in a database or another service. |
 
 An agent also has a name, an optional description, and an id.
 
 ## How a run moves
 
-An entry names where a run starts: a sub-agent, or a context group that leads to one. From there, every sub-agent and context group names what comes next. That is another sub-agent, another context group, or the end of the run.
+An entry runs its steps, if it has any, then starts the sub-agent it names. From there, every sub-agent names what comes next: another sub-agent, or the end of the run.
 
 The dashboard's starting arrangements are patterns of these links. A single agent starts with one sub-agent that you can expand later. A sequential pipeline chains sub-agents, and each one receives the reply of the one before it. A supervisor routes work to specialists by calling them as tools. A parallel fan-out hands work to several workers and collects their replies in an aggregator.
 
@@ -32,9 +32,9 @@ The **system prompt** sets the sub-agent's role. The **user prompt** is a templa
 
 A sub-agent can call [tools](/guides/add-a-tool) while it works: an action, tools from an outside service, another sub-agent, or another agent. It can also have a **workspace**, a folder of files it reads and writes with built-in file tools. A workspace is how a sub-agent keeps notes from one run to the next.
 
-## Context groups
+## Steps
 
-A context group is a set of steps that run before a sub-agent, every time, to gather what its prompt needs. The dashboard calls this context gathering. See [Context fetching](/concepts/context-fetching) for how it works and when to use a step instead of a tool.
+A step is an action an entry runs before its sub-agent, every time, to fetch what the prompt needs or to do something first. Each entry has its own steps, because what is worth fetching depends on what arrived. See [Steps before the agent](/concepts/steps-before-the-agent) for how they work and when to use a step instead of a tool.
 
 ## Identity and state
 
@@ -61,7 +61,7 @@ Creating an agent in the dashboard stores it disabled. Enabling it is what makes
 </Card>
 
 <Card title="Available actions" icon="play" href="/references/actions">
-  What context steps and action tools run.
+  What steps and action tools run.
 </Card>
 
 </CardGroup>

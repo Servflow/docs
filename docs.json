@@ -47,7 +47,7 @@
               "concepts/tools",
               "concepts/entries",
               "concepts/guard-rails",
-              "concepts/context-fetching",
+              "concepts/steps-before-the-agent",
               "concepts/workspaces-and-files",
               "concepts/providers",
               "concepts/secrets",
@@ -85,6 +85,10 @@
     ]
   },
   "redirects": [
+    {
+      "source": "/concepts/context-fetching",
+      "destination": "/concepts/steps-before-the-agent"
+    },
     {
       "source": "/references/concepts/dynamic-content",
       "destination": "/concepts/dynamic-content"

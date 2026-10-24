@@ -1,0 +1,110 @@
+---
+title: "Steps before the agent"
+description: "How an entry runs actions before its agent answers, and when to use a step instead of a tool"
+icon: "magnifying-glass"
+---
+
+Sometimes an agent needs to know something before it starts: which customer is writing, what a pull request changed, what is in stock. An entry can run steps for that. A step is an action that runs every time the entry fires, before the sub-agent, and hands what it returns to the sub-agent's prompt.
+
+<Frame>
+  <img src="/images/concepts/steps-before-the-agent/01-canvas.png" alt="The canvas with a badge on the line from the GitHub webhook entry to the Reviewer sub-agent, and the entry panel listing one step named pull_request_diff" />
+</Frame>
+
+## A step always runs. A tool runs if the agent decides to.
+
+A step and a [tool](/guides/add-a-tool) can do the same job, such as looking something up in a database. The difference is who decides.
+
+| | A step | A tool |
+|---|---|---|
+| When it runs | Every time, before the sub-agent | Only when the agent decides it needs it |
+| Who decides | You | The agent |
+| Good for | What every answer needs | What only some answers need |
+| Example | Look up the customer who is writing | Search the orders when asked about an order |
+
+Use a step for what you always need. It costs nothing in model decisions, and the agent cannot forget to do it. Use a tool for what you sometimes need.
+
+## Steps belong to the entry
+
+An agent can have several [entries](/concepts/entries), and what is worth fetching depends on what arrived. A pull request webhook wants the diff. A schedule may want nothing. So each entry has its own steps, and two entries can start the same sub-agent with different steps in front of it.
+
+On the canvas, the steps sit on the line from an entry to its sub-agent. The badge on that line shows how many there are.
+
+## Using what a step found
+
+Each step has a name, and a prompt reads the step's result by that name. A name is lowercase letters, digits, and underscores: a step you call "Look up customer" is named `look_up_customer`. No two steps or sub-agents in an agent share a name.
+
+In this **User prompt**, `customer` is a step that looked the customer up from the email address in the message:
+
+```
+The customer is {{ .customer.name }}, on the {{ .customer.plan }} plan.
+
+Their message: {{ body "message" }}
+```
+
+You do not have to remember a step's name. In any prompt, **Insert a variable** lists every step by its name under **Step & agent outputs** and writes the braces for you.
+
+If a step found nothing, that part of the prompt is left empty, so write prompts that still read sensibly.
+
+## Steps run in order
+
+Steps run one after another, in the order the entry lists them. Each step can use what the ones before it found: look up the customer, then read that customer's orders with `{{ .customer.id }}` in the second step's address.
+
+## When a step fails
+
+If a step cannot finish, the run stops there and the sub-agent is not called. If an agent with steps goes quiet, check its steps first.
+
+## Add a step in the dashboard
+
+1. On the canvas, click **+** on the line from the entry to its sub-agent. To add a step to an entry that already has some, open the entry and, under **Before the agent**, click **Add step**.
+2. Under **Action**, search for what the step does and click it.
+3. Under **Name**, keep the name the step was given or type your own. The line under the field shows how a prompt reads it.
+4. Under **Fields**, fill in the action's settings. The heading says when a required field is still empty.
+5. Click **Add step**, then click **Save**.
+
+<Frame>
+  <img src="/images/concepts/steps-before-the-agent/02-step-dialog.png" alt="The Add a step dialog with the HTTP Request action and the name pull_request_diff folded at the top, and the HTTP Request fields open below" />
+</Frame>
+
+To change a step, open the entry and click the gear on the step. To remove one, click the bin.
+
+## Write steps in a config file
+
+In a config file, steps go under the entry, before its `start`. A step is an `id`, an action `type`, and the action's `config`:
+
+```yaml
+entries:
+  - type: handler
+    handlerConfig:
+      path: /support
+    steps:
+      - id: customer
+        type: http
+        config:
+          method: GET
+          url: 'https://crm.example.com/customers?email={{ body "email" }}'
+    start: agent.reply
+```
+
+Each field in `config` takes the type its action expects: a string, a boolean, a list, or a map. Every string is a template. The fields of each action are in [Available actions](/references/actions).
+
+## Related
+
+<CardGroup cols={2}>
+
+<Card title="Agents" icon="robot" href="/concepts/agents">
+  How entries, steps, and sub-agents fit together.
+</Card>
+
+<Card title="Add a tool to an agent" icon="wrench" href="/guides/add-a-tool">
+  For what the agent should decide to do itself.
+</Card>
+
+<Card title="Dynamic content" icon="wand-magic-sparkles" href="/concepts/dynamic-content">
+  How a prompt reads the message and what steps found.
+</Card>
+
+<Card title="Available actions" icon="play" href="/references/actions">
+  Every action a step can run, and its fields.
+</Card>
+
+</CardGroup>
