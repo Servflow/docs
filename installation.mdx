@@ -1,49 +1,18 @@
 ---
-title: "Install ServFlow"
-description: "Get a running ServFlow instance, either hosted at app.servflow.io or installed on your own machine"
-icon: "download"
+title: "Self-host ServFlow"
+description: "Install ServFlow on your own machine with Docker, the binary, or npm, and create the first account"
+icon: "server"
 ---
 
-This guide gets you a running ServFlow instance with a signed-in dashboard. Pick one of two paths: the hosted cloud, where ServFlow runs the instance for you, or a self-hosted instance on a machine you manage.
+This guide installs ServFlow on a machine you manage and gets you signed in to its dashboard. Self-host when you want your data on your own machine, or when your agents need to reach services on a private network. If you just want to use ServFlow, sign up at [dash.servflow.io](https://dash.servflow.io) instead and follow [Your first agent](/quickstart).
 
-| | Choose it when |
-|---|---|
-| [Cloud](#cloud) | You want nothing to install or maintain. |
-| [Self-hosted](#self-hosted) | You want your data on your own machine, or your agents need to reach services on a private network. |
-
-## Cloud
-
-<Steps>
-
-<Step title="Create an account">
-Go to [app.servflow.io](https://app.servflow.io) and sign up.
-</Step>
-
-<Step title="Create a workspace">
-Choose a slug for your workspace. The slug names your hosted agent routes. The dashboard is available right away.
-</Step>
-
-<Step title="Open the dashboard">
-Open the workspace. You are signed in and ready to build.
-</Step>
-
-</Steps>
-
-Hosted plans limit how many agent runs a team may start in each one-minute window. Every webhook request, scheduled run, task run, and listener-triggered run counts. When a webhook request is refused at the limit, the API returns `429 Too Many Requests` with a `Retry-After` header telling you when the current minute ends.
-
-On the Starter and Pro plans, Cloud includes built-in model access with a monthly credit, so your first agent runs without an API key. On any plan, you can also buy credit for it. See [Built-in model access on ServFlow Cloud](/concepts/providers#built-in-model-access-on-servflow-cloud).
-
-Next, follow [Create an agent](/guides/create-an-agent).
-
-## Self-hosted
-
-### Before you begin
+## Before you begin
 
 - 100 MB of free RAM. ServFlow is a single Go binary with an embedded dashboard.
 - A supported platform: Linux or macOS on x86_64 or arm64, or any host that runs Docker.
 - Outbound network access to the LLM providers your agents use.
 
-### Get a working configuration
+## Get a working configuration
 
 ServFlow reads a TOML configuration file. You do not need to write one. The first time you run `servflowai start` without a `--config` flag, it writes a complete default configuration to `~/.servflow/config.toml` and starts with it. The database lands in `~/.servflow/data/` and the server listens on port `8080`.
 
@@ -55,7 +24,7 @@ servflowai resource settings view
 
 The Docker image seeds its own configuration into `/data` on first boot, so the same applies there. For what each key means, see the [Configuration reference](/references/configuration).
 
-### Install with Docker
+## Install with Docker
 
 1. Start the container with the port published and a volume mounted at `/data`:
 
@@ -71,7 +40,7 @@ The Docker image seeds its own configuration into `/data` on first boot, so the 
 
 2. Open `http://localhost:8080/dashboard/`. The first-run setup screen appears.
 
-### Install the binary
+## Install the binary
 
 1. Download the archive for your platform from the [Releases](https://github.com/Servflow/servflowai/releases) page. Archives are named by platform, for example `servflowai_Linux_x86_64.tar.gz` or `servflowai_Darwin_arm64.tar.gz`.
 
@@ -92,7 +61,7 @@ The Docker image seeds its own configuration into `/data` on first boot, so the 
 
 4. Open `http://localhost:8080/dashboard/`. The first-run setup screen appears.
 
-### Install with npm
+## Install with npm
 
 The npm package downloads the same binary for your platform. It supports macOS and Linux on x86_64 and arm64.
 
@@ -112,7 +81,7 @@ The npm package downloads the same binary for your platform. It supports macOS a
 
 3. Open `http://localhost:8080/dashboard/`. The first-run setup screen appears.
 
-### Create the first account
+## Create the first account
 
 The dashboard requires an account. On a fresh instance the setup and registration screens are open until the first account exists, then they close.
 
@@ -138,7 +107,7 @@ Open the dashboard again and sign in with your credentials. The dashboard opens 
 
 To run without the account gate on a trusted local machine, set `mode = "none"` under `[authentication]` in the configuration file.
 
-### Verify
+## Verify
 
 From the terminal, list the agents in the store. On a fresh instance the list is empty and the command exits without error:
 
@@ -152,7 +121,7 @@ If you use Docker, run it inside the container:
 docker exec servflowai servflowai resource agent list --config /data/config.toml
 ```
 
-### Run it properly
+## Run it properly
 
 For an instance that outlives a first try:
 

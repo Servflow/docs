@@ -16,14 +16,14 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Use ServFlow",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Get started",
             "icon": "flag",
             "pages": [
               "index",
-              "installation"
+              "quickstart"
             ]
           },
           {
@@ -33,29 +33,55 @@
               "guides/create-an-agent",
               "guides/add-a-tool",
               "guides/add-an-integration",
-              "guides/manage-llm-providers",
               "guides/set-up-memory-and-file-access",
-              "guides/call-other-agents",
+              "guides/manage-llm-providers",
               "guides/connect-an-agent-to-discord"
             ]
           },
           {
-            "group": "Concepts",
+            "group": "Tutorials",
+            "icon": "graduation-cap",
+            "pages": [
+              "tutorials/discord-community-mod-agent"
+            ]
+          },
+          {
+            "group": "How it works",
             "icon": "lightbulb",
             "pages": [
               "concepts/agents",
               "concepts/tools",
-              "concepts/entries",
-              "concepts/guard-rails",
+              "concepts/integrations",
               "concepts/workspaces-and-files",
               "concepts/providers",
-              "concepts/secrets",
-              "concepts/integrations",
-              "concepts/dynamic-content"
+              "concepts/guard-rails"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Developers",
+        "groups": [
+          {
+            "group": "Run it yourself",
+            "icon": "server",
+            "pages": [
+              "installation",
+              "references/configuration"
             ]
           },
           {
-            "group": "References",
+            "group": "Build in depth",
+            "icon": "code",
+            "pages": [
+              "guides/call-other-agents",
+              "concepts/entries",
+              "concepts/dynamic-content",
+              "concepts/secrets"
+            ]
+          },
+          {
+            "group": "Reference",
             "icon": "book",
             "pages": [
               "references/entry-handlers",
@@ -63,20 +89,7 @@
               "references/integrations",
               "references/providers",
               "references/dynamic-content",
-              "references/cli",
-              "references/configuration"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Tutorials",
-        "groups": [
-          {
-            "group": "Tutorials",
-            "icon": "graduation-cap",
-            "pages": [
-              "tutorials/discord-community-mod-agent"
+              "references/cli"
             ]
           }
         ]
@@ -183,7 +196,7 @@
     "primary": {
       "type": "button",
       "label": "Get Started",
-      "href": "https://servflow.mintlify.app/guides/create-an-agent"
+      "href": "https://servflow.mintlify.app/quickstart"
     }
   },
   "contextual": {

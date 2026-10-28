@@ -10,7 +10,7 @@ The example is a two-stage pipeline named Question answerer. The first stage ans
 
 ## Before you begin
 
-- A running instance with the dashboard open. See [Install ServFlow](/installation).
+- A ServFlow account at [dash.servflow.io](https://dash.servflow.io), or a [self-hosted instance](/installation).
 - On a self-hosted instance, an LLM provider. In the sidebar under **Configure**, open **Providers** and add one if the list is empty. See [Manage LLM providers](/guides/manage-llm-providers). On ServFlow Cloud with a Starter or Pro plan, or with bought credit, you can skip this: a sub-agent with no provider uses [built-in model access](/concepts/providers#built-in-model-access-on-servflow-cloud).
 
 ## Create an agent in the UI
@@ -20,7 +20,7 @@ The example is a two-stage pipeline named Question answerer. The first stage ans
 <Steps>
 
 <Step title="Open the Agents page and click New Agent">
-In the sidebar under **Build**, open **Agents**. Click **New Agent** in the top right. The New Agent page opens.
+In the sidebar under **Build**, open **Agents**. Click **New Agent** in the top right. The **New agent** dialog opens and asks how to start.
 
 <Frame>
   <img src="/images/guides/create-an-agent/01-agents-list.png" alt="The Agents page with the New Agent button in the top right" />
@@ -28,34 +28,46 @@ In the sidebar under **Build**, open **Agents**. Click **New Agent** in the top 
 </Step>
 
 <Step title="Choose Start from scratch">
-Under **How to start**, choose **Start from scratch**. The **Name and description** section appears below it.
+Choose **Start from scratch**. The **Details** group appears.
 
 <Frame>
-  <img src="/images/guides/create-an-agent/02-how-to-start.png" alt="The How to start section with three cards: Start from scratch, Use a template, Import a config" />
+  <img src="/images/guides/create-an-agent/02-how-to-start.png" alt="The New agent dialog with four choices: Describe it to AI assist, Use a template, Start from scratch, and Import a config" />
 </Frame>
 
-**Use a template** installs a ready-made agent. **Import a config** takes a config you already have. Both leave you in the same editor as the rest of this guide.
+The other choices leave you in the same editor as the rest of this guide:
+
+| Choice | What it does |
+|---|---|
+| **Describe it to AI assist** | Opens the AI assist prompt on the dashboard. AI assist drafts the agent for you to review. ServFlow Cloud only. |
+| **Use a template** | Installs a ready-made agent. See [Your first agent](/quickstart). ServFlow Cloud only. |
+| **Import a config** | Takes a config you already have, pasted as YAML or JSON. |
 </Step>
 
-<Step title="Name the agent and choose an architecture">
-Enter a **Name**, for example `Question answerer`. The **Architecture** section appears.
+<Step title="Name the agent">
+Enter a **Name**, for example `Question answerer`. Optional: add a **Description**. The **Architecture** group appears.
+</Step>
 
-Choose **Sequential pipeline** and set **Pipeline stages** to `2 sub-agents`. Each section keeps a summary of your answer on its right edge, so you can change an earlier choice at any point.
+<Step title="Choose an architecture">
+Choose **Sequential pipeline** and set **Pipeline stages** to `2 sub-agents`. The **AI provider** group appears.
 
 <Frame>
-  <img src="/images/guides/create-an-agent/04-architecture.png" alt="The New Agent page with the name filled in and Sequential pipeline selected" />
+  <img src="/images/guides/create-an-agent/04-architecture.png" alt="The New agent from scratch dialog with the name filled in, Sequential pipeline selected, and 2 sub-agents" />
 </Frame>
 
-| Arrangement | What it scaffolds |
+| Architecture | What it scaffolds |
 |---|---|
-| Single agent | One sub-agent with a trigger entry. Add entries, tools, or more sub-agents later in the editor. |
+| Single agent | One sub-agent. You can give it a **Schedule**. Add entries, tools, or more sub-agents later in the editor. |
 | Sequential pipeline | Sub-agents run in a chain. Each one's reply feeds the next. |
 | Supervisor / router | A coordinator sub-agent routes work to specialists and collects results. |
 | Parallel fan-out | One entry sub-agent calls several workers, then hands off to an aggregator. |
 </Step>
 
+<Step title="Choose a provider">
+Under **AI provider**, choose the model every sub-agent runs on. On ServFlow Cloud, keep **No provider selected** to use [built-in model access](/concepts/providers#built-in-model-access-on-servflow-cloud). On a self-hosted instance, you can choose **Choose later** and pick one per sub-agent in the editor.
+</Step>
+
 <Step title="Click Create Agent">
-Click **Create Agent**. The editor opens on a canvas with four nodes from top to bottom: the entry, labelled **Manual trigger**, the sub-agents **Analyze request** and **Compose response**, and **Final response**. The agent is saved, and its id, `question-answerer`, is derived from the name.
+Click **Create Agent**. The editor opens on a canvas with four nodes from top to bottom: the entry, labelled **Manual trigger**, the sub-agents **Analyze request** and **Compose response**, and **Final response**. The agent is saved but turned off, and its id, `question-answerer`, is derived from the name.
 
 <Frame>
   <img src="/images/guides/create-an-agent/05-editor.png" alt="The editor canvas showing the entry, two sub-agent nodes, and the final response" />
@@ -99,7 +111,7 @@ Click the **Analyze request** node. Its panel opens.
 </Step>
 
 <Step title="Choose a provider">
-Under **Provider**, choose your provider. The panel confirms with "Calls" and the provider's name. On ServFlow Cloud, you can leave it empty to use built-in model access.
+If you chose a provider when you created the agent, it is already set. Otherwise, under **Provider**, choose one. The panel confirms with "Calls" and the provider's name. On ServFlow Cloud, you can leave it empty to use built-in model access.
 </Step>
 
 <Step title="Write the prompts">
@@ -133,7 +145,7 @@ Leave its **User prompt** empty. In a pipeline, a stage receives the previous st
 </Step>
 
 <Step title="Save">
-Click **Save** in the top bar. The button reads **Saved**, and the running server picks up the agent without a restart.
+Click **Save** in the top bar. The button reads **Saved**. Saving stores the agent; it doesn't start serving it.
 </Step>
 
 </Steps>
@@ -170,7 +182,11 @@ The **Run** panel shows **Completed**, a log of each sub-agent's turn, and a **F
 
 </Steps>
 
-Then call it from outside. In a local servflowai instance the webhook is served at the entry path itself, so the response body is the agent's reply:
+Then turn it on and call it from outside. A new agent doesn't answer requests until it's enabled. In the top bar, switch **Disabled** to **Enabled**. A message confirms **Agent enabled**. If the agent can't be served, for example because a sub-agent has no provider on a self-hosted instance, the message says why and the switch stays off.
+
+After you change an enabled agent and save, it keeps serving the previous version until you apply the saved changes from the same place in the top bar.
+
+In a local servflowai instance the webhook is served at the entry path itself, so the response body is the agent's reply:
 
 ```bash
 curl -X POST http://localhost:8080/ask \
@@ -184,11 +200,12 @@ The `body` function only reads requests sent with `Content-Type: application/jso
 
 ## Create an agent from the CLI or MCP
 
-If you keep agents in files, describe the agent in a JSON or YAML document and create it with the `resource` command. It writes to the same store the dashboard uses, and a running server starts serving the change without a restart.
+If you keep agents in files, describe the agent in a JSON or YAML document and create it with the `resource` command. It writes to the same store the dashboard uses, and a created agent is off until you enable it.
 
 ```bash
 servflowai resource agent create -f agent.yaml --dry-run   # check it
 servflowai resource agent create -f agent.yaml            # create it
+servflowai resource agent enable question-answerer        # serve it
 ```
 
 The agent from the first section, reduced to one sub-agent, looks like this. Replace `providerID` with a provider id from `servflowai resource provider list`.
@@ -228,8 +245,8 @@ For every command, the shape of an agent, and the MCP management server, see the
   Template functions such as `body`, `param`, and `secret`.
 </Card>
 
-<Card title="Install ServFlow" icon="download" href="/installation">
-  Get a running instance if you do not have one yet.
+<Card title="Self-host ServFlow" icon="server" href="/installation">
+  Run ServFlow on your own machine.
 </Card>
 
 </CardGroup>

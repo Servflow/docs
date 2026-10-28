@@ -1,0 +1,135 @@
+---
+title: "Your first agent"
+description: "Sign up and install a ready-made agent that drafts follow-up emails after your meetings, then check what it did"
+icon: "rocket"
+---
+
+This guide takes you from a new account to an agent working in your calendar and inbox. You install the **Meeting Follow-ups** template. Every weekday evening it looks at the meetings you had that day and saves a thank-you and next-steps email to each meeting's attendees as a draft in Gmail. It never sends anything, so it's safe to try with your real accounts.
+
+It takes about ten minutes, and you need no code and no AI account of your own.
+
+## Before you begin
+
+- A Google account with Google Calendar and Gmail.
+- To see a draft today: a meeting earlier today in your calendar with at least one attendee outside your company.
+
+## Create your account
+
+<Steps>
+
+<Step title="Sign up">
+Go to [dash.servflow.io](https://dash.servflow.io) and sign up. A short setup opens.
+</Step>
+
+<Step title="Answer the setup questions">
+Tell ServFlow your role and company size, then create your **team**. Your team owns every agent and connection you make. The **Team identifier** forms part of your agents' web addresses and can't be changed later.
+
+You can skip connecting apps and picking a first agent during setup. This guide does both in the next steps.
+</Step>
+
+<Step title="Give your agents a model">
+A model is the AI that does the thinking. On **Choose how your agents use a model**, pick one of these:
+
+- **Use our model.** Paid for with credit from a plan, or credit you buy. The Starter and Pro plans include monthly credit.
+- **Bring your own key.** Use your own OpenAI, Claude, OpenRouter, LiteLLM, or Qwen account.
+</Step>
+
+</Steps>
+
+## Install the template
+
+<Steps>
+
+<Step title="Open the templates">
+In the sidebar under **Build**, click **Agents**, then click **New Agent**. Choose **Use a template**. The **Templates** gallery opens.
+
+<Frame>
+  <img src="/images/guides/quickstart/01-templates.png" alt="The Templates gallery, a grid of ready-made agents, each with the apps it uses and an Install button" />
+</Frame>
+</Step>
+
+<Step title="Choose Meeting Follow-ups">
+Find **Meeting Follow-ups** and click **Install**. The **Details** page shows what the agent does, the apps it uses, and the settings you fill in.
+
+<Frame>
+  <img src="/images/guides/quickstart/02-details.png" alt="The Details page for Meeting Follow-ups, listing Google Calendar and Gmail under Apps it uses" />
+</Frame>
+
+Click **Set up**.
+</Step>
+
+<Step title="Connect your apps">
+Under **Apps**, click **Connect Google Calendar**. Sign in to Google in the window that opens, and allow access. Then do the same with **Connect Gmail**. The group reads **2 of 2 connected**.
+
+The agent only reads your calendar, and it only saves drafts in Gmail. You connect each app once, and every agent on your team can then use it.
+
+<Frame>
+  <img src="/images/guides/quickstart/03-set-up.png" alt="The Set up page with AI model, Apps, Memory, and Settings groups, and Connect buttons for Google Calendar and Gmail" />
+</Frame>
+</Step>
+
+<Step title="Check the model">
+**AI model** shows **ServFlow's models**, which uses your credit. To use your own account instead, click **Change** and choose a provider.
+
+You can leave **Memory** as it is. This agent doesn't need to remember anything between runs.
+</Step>
+
+<Step title="Fill in the settings">
+Click **Settings** to open it, and fill in the fields:
+
+- **Instance name** names the agent. The default is fine.
+- **Hour to draft** is when each weekday's drafts are written, on the 24-hour clock in UTC. For example, `18` is 18:00 UTC.
+- **Your name** signs each email. The emails are written in your voice.
+- **Sign-off** is the line before your name, such as `Best regards`.
+- **Meetings to skip** says which meetings get no follow-up. By default, the agent skips meetings with only your own colleagues, and meetings with nobody but you.
+
+<Frame>
+  <img src="/images/guides/quickstart/05-settings.png" alt="The Settings group open, with Instance name, Hour to draft, Your name, Sign-off, and Meetings to skip" />
+</Frame>
+</Step>
+
+<Step title="Install it">
+Click **Install**, then click **Done**. The agent opens in the editor.
+</Step>
+
+<Step title="Turn it on">
+A new agent is off until you turn it on. In the editor's top bar, switch **Disabled** to **Enabled**. A message confirms **Agent enabled**, and the agent will now run every weekday at the hour you chose.
+
+<Frame>
+  <img src="/images/guides/quickstart/04-enabled-switch.png" alt="The editor's top bar with the Disabled switch, the settings button, Saved, and Run" />
+</Frame>
+
+If ServFlow can't start the agent, the message says why, such as an app that isn't connected, and the switch stays off.
+</Step>
+
+</Steps>
+
+## Try it now
+
+You don't have to wait for the evening. In the editor's top bar, click **Run**, then click **Run** again in the dialog that opens. The agent runs once, straight away, and the **Run** panel shows each step as it happens.
+
+When the run shows **Completed**, open Gmail and look in **Drafts**. You should see one follow-up email for each meeting today that the agent didn't skip. Edit them as you like, and send them yourself.
+
+If you had no meetings today, or every meeting matched **Meetings to skip**, the agent saves nothing. Its final response says why.
+
+## See what your agent did
+
+Every time an agent runs, ServFlow records it.
+
+1. In the sidebar under **Build**, click **Agents**. The agent's card shows its last run: **OK** if it finished, or **Failed** if something went wrong.
+2. To see each step the agent took, in the sidebar under **Account**, click **Traces**, then click the run. It shows what started the run, each tool the agent used, how long each part took, and any error.
+
+## Change it later
+
+The template installed an ordinary agent, so you can change anything about it. To change how the emails are written, open the agent from the **Agents** page and click the **Follow-up writer** box on the canvas.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="What ServFlow does" icon="house" href="/">
+    What agents are made of, and what else you can build.
+  </Card>
+  <Card title="Create an agent" icon="robot" href="/guides/create-an-agent">
+    Build an agent of your own from scratch.
+  </Card>
+</CardGroup>

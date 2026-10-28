@@ -333,6 +333,10 @@ entries:
 | `reply_to_author` | string | Who wrote the message this one replies to. |
 | `message_link` | string | A link to the message. |
 
+## Run limits on ServFlow Cloud
+
+Hosted plans limit how many agent runs a team may start in each one-minute window. Every webhook request, scheduled run, task run, and listener-triggered run counts. When a webhook request is refused at the limit, the API returns `429 Too Many Requests` with a `Retry-After` header telling you when the current minute ends.
+
 ## Related
 
 <CardGroup cols={2}>

@@ -1,59 +1,61 @@
 ---
-title: "Introduction"
-description: "ServFlow is an agent builder: design AI agents and the workflows they run, then serve them from a fast Go engine"
+title: "What ServFlow does"
+description: "ServFlow runs AI agents that work inside the apps your team already uses: they notice something happen, decide what to do, and do it"
 icon: "house"
 ---
 
-ServFlow is an **agent builder**. You describe an AI agent: what it should do, which models and tools it can use, and how the outside world reaches it. ServFlow runs it for you. There's no glue code to write and no framework to learn: the agent is the product, and a compiled Go engine serves it.
+ServFlow lets you set up AI agents that do real work in the apps you already use, such as Gmail, Slack, Notion, GitHub, Telegram, and Discord. You don't need to write code. This page explains what an agent is and what you can do with one. To try one right away, see [Your first agent](/quickstart).
 
-## How ServFlow works
+## What an agent is
 
-ServFlow is the only system you need to run and manage agents. The plumbing you would otherwise assemble yourself (webhook servers, cron jobs, sandboxed file storage, credential handling) is built in, and everything an agent depends on is created and managed in one place:
+An agent is an assistant that waits for something to happen, thinks about it, and acts. Every agent works the same way:
 
-- **[Agents](/concepts/agents)**: the top-level object. An agent has a name, a model, and instructions, and everything below belongs to one.
-- **Workflows**: the work an agent performs, either as HTTP endpoints the world can call (*webhooks*) or as scheduled and internal jobs (*tasks*).
-- **[Tools](/references/actions)**: what the agent can decide to do while it works, such as query a database, hit an API, transform data, or run a workflow. The same building blocks compose workflows.
-- **Context retrieval**: the agent pulls in what it needs to know before it responds, whether by searching a vector store, looking up records in a database, or reading files from its workspace.
-- **A workspace**: files the agent can read and write, so it has somewhere to keep memories, state, and output.
-- **Integrations and [secrets](/concepts/secrets)**: the AI models, databases, and APIs the agent is allowed to use, with credentials stored encrypted and out of your configs.
-- **The dashboard and the CLI**: two ways to build the same objects. Design visually on the canvas, or declare agents as JSON or YAML files, deploy them from the CLI, and check them into git.
+1. **Something starts it.** A new email arrives, someone mentions it in Slack, a pull request opens, or a set time comes round.
+2. **It reads its instructions.** You write these in plain language, the way you would brief a new colleague: who you are, what it should handle, and what it must never do.
+3. **It uses its tools.** Tools are the actions an agent may take in your apps, such as reading an email thread, searching a Notion page, or posting a message.
+4. **It finishes the job.** It replies, saves a draft, posts a summary, or decides nothing needs doing.
 
-## Example agents
+For example, the **Meeting Follow-ups** agent runs every weekday evening. It reads the meetings you had that day and saves a thank-you email to each meeting's attendees as a draft in Gmail. It never sends anything itself.
 
-ServFlow doesn't box you into a single shape of agent. Here are some examples of agents you can create:
+## What you can build
 
-- A conversational agent that answers questions in a chat widget or on Telegram
-- An autonomous agent that reads pull requests and comments on them
-- A scheduled agent that watches data sources and reports what changed
-- A plain HTTP API. The same engine serves ordinary endpoints, so ServFlow works even when no AI is involved
+- **Answer questions in chat.** An agent in Slack, Telegram, or Discord that answers from your Notion pages or its own notes.
+- **Keep your inbox moving.** Draft replies to customer emails, sort what arrives, and warn you about what's urgent.
+- **Review code.** Read new GitHub pull requests and comment on anything risky, or sort new issues.
+- **Report on a schedule.** A daily digest of a Slack channel, or a weekly report of what changed in a repository.
+- **Prepare and follow up on meetings.** Research the people you're meeting, then send the follow-ups afterwards.
 
-A workflow is a graph of tools: call a model, query a database, hit an API, branch, transform. Whatever shape your agent takes, it's built from the same pieces.
+Most of these exist as ready-made **templates**: an agent that already works, which you install, connect to your apps, and change to suit you.
 
-## What makes it different
+## How you build one
 
-**Agents are first-class, deployable objects.** One agent bundles its prompts, tools, workflows, workspace, and credentials under a single name, so you can look at it, version it, move it, and delete it as one thing.
+You build agents in the ServFlow dashboard, in one of three ways:
 
-**It bends to your systems, not the other way around.** Integrations connect agents to the infrastructure you already run: your PostgreSQL, your MongoDB, your vector store, your internal APIs. And because every agent is a plain JSON or YAML config underneath, you can customize any part of it and manage it like the rest of your code.
+- **Install a template.** Pick a ready-made agent, connect the apps it asks for, and it starts working.
+- **Describe it to AI assist.** Say in a sentence what you want, and AI assist drafts the agent for you to review.
+- **Start from scratch.** Name the agent and add its instructions and tools yourself.
 
-**It's self-contained.** A single binary serves your agents, the API, and the dashboard. There's no cluster to stand up and no fleet of services to keep alive.
+Whichever you choose, you end up in the same editor, where you can change anything later.
 
-**It's light and fast.** The engine is compiled Go: one process, a low memory footprint, and near-instant startup. It stays fast under real traffic, so your agents' latency comes from the models they call, not from the platform running them. The same binary is comfortable on a laptop, in a container, or on a small VM.
+## What you need
 
-**Local models are first-class.** A provider is just an endpoint and a credential, so you can point your agents at any OpenAI-compatible server: Ollama or LM Studio on your machine, vLLM or LiteLLM on your own hardware. Pair a local model with the lightweight engine and the whole stack runs on one box, with nothing leaving it.
+- **A ServFlow account.** Sign up at [dash.servflow.io](https://dash.servflow.io).
+- **Your apps, connected.** You sign in to each app once, and every agent on your team can then use it.
+- **A model.** This is the AI that does the thinking. On the Starter and Pro plans, ServFlow includes model credit, so you need no AI account of your own. You can also use your own OpenAI, Anthropic, or other account.
 
-## Monitoring
+## Keeping control
 
-Every run is traced end to end: which model was called, how many tokens it used, which tools it invoked, where the time went, and what failed. Analysing those traces tells you your agents' success rate, not just their uptime: how often runs complete, where they go wrong, and what each one costs.
-
-Traces follow the OpenTelemetry standard, so they work with the observability stack you already have. **ServFlow Cloud** takes this further: it hosts your agents on managed infrastructure and turns those traces into insight you can use to improve them.
+- **Agents only do what their tools allow.** An agent with no send tool can't send email. Templates are built this way: the Meeting Follow-ups agent can only read your calendar and save drafts.
+- **You turn agents on and off.** A new agent you build stays off until you enable it.
+- **You can see every run.** Each time an agent runs, ServFlow records what started it, what it read, which tools it used, and what it replied.
 
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Get started" icon="rocket" href="/installation">
-    Install ServFlow, create your account, and deploy your first agent.
+  <Card title="Your first agent" icon="rocket" href="/quickstart">
+    Install a template that drafts follow-up emails after your meetings, in about ten minutes.
   </Card>
-  <Card title="Core concepts" icon="book" href="/concepts/agents">
-    Understand agents, workflows, and how the pieces fit together.
+  <Card title="For developers" icon="code" href="/installation">
+    Self-host ServFlow, build agents as config files, and connect your own systems.
   </Card>
 </CardGroup>
