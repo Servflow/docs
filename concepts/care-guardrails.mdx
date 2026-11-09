@@ -8,7 +8,7 @@ A guardrail checks a care agent's reply before your customer sees it. This page 
 
 ## What a guardrail is
 
-A guardrail is one rule you write in plain words, such as "Don't promise anything the business's instructions and lookups don't support." A small model that Servflow chooses reads the customer's message, your care agent's instructions, what its tools returned, and the reply. It then allows or blocks the reply.
+A guardrail is one rule you write in plain words, such as "Don't promise anything the order lookup doesn't support." A small model that Servflow chooses reads three things: the customer's latest message, the tools your care agent called for this reply with what each returned, and the reply. It then allows or blocks the reply.
 
 The check runs outside the conversation with your customer. Your customer never sees it, and your care agent doesn't read it on later messages.
 
@@ -45,6 +45,7 @@ Guardrails check the reply your care agent writes, and nothing else. Keep these 
 
 - **Messages a tool sends:** if you give your care agent a tool that can message a customer, guardrails don't check what that tool sends. To keep every message checked, don't give it such a tool.
 - **Tool actions:** a guardrail doesn't undo what a tool already did. If your care agent issues a refund through a tool and its reply is then blocked, the refund stands.
+- **Earlier messages and instructions:** a guardrail doesn't see earlier messages in the conversation or your care agent's instructions. Write each rule so it can be judged from the latest message, the tool results, and the reply alone.
 - **Personal data:** Servflow doesn't look for personal data on its own. To stop replies that share it, write a guardrail that asks for this.
 - **A care agent with no guardrails:** nothing checks its replies.
 
