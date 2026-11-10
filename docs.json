@@ -54,7 +54,8 @@
               "concepts/integrations",
               "concepts/workspaces-and-files",
               "concepts/providers",
-              "concepts/guard-rails"
+              "concepts/guard-rails",
+              "concepts/support-guardrails"
             ]
           }
         ]

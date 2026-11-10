@@ -1,0 +1,52 @@
+---
+title: "Guardrails on support replies"
+description: "What a guardrail checks in a support agent's reply, what your customer receives when it stops one, and what guardrails don't check"
+icon: "shield-check"
+---
+
+A guardrail checks a support agent's reply before your customer sees it. This page explains what happens to a reply, what your customer receives, and where guardrails stop. It's for anyone setting up a support agent. To limit which tools an agent can call, see [Guard rails](/concepts/guard-rails).
+
+## What a guardrail is
+
+A guardrail is one rule you write in plain words, such as "Don't promise anything the order lookup doesn't support." A small model that Servflow chooses reads three things: the customer's latest message, the tools your support agent called for this reply with what each returned, and the reply. It then allows or blocks the reply.
+
+The check runs outside the conversation with your customer. Your customer never sees it, and your support agent doesn't read it on later messages.
+
+## What happens to a reply
+
+Your support agent writes its reply, and Servflow holds it. Support replies don't stream, so your customer sees nothing until the check finishes.
+
+Guardrails run in order, and the first one that doesn't allow the reply stops the check. Your customer then receives one of the following:
+
+| Result | What your customer receives | Handoff |
+|---|---|---|
+| Every guardrail allows the reply | The reply | No |
+| A guardrail blocks the reply | Your fallback message | Yes |
+| The support agent wrote nothing | Your fallback message | Yes |
+| A guardrail can't finish, or its answer isn't valid | Your fallback message | Yes |
+
+The third and fourth rows matter most. A reply is sent only when a guardrail clearly allows it, so a model error or a timeout gives your customer the fallback message rather than an unchecked reply.
+
+## Fallback message
+
+The fallback message is a fixed text you write. Servflow sends it as written, and no model changes it. It goes out when nothing is known about the reply, so make no specific promise in it. For example:
+
+```text
+Thanks for your message. A member of our team will reply soon.
+```
+
+## Blocked replies
+
+A blocked reply stays out of the conversation, so your support agent can't repeat it on a later message. The saved conversation shows the fallback message in its place. You can read the blocked reply, the guardrail that stopped it, and the reason on the trace of that run. Anyone on your team who can read traces can read it.
+
+## What guardrails don't check
+
+Guardrails check the reply your support agent writes, and nothing else. Keep these limits in mind when you set up a support agent:
+
+- **Messages a tool sends:** if you give your support agent a tool that can message a customer, guardrails don't check what that tool sends. To keep every message checked, don't give it such a tool.
+- **Tool actions:** a guardrail doesn't undo what a tool already did. If your support agent issues a refund through a tool and its reply is then blocked, the refund stands.
+- **Earlier messages and instructions:** a guardrail doesn't see earlier messages in the conversation or your support agent's instructions. Write each rule so it can be judged from the latest message, the tool results, and the reply alone.
+- **Personal data:** Servflow doesn't look for personal data on its own. To stop replies that share it, write a guardrail that asks for this.
+- **A support agent with no guardrails:** nothing checks its replies.
+
+A guardrail is a model's judgment, so it can miss something or block a correct reply. The trace shows what each guardrail decided, so you can adjust its rule.
