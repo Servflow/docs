@@ -1,63 +1,55 @@
 ---
 title: "Configuration Reference"
-description: "Every TOML option and environment variable for a ServFlow instance"
+description: "Every TOML option and environment variable for a self-hosted Servflow instance"
 icon: "gear"
 ---
 
-ServFlow is an agent builder: you define AI agents and the workflows they run, and a Go engine serves them. The instance itself — ports, storage, authentication, tracing — is configured with a single TOML file passed to `servflowai start --config`.
+A self-hosted Servflow instance reads one TOML file: its port, storage, authentication, tracing, memory folders, and shell sandbox. This page lists every key in that file and the environment variable that sets it. For installing the binary, see [Self-host Servflow](/installation). For what an agent is, see [Agents](/concepts/agents).
 
-This page is the complete reference for that file. For installing the binary see [Installation](/installation); for what an agent *is*, see [Agents](/concepts/agents).
+## Where the file is read from
 
-<Tip>
-Every option can also be set with an environment variable. Environment variables take precedence over the TOML file, which makes them convenient for containers and CI.
-</Tip>
+| How the server is started | File read | When the file is missing |
+|---|---|---|
+| `servflowai start` | `~/.servflow/config.toml` | The server starts on the defaults on this page and writes no file. |
+| `servflowai start --config <path>` | `<path>` | The server refuses to start. |
+
+The `resource` commands take the same `-c, --config` flag and follow the same rule.
+
+Values are applied in this order, each overriding the one before:
+
+1. The defaults on this page.
+2. The keys the file states.
+3. The environment variables the process has.
+
+Three keys are paths: `sqlite.path`, `workspaces.root`, and `shell.working_dir`. A relative value resolves against the folder that holds the configuration file, not the folder the process starts in. Without a file, it resolves against `~/.servflow`.
+
+The first-run setup screen writes the file. It saves `servflow.auth_token`, `workspaces.root`, and the `[tracing]` keys, and every other key at its current value from the file or its default.
 
 ## Minimal configuration
 
-Only `server.config_folder` is required. Everything else has a working default:
-
-```toml
-[server]
-config_folder = "./configs"
-```
-
-Start the instance with:
+No key is required. An empty file, or no file, runs the server on port `8080` with its database at `secrets.db` next to the file:
 
 ```bash
-servflowai start --config config.toml
+servflowai start --dashboard
 ```
 
 ## `[server]`
 
-Controls how the process is hosted. **One port serves everything.** Agent paths are served from the root, so an agent listening on `/ask` answers at `http://localhost:8080/ask`. The dashboard is under `/dashboard` on the same port.
-
-```toml
-[server]
-port = "8080"
-config_folder = "./configs"
-env = "production"
-```
+How the process is hosted. One port serves everything. Agent paths are served from the root, so an agent listening on `/ask` answers at `http://localhost:8080/ask`. With `--dashboard`, the dashboard and its API are under `/dashboard` on the same port.
 
 | Field | Environment variable | Default | Description |
 |---|---|---|---|
-| `port` | `SERVFLOW_SERVER_PORT` | `8080` | Port serving agents, the API, and (with `--dashboard`) the dashboard |
-| `config_folder` | `SERVFLOW_SERVER_CONFIG_FOLDER` | — | **Required.** Directory holding workflow configuration files |
-| `env` | `SERVFLOW_SERVER_ENV` | `production` | Environment mode: `production` or `development` |
+| `port` | `SERVFLOW_SERVER_PORT` | `"8080"` | The port that serves agents and, with `--dashboard`, the dashboard. |
+| `env` | `SERVFLOW_SERVER_ENV` | `"production"` | The deployment environment. It is recorded only. |
 
 ## `[sqlite]`
 
-Where ServFlow keeps agents, integrations, providers, secrets, workspaces, and user accounts.
-
-```toml
-[sqlite]
-path = "secrets.db"
-master_key = ""
-```
+Where Servflow keeps agents, integrations, providers, secrets, memory records, and user accounts. SQLite is the only storage.
 
 | Field | Environment variable | Default | Description |
 |---|---|---|---|
-| `path` | `SERVFLOW_SQLITE_PATH` | `secrets.db` | Path to the database file. A relative path is resolved against the folder that holds the settings file, so the default is `~/.servflow/secrets.db`. |
-| `master_key` | `SERVFLOW_SQLITE_MASTER_KEY` | empty | The key that encrypts stored credentials. Empty stores them as plain text. |
+| `path` | `SERVFLOW_SQLITE_PATH` | `"secrets.db"` | The database file. With no configuration file, this is `~/.servflow/secrets.db`. |
+| `master_key` | `SERVFLOW_SQLITE_MASTER_KEY` | `""` | The key that encrypts stored credentials. Empty stores them as plain text. |
 
 When `master_key` is set, stored [secrets](/concepts/secrets), [integration](/concepts/integrations) credentials, and [provider](/concepts/providers) API keys are encrypted. Set it before you store any credentials.
 
@@ -67,71 +59,137 @@ Never commit `master_key` to version control. Set it with `SERVFLOW_SQLITE_MASTE
 
 ## `[secrets]`
 
-Controls where `{{ secret "name" }}` resolves from at runtime.
-
-```toml
-[secrets]
-disable_env = false
-```
+Where `{{ secret "name" }}` reads from at run time.
 
 | Field | Environment variable | Default | Description |
 |---|---|---|---|
-| `disable_env` | `SERVFLOW_SECRETS_DISABLE_ENV` | `false` | When `true`, `{{ secret "name" }}` reads only stored secrets and never the server process environment |
+| `disable_env` | `SERVFLOW_SECRETS_DISABLE_ENV` | `false` | When `true`, `{{ secret "name" }}` reads only stored secrets and never the server process's environment. |
 
-By default, ServFlow checks an environment variable whose name exactly matches the secret name before it checks the stored secret of that name. Set `disable_env = true` on a shared or hosted instance so workflows and agent tools cannot read the instance's own environment variables through `{{ secret }}`.
+A secret is looked up by name each time it is used. A name that matches nothing gives an empty value, not an error.
+
+| When `disable_env` is | Order | Where the value comes from |
+|---|---:|---|
+| `false` | 1 | An environment variable with exactly the secret's name, with no prefix and no change of case. |
+| `false` | 2 | The secret stored under that name. |
+| `true` | 1 | The secret stored under that name. |
+
+Set `disable_env = true` on a shared instance, so that agents cannot read the instance's own environment variables through `{{ secret }}`.
 
 ## `[authentication]`
 
-Controls how the dashboard and management API are gated.
-
-```toml
-[authentication]
-mode = "local"
-domain = "your-domain.com"
-```
+How the dashboard and its API are gated.
 
 | Field | Environment variable | Default | Description |
 |---|---|---|---|
-| `mode` | `SERVFLOW_AUTH_MODE` | `local` | `local` gates the dashboard behind username and password accounts. `none` disables the gate entirely |
-| `domain` | `SERVFLOW_AUTH_DOMAIN` | — | Public base URL of this instance, used to build OAuth integration callback URLs |
+| `mode` | `SERVFLOW_AUTH_MODE` | `"local"` | `local`, `none`, or `jwt`. See the modes below. |
+| `jwks_url` | `SERVFLOW_AUTH_JWKS_URL` | `""` | The JSON Web Key Set that token signatures are checked against. Required in `jwt` mode, ignored in the others. |
+| `team_id` | `SERVFLOW_AUTH_TEAM_ID` | `""` | The only team a token may name. Required in `jwt` mode, ignored in the others. |
 
-**`mode` defaults to `local`.** A config file that omits this section is still gated — the first time you open the dashboard you are asked to create an account. See [First run](/installation#create-the-first-account).
+| Mode | What it does |
+|---|---|
+| `local` | Gates the dashboard behind username and password accounts stored in the database. The first account is created on the registration screen while no account exists. After that, creating an account requires being signed in. See [Create the first account](/installation#create-the-first-account). |
+| `none` | Turns the gate off. Anyone who can reach the port can use the dashboard and its API. |
+| `jwt` | Hands identity to an external OpenID Connect provider. Every request to the dashboard API needs an `Authorization: Bearer <token>` header with a token signed by a key from `jwks_url`, whose `https://servflow.io/team_id` claim equals `team_id`. Local accounts, the first-run setup screen, and the embedded dashboard are off. The [management MCP server](/references/mcp-servers) moves behind the same check. |
 
 <Warning>
-`mode = "none"` leaves the dashboard and management API open to anyone who can reach the port. Use it only on a trusted local machine.
+In `local` and `none` modes, the management MCP server at `/dashboard/api/mcp` takes no authentication. Anyone who can reach the port can read and change agents and create secrets through it. Do not expose such an instance to a network you do not trust.
 </Warning>
 
 ## `[tracing]`
 
-OpenTelemetry tracing for debugging workflow and agent runs.
-
-```toml
-[tracing]
-enabled = false
-service_name = "servflowai"
-org_id = ""
-collector_endpoint = ""
-```
+OpenTelemetry tracing of runs, exported over OTLP/HTTP.
 
 | Field | Environment variable | Default | Description |
 |---|---|---|---|
-| `enabled` | `SERVFLOW_TRACING_ENABLED` | `false` | Enable OpenTelemetry tracing |
-| `service_name` | `SERVFLOW_TRACING_SERVICE_NAME` | — | Service name attached to every span |
-| `org_id` | `SERVFLOW_TRACING_ORG_ID` | — | Organization ID sent with exported traces |
-| `collector_endpoint` | `SERVFLOW_TRACING_COLLECTOR_ENDPOINT` | — | Base URL of the OTLP/HTTP ingest endpoint. The `/v1/traces` path is appended automatically, so give a full URL including scheme |
+| `enabled` | `SERVFLOW_TRACING_ENABLED` | `false` | Exports a trace of every run. |
+| `service_name` | `SERVFLOW_TRACING_SERVICE_NAME` | `"servflowai"` | The service name on every span. |
+| `collector_endpoint` | `SERVFLOW_TRACING_COLLECTOR_ENDPOINT` | the endpoint the release was built with | The base URL of the OTLP/HTTP ingest endpoint, with its scheme. `/v1/traces` is appended. |
 
-Tracing can also be configured during [first-run setup](/installation#create-the-first-account).
+When `servflow.auth_token` is set, it is sent as the `Authorization` header of every export. Tracing can also be set on the [first-run setup screen](/installation#create-the-first-account).
+
+## `[pprof]`
+
+Go's runtime profiler.
+
+| Field | Environment variable | Default | Description |
+|---|---|---|---|
+| `enabled` | `SERVFLOW_PPROF_ENABLED` | `false` | With `--dashboard`, serves the profiler at `/dashboard/debug/pprof/`. |
+
+<Warning>
+The profiler endpoints take no authentication, in every mode. Enable them only on an instance nobody else can reach.
+</Warning>
+
+## `[servflow]`
+
+Connects a self-hosted instance to your Servflow team, for Assist and trace export.
+
+| Field | Environment variable | Default | Description |
+|---|---|---|---|
+| `auth_token` | `SERVFLOW_AUTH_TOKEN` | `""` | Your team's API key, shown under **Settings** > **Team** > **Your API key** in the hosted dashboard. Empty leaves the instance unconnected. |
+| `server_url` | `SERVFLOW_SERVER_URL` | the URL the release was built with | The Servflow server the instance reports to. |
+| `instance_id` | `SERVFLOW_INSTANCE_ID` | `""` | The id the instance reports as. Empty gives a new random id at each start. |
+
+With both `auth_token` and `server_url` set, the instance reports to the server every 5 seconds, and learns which team it belongs to from the reply.
+
+## `[workspaces]`
+
+Where memory folders are kept. `workspace` is the code's word for a memory.
+
+| Field | Environment variable | Default | Description |
+|---|---|---|---|
+| `root` | `SERVFLOW_WORKSPACES_ROOT` | `"workspaces"` | The folder every memory folder is created in. A memory cannot point at a path outside it. |
+
+## `[shell]`
+
+How the `shell` action runs commands. Each run gets a folder of its own under `working_dir`, deleted when the run ends, and a sandbox that decides what a command can reach. There is no unconfined setting: when the sandbox cannot run, commands fail.
+
+| Field | Environment variable | Default | Description |
+|---|---|---|---|
+| `engine` | `SERVFLOW_SHELL_ENGINE` | `"native"` | `native` uses the platform's kernel sandbox: bubblewrap on Linux, Seatbelt on macOS. `docker` runs each run's commands in a container. |
+| `working_dir` | `SERVFLOW_WORKING_DIR` | `"work"` | The folder every run's shell folder is created in. The server refuses to start when it contains the database or the configuration file. |
+| `timeout` | `SERVFLOW_SHELL_TIMEOUT` | `"60s"` | How long one command may run, as a duration. |
+| `max_output` | `SERVFLOW_SHELL_MAX_OUTPUT` | `32768` | How many bytes of output one command returns. Longer output keeps its start and end and loses the middle. |
+
+### `[shell.native]`
+
+What a command can reach beyond its own folder, with either engine. There is no list of allowed programs: a command can run any binary it can see.
+
+| Field | Environment variable | Default | Description |
+|---|---|---|---|
+| `folders` | `SERVFLOW_SHELL_FOLDERS` | `[]` | Extra read-only paths. Each must be absolute, exist, and sit outside `working_dir`. With `docker`, each becomes a mount. |
+| `write_folders` | `SERVFLOW_SHELL_WRITE_FOLDERS` | `[]` | Extra read-write paths, with the same rules. |
+| `network` | `SERVFLOW_SHELL_NETWORK` | `true` | Outbound network access for the `native` engine. `false` removes the network under bubblewrap and refuses connections under Seatbelt. |
+
+In an environment variable, separate list items with commas.
+
+### `[shell.docker]`
+
+Used only when `engine = "docker"`. The image decides which programs a command can run.
+
+| Field | Environment variable | Default | Description |
+|---|---|---|---|
+| `image` | `SERVFLOW_SHELL_DOCKER_IMAGE` | `"alpine:3.20"` | The image each run's container starts from. |
+| `memory` | `SERVFLOW_SHELL_DOCKER_MEMORY` | `""` | The container's memory limit, in Docker's format, such as `512m`. Empty sets none. |
+| `cpus` | `SERVFLOW_SHELL_DOCKER_CPUS` | `0` | The container's CPU limit. `0` sets none. |
+| `network` | `SERVFLOW_SHELL_DOCKER_NETWORK` | `false` | Outbound network access for the container. |
+
+## Environment variables outside the file
+
+| Variable | Description |
+|---|---|
+| `SERVFLOW_LOG_LEVEL` | Any value makes `servflowai start` log at debug level. Unset, it logs at info level. |
 
 ## Complete example
+
+Every key at its default, apart from `collector_endpoint` and `server_url`, whose defaults depend on the release:
 
 ```toml
 [server]
 port = "8080"
-config_folder = "./configs"
 env = "production"
 
 [sqlite]
-path = "./secrets.db"
+path = "secrets.db"
 master_key = ""
 
 [secrets]
@@ -139,52 +197,78 @@ disable_env = false
 
 [authentication]
 mode = "local"
+jwks_url = ""
+team_id = ""
 
 [tracing]
 enabled = false
 service_name = "servflowai"
-org_id = ""
 collector_endpoint = ""
+
+[pprof]
+enabled = false
+
+[servflow]
+auth_token = ""
+server_url = ""
+instance_id = ""
+
+[workspaces]
+root = "workspaces"
+
+[shell]
+engine = "native"
+working_dir = "work"
+timeout = "60s"
+max_output = 32768
+
+[shell.native]
+folders = []
+write_folders = []
+network = true
+
+[shell.docker]
+image = "alpine:3.20"
+memory = ""
+cpus = 0.0
+network = false
 ```
 
 ## Environment variable overrides
 
-Environment variables always win over the TOML file. This keeps secrets out of configuration files and lets one image serve several environments:
+Environment variables win over the file. This keeps credentials out of files and lets one image serve several environments. The Docker image already sets `SERVFLOW_SQLITE_PATH`, `SERVFLOW_WORKSPACES_ROOT`, and `SERVFLOW_WORKING_DIR` to folders under `/data`, and starts the server with `--dashboard`:
 
 ```bash
 docker run -d \
   -p 8080:8080 \
   -e SERVFLOW_SQLITE_MASTER_KEY=my-secret-key \
-  -e SERVFLOW_SQLITE_PATH=/data/servflow.db \
-  -e SERVFLOW_AUTH_MODE=local \
-  -v $(pwd)/config.toml:/data/config.toml \
-  servflow/servflowai start --config /data/config.toml --dashboard
+  -e SERVFLOW_SECRETS_DISABLE_ENV=true \
+  -v servflowai-data:/data \
+  servflow/servflowai:latest
 ```
 
-## Secrets from environment variables
+## Viewing and resetting the configuration
 
-A secret is looked up by name each time it is used. By default, an environment variable whose name is exactly the secret's name, with no prefix and no change of case, is used before the stored secret of that name. A name that matches neither gives an empty value, not an error. Set `[secrets].disable_env = true` to skip environment lookup completely.
-
-| When `disable_env` is... | Order | Where the value comes from |
-|---|---:|---|
-| `false` | 1 | An environment variable with exactly the secret's name. |
-| `false` | 2 | The secret stored under that name. |
-| `true` | 1 | The secret stored under that name. |
-
-## Viewing the active configuration
-
-To see the settings an instance actually resolved, including defaults and environment overrides:
+To see the settings an instance resolved, including defaults and environment overrides:
 
 ```bash
 servflowai resource settings view --config config.toml
 ```
 
+To write the defaults back to the file, keeping `sqlite.path`, `sqlite.master_key`, and `workspaces.root`:
+
+```bash
+servflowai resource settings reset --config config.toml
+```
+
+`--full` resets those three keys too. `--dry-run` prints the result without writing it.
+
 ## Next steps
 
 <CardGroup cols={2}>
 
-<Card title="Installation" icon="download" href="/installation">
-  Install ServFlow and create your first account.
+<Card title="Self-host Servflow" icon="download" href="/installation">
+  Install Servflow and create your first account.
 </Card>
 
 <Card title="Secrets" icon="key" href="/concepts/secrets">

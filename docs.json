@@ -16,7 +16,7 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Use ServFlow",
+        "tab": "Agents",
         "groups": [
           {
             "group": "Get started",
@@ -30,12 +30,17 @@
             "group": "Guides",
             "icon": "book-open",
             "pages": [
+              "guides/describe-an-agent-with-assist",
               "guides/create-an-agent",
               "guides/add-a-tool",
               "guides/add-an-integration",
               "guides/set-up-memory-and-file-access",
               "guides/manage-llm-providers",
-              "guides/connect-an-agent-to-discord"
+              "guides/connect-an-agent-to-discord",
+              "guides/connect-an-agent-to-slack",
+              "guides/run-an-agent-on-an-app-event",
+              "guides/check-what-your-agent-did",
+              "guides/top-up-credits"
             ]
           },
           {
@@ -54,7 +59,41 @@
               "concepts/integrations",
               "concepts/workspaces-and-files",
               "concepts/providers",
-              "concepts/guard-rails"
+              "concepts/guard-rails",
+              "concepts/plans-and-credits"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Support agents",
+        "groups": [
+          {
+            "group": "Get started",
+            "icon": "flag",
+            "pages": [
+              "concepts/support-agents",
+              "guides/create-a-support-agent"
+            ]
+          },
+          {
+            "group": "Guides",
+            "icon": "book-open",
+            "pages": [
+              "guides/connect-a-support-channel",
+              "guides/add-live-chat-to-your-website",
+              "guides/show-cards-in-live-chat",
+              "guides/add-files",
+              "guides/set-up-a-handoff",
+              "guides/read-support-conversations"
+            ]
+          },
+          {
+            "group": "How it works",
+            "icon": "lightbulb",
+            "pages": [
+              "concepts/files-and-policy-labels",
+              "concepts/support-guardrails"
             ]
           }
         ]
@@ -74,6 +113,7 @@
             "group": "Build in depth",
             "icon": "code",
             "pages": [
+              "guides/manage-servflow-from-an-ai-agent",
               "guides/call-other-agents",
               "concepts/entries",
               "concepts/dynamic-content",
@@ -89,7 +129,8 @@
               "references/integrations",
               "references/providers",
               "references/dynamic-content",
-              "references/cli"
+              "references/cli",
+              "references/mcp-servers"
             ]
           }
         ]

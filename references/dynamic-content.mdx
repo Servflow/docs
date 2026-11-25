@@ -1,6 +1,6 @@
 ---
 title: "Dynamic content reference"
-description: "Every template function and variable: where templates are accepted, what each entry provides, and what each function takes and returns"
+description: "Every template function and variable: where templates are accepted, what each trigger provides, and what each function takes and returns"
 icon: "wand-magic-sparkles"
 ---
 
@@ -12,7 +12,7 @@ Templates use Go's [`text/template`](https://pkg.go.dev/text/template) syntax wi
 
 | Place | Functions available |
 |---|---|
-| A sub-agent's system prompt and user prompt | All |
+| A sub agent's system prompt and user prompt | All |
 | An action tool's fields | All |
 | A step's fields | All |
 | A guard's expression | All except `tool_param`. A guard never sees the model's arguments. |
@@ -21,14 +21,18 @@ Templates use Go's [`text/template`](https://pkg.go.dev/text/template) syntax wi
 
 ## Reading the message
 
-What is available depends on the entry the run came in through.
+What is available depends on the trigger the run came in through.
 
-| Entry | Functions | Variables |
+| Trigger | Functions | Variables |
 |---|---|---|
 | Webhook | `body`, `param`, `header`, `urlparam` | none |
+| `streamable_http_webhook` | `body`, `param`, `header`, `urlparam` | none |
 | `github_webhook` | `body`, `param`, `header`, `urlparam` | `.github.*` |
+| `gitea_webhook` | `body`, `param`, `header`, `urlparam` | `.gitea.*` |
 | `telegram_webhook` | `body`, `param`, `header`, `urlparam` | `.telegram.*` |
 | `discord_gateway` | none. Using one is a template error, because a Discord run has no HTTP request. | `.discord.*` |
+| `slack_bot`, Servflow Cloud only | none, for the same reason | `.slack.*` |
+| `app_event`, Servflow Cloud only | none, for the same reason | `.event.*` |
 | Trigger, run by hand or handed a task | `input`, `trigger_value` | none |
 | Trigger, run on a schedule | none. `input` and `trigger_value` are not defined on a scheduled run. | none |
 
@@ -41,7 +45,7 @@ The [Available entry handlers](/references/entry-handlers) lists every variable 
 | `body(path)` | A field of the JSON request body, by dot and array path. An empty path returns the whole body. Reads only when `Content-Type` is exactly `application/json`. | `{{ body "user.id" }}` |
 | `param(name)` | A query-string or form parameter. | `{{ param "page" }}` |
 | `header(name)` | A request header. | `{{ header "Authorization" }}` |
-| `urlparam(name)` | A variable declared in the entry's path, such as `{userId}` in `/users/{userId}`. | `{{ urlparam "userId" }}` |
+| `urlparam(name)` | A variable declared in the trigger's path, such as `{userId}` in `/users/{userId}`. | `{{ urlparam "userId" }}` |
 
 ### Trigger functions
 
@@ -50,14 +54,15 @@ The [Available entry handlers](/references/entry-handlers) lists every variable 
 | `input(key)` | An input the run was started with. An Agent Task Tool starts its agent with the model's instruction as `instruction`. | `{{ input "instruction" }}` |
 | `trigger_value(key)` | The same value, always as a string. Empty when absent. | `{{ trigger_value "instruction" }}` |
 
-## Available from any entry
+## Available from any trigger
 
 | Expression | Returns | Example |
 |---|---|---|
 | `.stepID`, `.stepID.field` | The output of an earlier step or action, by its id. | `{{ .customer.name }}` |
 | `action(name)` | The same output, looked up by step id, then by display name. | `{{ action "customer" }}` |
 | `secret(name)` | A stored secret, or by default the environment variable of the same name before the stored secret. Set `[secrets].disable_env = true` to skip environment lookup. See [Secrets](/concepts/secrets) and [Configuration](/references/configuration#secrets). | `{{ secret "weather-api-key" }}` |
-| `tool_param(name)` | An argument the model passed to the tool. Available in an action tool's fields, and in the prompts of a sub-agent called by a Call sub-agent tool that declares `params`. | `{{ tool_param "question" }}` |
+| `tool_param(name)` | An argument the model passed to the tool. Available in an action tool's fields, and in the prompts of a sub agent called by a **Call sub-agent** tool that declares `params`. | `{{ tool_param "question" }}` |
+| `file(path)` | The contents of a file in the run's memory, by its path from the memory's root. A run with no memory, or a path that does not exist, is a template error. | `{{ file "policies/returns.md" }}` |
 
 ## Transform functions
 

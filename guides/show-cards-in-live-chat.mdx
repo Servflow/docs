@@ -1,0 +1,92 @@
+---
+title: "Show products as cards in live chat"
+description: "Have a Servflow support agent show products as cards under its live chat replies, with a picture, the price and a link, that the customer can open or ask about"
+icon: "images"
+---
+
+This guide has your support agent show products as cards under its replies in your website's live chat. A card has a picture, a title, a line such as the price, and a link. The customer clicks **View** to open the product, or **Ask about it** to ask the support agent about it. Two or more cards show as a row the customer scrolls.
+
+Every support agent with the live chat channel can show cards. Its instructions decide when it does, and where the products come from.
+
+## Before you begin
+
+- A support agent that answers your website's live chat, and is on. See [Add live chat to your website](/guides/add-live-chat-to-your-website).
+- A place the support agent reads your products from: a tool that looks them up, such as a search in your store, or, on a paid plan, a file that lists them on the **Files** page. The support agent copies each card's values from what it read there, so the source needs each product's title and link and, if you want them on the card, its price and a picture link. See [Create a support agent](/guides/create-a-support-agent#add-tools) and [Add files for your support agents](/guides/add-files).
+
+## Show cards
+
+<Steps>
+
+<Step title="Open the instructions">
+Open the support agent from the **Support agents** page and open **Instructions**.
+</Step>
+
+<Step title="Add the cards example">
+Under what is already in **What should it know and do?**, add this paragraph:
+
+```
+When a customer asks about products, look them up with [your tool] and show up to 4 as cards. Copy each price and link exactly as the tool returns it.
+```
+
+This is the example from the guide beside the form. While you set up a new support agent, you can add it with **Add this to the instructions** under **Show products as cards** in the guide.
+</Step>
+
+<Step title="Say when to show cards">
+Replace the parts in brackets, and change the paragraph to fit your shop:
+
+- **Name the tool to read.** Name the tool or file the products come from. Cards can only hold what the support agent read: a tool's result or your files.
+- **Ask for exact values.** Tell it to copy the price and the link as the tool returns them, so a card never shows a made-up price.
+- **Say how many.** One reply can show up to 10 cards.
+
+For a fictional bike shop with a `search_products` tool, the paragraph could be:
+
+```
+When a customer asks which bikes or helmets we sell, search with search_products and show up to 4 as cards. Copy each title, price, link and picture exactly as search_products returns them. Don't show cards for repairs or opening hours.
+```
+</Step>
+
+<Step title="Save and apply">
+Click **Save**, then **Apply saved changes**. Customers get the new instructions from their next message.
+</Step>
+
+</Steps>
+
+## Test in the chat
+
+Open one of your websites that shows the chat, and ask about a product, for example "Do you sell commuter helmets?". The reply arrives with the cards under it. Click **View** on a card to check that its link opens the right product, and **Ask about it** to check that the support agent answers about that product.
+
+If no cards show:
+
+- **The instructions don't say when.** Name the kind of question that should get cards, and the tool or file to read.
+- **The changes aren't applied.** If the support agent's page shows **Apply saved changes**, click it.
+- **The reply was blocked.** A withheld reply sends no cards; the customer gets the fallback message. Your guardrails read the cards along with the reply, so a card whose price or link isn't in a tool result or a file can get the reply blocked.
+
+## See cards in a conversation
+
+Open **Conversations** and click the conversation. Under the reply, a box says how many cards were sent, for example "2 cards sent on live chat", and lists each card's picture, title, line and link. See [Read support conversations](/guides/read-support-conversations).
+
+## Cards on other channels
+
+Cards show on live chat only. On email and Discord, the support agent writes the products in its reply instead, with their links. You don't need separate instructions for those channels.
+
+## Next steps
+
+<CardGroup cols={2}>
+
+<Card title="Add live chat to your website" icon="comments" href="/guides/add-live-chat-to-your-website">
+  Set up the chat and how it greets customers.
+</Card>
+
+<Card title="Read support conversations" icon="comments" href="/guides/read-support-conversations">
+  See the cards each reply showed.
+</Card>
+
+<Card title="Guardrails on support replies" icon="shield-check" href="/concepts/support-guardrails">
+  How each reply and its cards are checked.
+</Card>
+
+<Card title="Support agents" icon="headset" href="/concepts/support-agents">
+  How one reply travels, from customer to cards.
+</Card>
+
+</CardGroup>

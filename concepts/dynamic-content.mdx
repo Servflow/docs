@@ -1,10 +1,10 @@
 ---
 title: "Dynamic content"
-description: "How prompts and tool settings use the message that started the run: what double curly braces mean, and what they can read for each kind of entry"
+description: "How prompts and tool settings use the message that started the run: what double curly braces mean, and what they can read for each kind of trigger"
 icon: "wand-magic-sparkles"
 ---
 
-A prompt is mostly fixed text, with gaps that are filled in each time the agent runs: the question someone asked, the name of the person who wrote, what an earlier step found. The gaps are written in double curly braces, `{{ }}`. ServFlow calls this dynamic content. This page explains how to read and write it. For every function, see the [Dynamic content reference](/references/dynamic-content).
+A prompt is mostly fixed text, with gaps that are filled in each time the agent runs: the question someone asked, the name of the person who wrote, what an earlier step found. The gaps are written in double curly braces, `{{ }}`. Servflow calls this dynamic content. This page explains how to read and write it. For every function, see the [Dynamic content reference](/references/dynamic-content).
 
 ## Reading a template
 
@@ -26,25 +26,29 @@ In a **System prompt** and a **User prompt**, in a tool's settings, in a step's 
 
 | The agent is started by | Read the message with | Example |
 |---|---|---|
-| A webhook | `body`, `param`, `header` | `{{ body "question" }}` |
-| A Discord bot entry | `.discord` | `{{ .discord.content }}` |
-| A Telegram bot entry | `.telegram` | `{{ .telegram.text }}` |
-| A GitHub entry | `.github`, and `body` for the rest of what GitHub sent | `{{ .github.repo }}`, `{{ body "issue.title" }}` |
-| A trigger, handed a task by another agent | `input` | `{{ input "instruction" }}` |
+| A webhook or a streamable HTTP webhook | `body`, `param`, `header` | `{{ body "question" }}` |
+| A Discord bot | `.discord` | `{{ .discord.content }}` |
+| A Telegram bot | `.telegram` | `{{ .telegram.text }}` |
+| A Slack bot, on Servflow Cloud | `.slack` | `{{ .slack.text }}` |
+| A GitHub webhook | `.github`, and `body` for the rest of what GitHub sent | `{{ .github.repo }}`, `{{ body "issue.title" }}` |
+| A Gitea webhook | `.gitea`, and `body` for the rest of what Gitea sent | `{{ .gitea.comment_body }}` |
+| An app event, on Servflow Cloud | `.event` | `{{ .event.data.subject }}` |
+| A **Trigger**, handed a task by another agent | `input` | `{{ input "instruction" }}` |
 
 Three things to watch:
 
-- A Discord agent cannot use `body`. It has no web request to read.
+- A Discord, Slack, or app event agent cannot use `body`. It has no web request to read.
 - `body` reads a web request only when the request is sent as JSON.
 - An agent that runs on a schedule has no message to read, so leave `input` out of its prompts.
 
-The [Available entry handlers](/references/entry-handlers) lists every name under `.discord`, `.telegram`, and `.github`.
+The [Available entry handlers](/references/entry-handlers) lists every name under `.discord`, `.telegram`, `.slack`, `.github`, `.gitea`, and `.event`.
 
 ## What you can read from any agent
 
 - **What an earlier step found.** `{{ .customer.name }}` reads `name` from a step called `customer`. See [Steps before the agent](/concepts/entries#steps-before-the-agent).
 - **A stored secret.** `{{ secret "weather-api-key" }}`. See [Secrets](/concepts/secrets).
 - **Inside a tool, what the agent passed to it.** `{{ tool_param "question" }}`. See [Add a tool to an agent](/guides/add-a-tool).
+- **A file from the agent's memory.** `{{ file "policies/returns.md" }}` puts the file's contents in the prompt. See [Workspaces and files](/concepts/workspaces-and-files).
 
 ## Small changes to a value
 
@@ -62,7 +66,7 @@ The brackets in `(body "count")` mean "work this out first".
 
 A gap whose value is missing is left empty, and the prompt still goes out. Write prompts that read sensibly when that happens.
 
-A misspelt function name is different. In a guard, ServFlow refuses it when you save. In a prompt, the agent fails when it runs.
+A misspelt function name is different. In a guard, Servflow refuses it when you save. In a prompt, the agent fails when it runs.
 
 ## Dynamic content in the dashboard
 
@@ -89,7 +93,7 @@ Every field that accepts dynamic content has two small buttons. A short field ke
 </Card>
 
 <Card title="Available entry handlers" icon="right-to-bracket" href="/references/entry-handlers">
-  Every name a Discord, Telegram, or GitHub entry provides.
+  Every name each trigger provides.
 </Card>
 
 <Card title="Guard rails" icon="shield-halved" href="/concepts/guard-rails">
@@ -97,7 +101,7 @@ Every field that accepts dynamic content has two small buttons. A short field ke
 </Card>
 
 <Card title="Entries and entry handlers" icon="right-to-bracket" href="/concepts/entries#steps-before-the-agent">
-  The steps an entry runs, whose results a prompt can read.
+  The steps a trigger runs, whose results a prompt can read.
 </Card>
 
 </CardGroup>

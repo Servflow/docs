@@ -4,9 +4,9 @@ description: "Every integration type: what uses it, its fields, and its shape in
 icon: "puzzle-piece"
 ---
 
-This page lists every integration type built into ServFlow. The apps ServFlow connects to, such as Slack, Gmail, or Jira, are listed in the [integrations directory](https://servflow.io/integrations). Each type's section says what uses it and lists its fields and its body in a file. `servflowai resource integration describe --all` prints the same catalog. For what an integration is, see [Integrations](/concepts/integrations). To add one in the dashboard, see [Add an integration](/guides/add-an-integration).
+This page lists every integration type built into Servflow, and the types Servflow Cloud adds. The apps Servflow Cloud connects to, such as Gmail or Jira, are listed in the [integrations directory](https://servflow.io/integrations). Each type's section says what uses it and lists its fields and its body in a file. `servflowai resource integration describe --all` prints the same catalog. For what an integration is, see [Integrations](/concepts/integrations). To add one in the dashboard, see [Add an integration](/guides/add-an-integration).
 
-In a body, each field of `config` holds either a literal, as `{"value": ...}`, or the name of a stored secret, as `{"secret": "<secret name>"}`. Use a secret for every password field. A secret that a body names has to exist before the integration is created. The commands that take a body are in the [CLI reference](/references/cli#integration).
+In a body, `name` is what you call the integration; Servflow generates its `integrationId` from it. Each field of `config` holds either a literal, as `{"value": ...}`, or the name of a stored secret, as `{"secret": "<secret name>"}`. Use a secret for every password field. A secret that a body names has to exist before the integration is created. The commands that take a body are in the [CLI reference](/references/cli#integration).
 
 An integration connected through OAuth, such as Notion, cannot be used until its sign-in finishes.
 
@@ -21,7 +21,9 @@ An integration connected through OAuth, such as Notion, cannot be used until its
 | [`notion_mcp`](#notion_mcp) | Notion | Yes | MCP server tools |
 | [`qdrant`](#qdrant) | Qdrant | No | `storevector` and `fetchvectors` actions |
 | [`sql`](#sql) | SQL Database | No | `fetch`, `delete`, and `authenticate` actions |
-| [`telegram_bot`](#telegram_bot) | Telegram Bot | No | `telegram_webhook` entry |
+| [`telegram_bot`](#telegram_bot) | Telegram Bot Chat | No | `telegram_webhook` entry |
+| [`slack:bot`](#servflow-slackbot), Servflow Cloud only | Servflow SlackBot | Yes | `slack_bot` entry, `slack:send_message` action |
+| [`composio:<id>`](#composio-integrations), Servflow Cloud only | The app's name | Depends on the app | The app's `external:` actions, `app_event` entry |
 
 A type with a guided setup opens its own set of screens in the dashboard. Every other type opens a form with one input for each field. OAuth-guided integrations can appear as **Not connected** until the provider approval finishes; use the row's **Connect integration** action to retry the approval.
 
@@ -40,7 +42,7 @@ Binance cryptocurrency exchange integration for trading operations.
 
 ```json
 {
-  "integrationId": "my-binance",
+  "name": "My Binance",
   "type": "binance",
   "config": {
     "api_key": { "secret": "binance-api-key" },
@@ -61,7 +63,7 @@ Chromium browser automation integration for web scraping and testing.
 
 ```json
 {
-  "integrationId": "browser",
+  "name": "Browser",
   "type": "chromium",
   "config": {
     "headless": { "value": true },
@@ -81,7 +83,7 @@ A Discord bot for one server. It reads that server, and sends messages anywhere 
 
 ```json
 {
-  "integrationId": "my-discord-bot",
+  "name": "My Discord bot",
   "type": "discord",
   "config": {
     "bot_token": { "secret": "discord-bot-token" },
@@ -101,7 +103,7 @@ A Gitea server and the account the agent acts as on it. Receiving a Gitea webhoo
 
 ```json
 {
-  "integrationId": "my-gitea",
+  "name": "My Gitea",
   "type": "gitea",
   "config": {
     "base_url": { "value": "https://gitea.example.com" },
@@ -126,7 +128,7 @@ In the dashboard, the guided setup creates the App and fills in these fields for
 
 ```json
 {
-  "integrationId": "my-github-app",
+  "name": "My GitHub App",
   "type": "github_app",
   "config": {
     "client_id": { "value": "Iv1.0000000000000000" },
@@ -148,7 +150,7 @@ MongoDB database integration for document storage and retrieval.
 
 ```json
 {
-  "integrationId": "app-db",
+  "name": "App database",
   "type": "mongo",
   "config": {
     "connectionString": { "secret": "mongo-uri" },
@@ -173,7 +175,7 @@ Qdrant vector database for similarity search and vector storage.
 
 ```json
 {
-  "integrationId": "vectors",
+  "name": "Vectors",
   "type": "qdrant",
   "config": {
     "url": { "value": "http://localhost:6333" }
@@ -192,7 +194,7 @@ SQL database integration supporting PostgreSQL and MySQL.
 
 ```json
 {
-  "integrationId": "orders-db",
+  "name": "Orders database",
   "type": "sql",
   "config": {
     "connectionString": { "secret": "orders-db-url" },
@@ -203,16 +205,16 @@ SQL database integration supporting PostgreSQL and MySQL.
 
 ### telegram_bot
 
-A Telegram bot: the token BotFather issued, and the secret its webhook is registered with.
+A Telegram bot: the token BotFather issued, and optionally the secret its webhook is registered with. Point the bot's webhook at one agent only.
 
 | Key | Label | Type | Required | Default |
 |---|---|---|---|---|
-| `secret_token` | Webhook Secret Token | password | Yes | none |
+| `secret_token` | Webhook Secret Token | password | No | none |
 | `token` | Bot Token | password | Yes | none |
 
 ```json
 {
-  "integrationId": "my-telegram-bot",
+  "name": "My Telegram bot",
   "type": "telegram_bot",
   "config": {
     "token": { "secret": "telegram-bot-token" },
@@ -220,6 +222,22 @@ A Telegram bot: the token BotFather issued, and the secret its webhook is regist
   }
 }
 ```
+
+## Servflow Cloud types
+
+These types are added by the hosted service. A self-hosted catalog does not list them.
+
+### Servflow SlackBot
+
+Type `slack:bot`. Servflow Cloud only. A Slack workspace with the Servflow bot installed. Agents answer as the bot through a [`slack_bot`](/references/entry-handlers#slack_bot) trigger, and send direct messages as it with the [`slack:send_message`](/references/actions#servflow-cloud-actions) action.
+
+It has no fields. In the dashboard, click **Add to Slack** on the **Integrations** page and approve the install in Slack; the install fills in the workspace and the bot's token. An integration created any other way cannot be enabled until the workspace is installed.
+
+### Composio integrations
+
+Type `composio:<id>`, one type for each app Servflow Cloud connects to. Servflow Cloud only. An integration of one of these types is a connected account of that app, such as a Gmail inbox. The app's actions, of type `external:<ACTION>`, and the `app_event` trigger take it in their `integration` field.
+
+`list_integration_types` and `describe_integration_type` on the [management MCP server](/references/mcp-servers) list the types and their fields. Each field is one the app asks for, such as an API key. An app that signs in through OAuth runs its sign-in in the dashboard when you add the integration.
 
 ## Related
 

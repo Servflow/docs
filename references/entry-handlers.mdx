@@ -1,10 +1,10 @@
 ---
 title: "Available entry handlers"
-description: "Every way an agent can be started: each entry handler's settings, its shape in a config file, and the variables it gives to prompts"
+description: "Every trigger an agent can have: each entry handler's settings, its shape in a config file, and the variables it gives to prompts"
 icon: "right-to-bracket"
 ---
 
-This page lists every entry an agent can have. Each entry's section holds its settings, its shape in a config file, and, for an entry handler, the variables a prompt can read. `servflowai resource handler describe --all` prints the same catalog. For what entries are and how to choose one, see [Entries and entry handlers](/concepts/entries).
+This page lists every trigger an agent can have. In a config file a trigger is an item of `entries`. Each section holds its settings, its shape in a config file, and, for an entry handler, the variables a prompt can read. `servflowai resource handler describe --all` prints the same catalog for the engine. Entries marked **Servflow Cloud only** are added by the hosted service and are not in a self-hosted catalog. For what triggers are and how to choose one, see [Entries and entry handlers](/concepts/entries).
 
 | Entry type in the dashboard | `type` | `handlerConfig.type` | Path | Replies to |
 |---|---|---|---|---|
@@ -12,11 +12,13 @@ This page lists every entry an agent can have. Each entry's section holds its se
 | [Webhook — a plain HTTP request starts the agent](#webhook) | `handler` | empty | Yes | Whoever sent the request. |
 | [GitHub webhook](#github_webhook) | `handler` | `github_webhook` | Yes | The pull request or issue, when `respond_to` allows. |
 | [Gitea webhook](#gitea_webhook) | `handler` | `gitea_webhook` | Yes | The pull request or issue, when `respond_to` allows. |
-| [Streamable webhook](#streamable_http_webhook) | `handler` | `streamable_http_webhook` | Yes | Whoever opened the Server-Sent Events stream. |
+| [Streamable HTTP webhook](#streamable_http_webhook) | `handler` | `streamable_http_webhook` | Yes | Whoever opened the Server-Sent Events stream. |
 | [Telegram bot](#telegram_webhook) | `handler` | `telegram_webhook` | Yes | The chat the message came from. |
 | [Discord bot](#discord_gateway) | `handler` | `discord_gateway` | No | The channel the message came from. |
+| [Slack bot](#slack_bot), Servflow Cloud only | `handler` | `slack_bot` | No | The thread the message came from. |
+| [App event](#app_event), Servflow Cloud only | `handler` | `app_event` | No | Nobody. Give the agent a tool to act on the event. |
 
-The keys every entry shares, `type` and `start`, and the rules for an agent with several entries are in the [CLI reference](/references/cli#entries).
+The keys every entry shares, such as `type`, `start`, `steps`, and `conversationRunsPerHour`, and the rules for an agent with several entries are in the [CLI reference](/references/cli#entries).
 
 ## Entries without a handler
 
@@ -48,33 +50,23 @@ Answers `POST` requests on its path. Nothing about the request is checked in adv
 |---|---|
 | `200`, with the agent's final reply as `text/plain` | The agent said something. |
 | `204`, with no body | The run finished and the agent said nothing. |
-| `429` | The request continued a conversation that has already started as many runs in the last hour as the agent's `settings.conversationRunsPerHour` allows. |
+| `429` | The request continued a conversation that has already started as many runs in the last hour as the entry's `conversationRunsPerHour` allows. |
 | `500` | The run failed. |
 
 Every response carries an `X-Conversation-Id` header naming the conversation the run used. A request that sends the same header continues that conversation. A request without it starts a new one. When a request is refused with `429`, that same header still names the conversation it would have continued.
 
-Set the limit on the agent itself:
+Set the limit on the entry:
 
 ```yaml
-name: support-bot
-settings:
-  conversationRunsPerHour: 60
 entries:
   - type: handler
     handlerConfig:
       path: /ask
+    conversationRunsPerHour: 60
     start: agent.answer
 ```
 
 A value of `0` means no limit, which is the default. The limit applies only to runs that continue a conversation, so a test run or any run with no conversation id is not counted.
-
-```yaml
-entries:
-  - type: handler
-    handlerConfig:
-      path: /ask
-    start: agent.answer
-```
 
 ### streamable_http_webhook
 
@@ -90,10 +82,10 @@ Answers `POST` requests on its path the same way as a webhook entry, but as a st
 | `tool_call` | The agent starts a tool call. The event data is JSON with `id`, optional `parent_id`, and `text`, always `calling tool`. Tool arguments and results are not streamed. |
 | `done` | The run finished. The event data is JSON with `conversation_id` and the final `text`, the same reply a webhook would have returned. |
 | `error` | The run failed after the stream opened. The event data is JSON with `error`. |
-| `429` | The request continued a conversation that has already started as many runs in the last hour as the agent's `settings.conversationRunsPerHour` allows, or the agent could not start another run right now. |
+| `429` | The request continued a conversation that has already started as many runs in the last hour as the entry's `conversationRunsPerHour` allows, or the agent could not start another run right now. |
 | `500` | The run failed before the stream opened. |
 
-The stream opens only when the run adds its first message. A refusal before that still comes back as an ordinary HTTP response. Once the stream is open, ServFlow sends keepalive comments so idle proxies do not cut the connection.
+The stream opens only when the run adds its first message. A refusal before that still comes back as an ordinary HTTP response. Once the stream is open, Servflow sends keepalive comments so idle proxies do not cut the connection.
 
 Like a webhook, the response carries an `X-Conversation-Id` header naming the conversation the run used. Send the same header on the next request to continue that conversation.
 
@@ -130,6 +122,7 @@ A delivery is answered `202` at once, and the run continues after the response. 
 | `trigger_text` | Trigger text | string | No | the App's own handle | What a comment has to say to be talking to this agent. Set it to be summoned by something other than the App's name, such as `/review`. |
 | `respond_to` | Reply on | string list | No | never replies; the answer only reaches the log | Which kinds of delivery get the agent's answer posted back. Values: `pull_request` (**The pull request thread**), `issue` (**The issue thread**). |
 | `update_pr_comment` | the choice between **Rewrites the one it left before** and **Is posted as a new comment each time** | boolean | No | `false` | Edits the comment this agent last left on the pull request instead of posting another one under it. |
+| `run_timeout` | none; config file only | string | No | `10m` | How long the run may continue after the delivery is answered, as a duration such as `30m`. An agent that clones the repository and works in a shell needs more than one that answers from the thread. |
 
 **In a config file**
 
@@ -144,6 +137,7 @@ entries:
         events: [pull_request]
         actions: [opened, synchronize]
         respond_to: [pull_request]
+        run_timeout: 30m
     start: agent.review
 ```
 
@@ -333,7 +327,93 @@ entries:
 | `reply_to_author` | string | Who wrote the message this one replies to. |
 | `message_link` | string | A link to the message. |
 
-## Run limits on ServFlow Cloud
+### slack_bot
+
+Servflow Cloud only. Answers as the Servflow bot in a Slack workspace that installed it: direct messages to the bot, mentions of it, and replies in threads it answered in. The answer goes in the message's thread, and each thread keeps its own conversation. In each Slack workspace, one agent answers direct messages and one answers mentions. Messages arrive through Servflow's own Slack app, so it has no path.
+
+Namespace: `slack`. No path. Integration type: [`slack:bot`](/references/integrations#servflow-slackbot).
+
+**Settings**
+
+| Key | Dashboard label | Type | Required | Default | Description |
+|---|---|---|---|---|---|
+| `integration` | Slack workspace | integration | Yes | none | The Slack workspace this agent answers in. Add it with **Add to Slack** on the **Integrations** page. |
+| `direct_messages` | Direct messages | boolean | No | `true` | Answers direct messages to the bot, in the message's thread. |
+| `mentions` | Mentions | boolean | No | `true` | Answers messages that mention the bot, in the message's thread. |
+| `continue_threads` | Thread replies | boolean | No | `true` | Keeps answering replies in a thread the bot answered in, without a new mention, until the thread is quiet for a day. |
+
+At least one of `direct_messages` and `mentions` has to be on.
+
+**In a config file**
+
+```yaml
+entries:
+  - type: handler
+    handlerConfig:
+      type: slack_bot
+      config:
+        integration: acme-slack-1a2b3c4d
+        direct_messages: true
+        mentions: true
+        continue_threads: true
+    start: agent.answer
+```
+
+**Variables**
+
+| Key | Type | Description |
+|---|---|---|
+| `text` | string | The message, without the mention of the bot. |
+| `user` | string | Who sent it, as a Slack user ID. |
+| `user_name` | string | Who sent it, as the workspace shows their name. |
+| `channel` | string | The conversation it was sent in, as a Slack channel ID. |
+| `channel_type` | string | `im` for a direct message; `channel`, `group`, or `mpim` otherwise. |
+| `ts` | string | The message's Slack timestamp, which is its ID. |
+| `thread_ts` | string | The thread it is in. Empty for a message in no thread. |
+| `team` | string | The Slack workspace ID. |
+| `is_dm` | boolean | Whether it was a direct message to the bot. |
+| `is_mention` | boolean | Whether it mentioned the bot. |
+
+### app_event
+
+Servflow Cloud only. Runs on an event in a connected app: a new email, a new message, a new page. The event reaches the agent as variables, and nothing is answered automatically: to reply, give the agent a tool of the same app. It has no path: the event arrives through Servflow. The events on offer are listed by `list_app_events` on the [management MCP server](/references/mcp-servers), and in the dashboard under **Event**.
+
+Namespace: `event`. No path. Integration type: the app's own, `composio:<id>`. See [Composio integrations](/references/integrations#composio-integrations).
+
+**Settings**
+
+| Key | Dashboard label | Type | Required | Default | Description |
+|---|---|---|---|---|---|
+| `integration` | Account | integration | Yes | none | The connected account whose events start this agent. It must belong to the app the event comes from. |
+| `trigger` | Event | string | Yes | none | The event to listen for, by its name, such as `GMAIL_NEW_GMAIL_MESSAGE`. |
+| `settings` | Settings | object | No | the event's own defaults | The event's settings, such as which label or channel to watch. `describe_app_event` lists the keys each event takes. |
+
+**In a config file**
+
+```yaml
+entries:
+  - type: handler
+    handlerConfig:
+      type: app_event
+      config:
+        integration: work-gmail-5e6f7a8b
+        trigger: GMAIL_NEW_GMAIL_MESSAGE
+    start: agent.triage
+```
+
+**Variables**
+
+| Key | Type | Description |
+|---|---|---|
+| `trigger` | string | The event's name, such as `GMAIL_NEW_GMAIL_MESSAGE`. |
+| `trigger_id` | string | The id of the watch that fired. |
+| `event_id` | string | This event's own id. A retried delivery keeps it. |
+| `integration` | string | The integration the entry names. |
+| `timestamp` | string | When the event happened. |
+| `data` | object | The event itself, in the shape the event declares, such as `{{ .event.data.subject }}`. |
+| `json` | string | `data` as JSON text, for a prompt that passes the whole event on. |
+
+## Run limits on Servflow Cloud
 
 Hosted plans limit how many agent runs a team may start in each one-minute window. Every webhook request, scheduled run, task run, and listener-triggered run counts. When a webhook request is refused at the limit, the API returns `429 Too Many Requests` with a `Retry-After` header telling you when the current minute ends.
 
