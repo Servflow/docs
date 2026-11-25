@@ -1,12 +1,12 @@
 ---
 title: "Available actions"
-description: "Every action built into ServFlow: what it does, its fields, and its shape in a config file"
+description: "Every action built into Servflow: what it does, its fields, and its shape in a config file"
 icon: "table-list"
 ---
 
-An action is one thing an agent can do: send a Discord message, fetch a web address, read a pull request. An agent runs an action in two places. A [tool](/concepts/tools) runs one when the agent decides to use it. A [step](/concepts/entries#steps-before-the-agent) runs one every time its entry fires, before the agent starts. This page lists every built-in action with its fields. `servflowai resource action describe --all` prints the same catalog.
+An action is one thing an agent can do: send a Discord message, fetch a web address, read a pull request. An agent runs an action in two places. A [tool](/concepts/tools) runs one when the agent decides to use it. A [step](/concepts/entries#steps-before-the-agent) runs one every time its trigger fires, before the agent starts. This page lists every built-in action with its fields. `servflowai resource action describe --all` prints the same catalog.
 
-An agent can also run the actions of the apps ServFlow connects to, such as Slack, Gmail, or Jira. The [integrations directory](https://servflow.io/integrations) lists every app with its actions and events. In the dashboard, those actions appear in the same **Search actions** box as the built-in ones, grouped by app.
+On Servflow Cloud, an agent can also run the actions of the apps Servflow connects to, such as Gmail or Jira, and send Slack messages as the Servflow bot. See [Servflow Cloud actions](#servflow-cloud-actions). The [integrations directory](https://servflow.io/integrations) lists every app with its actions and events. In the dashboard, those actions appear in the same **Search actions** box as the built-in ones, grouped by app.
 
 ## Built-in actions
 
@@ -58,12 +58,10 @@ An agent can also run the actions of the apps ServFlow connects to, such as Slac
 | Binance Account Balance | [`binance/accountbalance`](#binance%2Faccountbalance) | Reads the account's balances. | `binance` |
 | Binance Spot Order | [`binance/spotorder`](#binance%2Fspotorder) | Places a spot order. | `binance` |
 | Binance Futures Order | [`binance/futuresorder`](#binance%2Ffuturesorder) | Places a futures order. | `binance` |
-| **ServFlow** | | | |
-| Servflow Validate | [`servflowvalidate`](#servflowvalidate) | Checks a ServFlow YAML config for mistakes. | none |
 
 ## How an action is written in a config file
 
-As a step, an action is an `id`, a `type`, and a `config` that maps each field to a value of the type the action expects. Every string is a template. A step goes under its entry's `steps`, and its `id` is lowercase letters, digits, and underscores, not starting with a digit.
+As a step, an action is an `id`, a `type`, and a `config` that maps each field to a value of the type the action expects. Every string is a template. A step goes under its trigger's `steps`, and its `id` is lowercase letters, digits, and underscores, not starting with a digit.
 
 ```yaml
 - id: repo
@@ -369,17 +367,27 @@ A later step or a prompt reads the result as `{{ .customer.name }}`.
 
 ### shell
 
-Runs a shell script, with the shell's full syntax. The script starts in a sandboxed folder of its own that is deleted when the run ends, and it cannot read the server's own files. The instance's `[shell]` settings decide how it is sandboxed.
+Runs a shell script, with the shell's full syntax. The script starts in a sandboxed folder of its own that is deleted when the run ends, and it cannot read the server's own files. On a self-hosted instance, the `[shell]` settings decide how it is sandboxed. See [Configuration](/references/configuration#shell).
 
 | Key | Label | Type | Required | Default | Values |
 |---|---|---|---|---|---|
 | `script` | Script | string | Yes | none | The script to run |
+| `env` | Environment | list | No | none | Environment variables the script can read. Each item is a `name` and exactly one source: `integrationId`, whose credential becomes the value; `secretId`, the name of a stored secret; or `value`, a literal |
+
+An `env` item is set by the step's author. None of its fields is a template, and a tool cannot hand them to the model as a parameter. A `name` is letters, digits, and underscores, not starting with a digit, and cannot be `PATH`, `HOME`, or `TMPDIR`. Each name can appear once. A secret that holds nothing fails the step. In the script's output, a value of four or more characters is replaced by `«sf:<name>»`.
+
+The step returns everything the script wrote to standard output and standard error. A script that fails adds a last line naming its exit code. Long output keeps its start and end and loses the middle.
 
 ```yaml
-- id: today
+- id: status
   type: shell
   config:
-    script: date +%A
+    script: 'curl -s -H "Authorization: Bearer $API_TOKEN" "$API_URL/status"'
+    env:
+      - name: API_TOKEN
+        secretId: status-api-token
+      - name: API_URL
+        value: https://api.example.com
 ```
 
 ### static
@@ -929,22 +937,36 @@ Places a futures order. This action spends money on a live account. Put a [guard
     position_side: BOTH
 ```
 
-## ServFlow
+## Servflow Cloud actions
 
-### servflowvalidate
+These actions are added by the hosted service. A self-hosted catalog does not list them.
 
-Checks a ServFlow YAML config for mistakes in its syntax and structure.
+### slack:send_message
+
+Servflow Cloud only. Sends a direct message to a person in the Slack workspace, as the Servflow bot. Their reply goes to the workspace's agent that answers direct messages through a [`slack_bot`](/references/entry-handlers#slack_bot) trigger, which sees this message as the start of the thread. One run can send direct messages to at most 10 people.
+
+Name in the dashboard: **Send direct message**. Integration: [`slack:bot`](/references/integrations#servflow-slackbot).
 
 | Key | Label | Type | Required | Default | Values |
 |---|---|---|---|---|---|
-| `yamlContent` | YAML Content | text_area | Yes | none | The YAML to check |
+| `integration` | Slack workspace | integration | Yes | none | The workspace the bot sends in |
+| `user` | User | string | Yes | none | Who gets the message: their Slack user ID, such as `U07ABC123`, or their email address |
+| `text` | Message | text_area | Yes | none | The message, in Markdown |
+
+The step returns `user`, the Slack user ID the message went to; `channel`, the direct message's channel ID; `ts`, the message's Slack timestamp; and `replies_answered`, whether an agent answers the person's reply.
 
 ```yaml
-- id: checked
-  type: servflowvalidate
+- id: nudge
+  type: slack:send_message
   config:
-    yamlContent: '{{ body "config" }}'
+    integration: acme-slack-1a2b3c4d
+    user: ana@example.com
+    text: Your pull request has a new review.
 ```
+
+### Actions of connected apps
+
+Servflow Cloud only. Each action of an app Servflow connects to has the type `external:<ACTION>`, where `<ACTION>` is the action's name in that app's catalog. Its `integration` field takes an integration of that app, of type `composio:<id>`; see [Composio integrations](/references/integrations#composio-integrations). Its other fields are the app's own. `list_actions` and `describe_action` on the [management MCP server](/references/mcp-servers) list them by app.
 
 ## Related
 
@@ -955,7 +977,7 @@ Checks a ServFlow YAML config for mistakes in its syntax and structure.
 </Card>
 
 <Card title="Entries and entry handlers" icon="right-to-bracket" href="/concepts/entries#steps-before-the-agent">
-  How an entry runs an action every time, before the agent starts.
+  How a trigger runs an action every time, before the agent starts.
 </Card>
 
 <Card title="Available integrations" icon="puzzle-piece" href="/references/integrations">

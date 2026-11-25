@@ -15,6 +15,7 @@ In a body, `config` holds the type's fields as plain values. `api_key` is the ke
 | [`openrouter`](#openrouter) | OpenRouter | No. It has a default. |
 | [`litellm`](#litellm) | LiteLLM | Yes |
 | [`qwen`](#qwen) | Qwen | No. It has a default. |
+| [`native`](#native), Servflow Cloud only | Built-in provider | No. It is not stored. |
 
 ## Types
 
@@ -115,12 +116,25 @@ Alibaba Qwen models.
 }
 ```
 
+### native
+
+Servflow Cloud only. The built-in provider: Servflow's own model access, paid for with your team's credits. It is not a type you create. It has no fields, no stored row, and does not appear in `list_providers`. A sub agent uses it by naming it as its provider:
+
+```yaml
+agents:
+  answer:
+    name: Answer
+    providerID: native
+```
+
+On Servflow Cloud, a sub agent saved with an empty `providerID` is saved as `native`. The model is chosen for the whole team, under **Settings** > **Team** > **Built-in model** in the dashboard. On a self-hosted instance, `native` does not exist, and a sub agent that names it cannot run.
+
 ## Related
 
 <CardGroup cols={2}>
 
 <Card title="Providers" icon="cloud" href="/concepts/providers">
-  What a provider is and why sub-agents share one.
+  What a provider is and why sub agents share one.
 </Card>
 
 <Card title="Manage LLM providers" icon="cloud" href="/guides/manage-llm-providers">

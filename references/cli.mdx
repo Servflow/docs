@@ -3,49 +3,100 @@ title: "CLI reference"
 description: "The servflowai command line"
 ---
 
-This page lists every `servflowai` command, what each one is for, and what shape of data it reads or prints. Use it with [Configuration](/references/configuration), [Available entry handlers](/references/entry-handlers), [Available actions](/references/actions), [Available integrations](/references/integrations), and [Available providers](/references/providers).
+This page lists every `servflowai` command, its flags, and the shape of data it reads or prints. Use it with [Configuration](/references/configuration), [Available entry handlers](/references/entry-handlers), [Available actions](/references/actions), [Available integrations](/references/integrations), and [Available providers](/references/providers).
 
-The settings of one entry handler, action, integration, or provider are not on this page. Each has its own section on its catalog page: [Available entry handlers](/references/entry-handlers), [Available actions](/references/actions), [Available integrations](/references/integrations), and [Available providers](/references/providers).
+The settings of one entry handler, action, integration, or provider are not on this page. Each has its own section on its catalog page. The tools of the management MCP server are on [MCP servers](/references/mcp-servers).
 
 ## Commands
 
 | Command | Purpose |
 |---|---|
-| [`servflowai server`](#server) | Runs the HTTP server and dashboard. |
-| [`servflowai resource <noun> <verb>`](#resource) | Reads and writes agents, integrations, providers, secrets, and workspaces, and prints the catalogs. |
-| [`servflowai install`](#install) | Installs a template into the running server. |
-| [`servflowai version`](#version) | Prints the binary's version. |
+| [`servflowai start`](#start) | Runs the HTTP server and, with `--dashboard`, the dashboard. |
+| [`servflowai resource <noun> <verb>`](#resource) | Reads and writes agents, integrations, providers, secrets, and memory records, and prints the catalogs and settings. |
+| `servflowai completion <shell>` | Prints a shell completion script for `bash`, `zsh`, `fish`, or `powershell`. |
 
-## server
+## start
 
-Runs the HTTP server and dashboard.
+Runs the HTTP server.
 
 ```bash
-servflowai server -c ./server.toml
+servflowai start --dashboard
 ```
+
+| Flag | Meaning |
+|---|---|
+| `-c, --config <path>` | The configuration file. Default: `~/.servflow/config.toml`. See [Where the file is read from](/references/configuration#where-the-file-is-read-from). |
+| `--dashboard` | Also serves the dashboard and its API under `/dashboard`. |
+
+A healthy start logs one line, `servflowai started`. The server writes its process id to `servflow.pid` in the database's folder, and reloads every stored agent when it receives `SIGHUP`. `resource` commands send that signal after a change. Set `SERVFLOW_LOG_LEVEL` to any value for debug logs.
 
 ## resource
 
-Reads and writes saved resources and prints the catalogs the server uses.
+Reads and writes the database directly. It needs no running server.
 
 ### Nouns and verbs
 
 | Noun | Verbs | Addressed by |
 |---|---|---|
 | `agent` | `list`, `get`, `create`, `update`, `delete`, `enable`, `disable`, `schema` | `config_id` |
-| `integration` | `list`, `get`, `create`, `update`, `delete`, `enable`, `disable`, `types`, `describe` | `integrationId` generated from the integration's name at creation |
-| `provider` | `list`, `get`, `create`, `update`, `delete`, `types`, `describe` | `providerId` |
+| `integration` | `list`, `get`, `create`, `update`, `delete`, `enable`, `disable`, `types`, `describe` | `integrationId`, generated from the integration's name when it is created |
+| `provider` | `list`, `get`, `create`, `update`, `delete`, `types`, `describe` | `providerId`, generated from the provider's name when it is created |
 | `secret` | `list`, `get`, `create`, `update`, `delete` | `name` |
 | `workspace` | `list`, `get`, `create`, `update`, `delete` | `uid` |
+| `action` | `list`, `describe` | action type |
+| `handler` | `list`, `describe` | entry handler type |
+| `settings` | `view`, `reset` | none |
 
-### Common flags
+`agent` also answers to `agents`, and `provider` to `providers`. A `workspace` is a memory. An unknown noun or verb fails with `unknown command`.
+
+### Flags for every resource command
 
 | Flag | Meaning |
 |---|---|
-| `-c, --config <path>` | Server config file. |
-| `-f, --file <path or ->` | Body file for create and update. `-` reads stdin. |
-| `--dry-run` | Validate and print what would be written, without saving it. |
-| `--reload` | Reload the running engine after a successful write. |
+| `-c, --config <path>` | The configuration file whose database to use. Default: `~/.servflow/config.toml`. |
+| `-o, --output <format>` | `json`, the default, or `yaml`. |
+
+### Flags for commands that write
+
+| Flag | Applies to | Meaning |
+|---|---|---|
+| `-f, --file <path or ->` | `create` and `update` of `agent`, `integration`, `provider`, and `workspace` | The body, as JSON or YAML. `-` reads standard input. Required. |
+| `--set <key=value>` | Same as `-f` | Sets one field of the body after it is read, by a dotted path such as `config.model=gpt-4.1`. A value that parses as JSON is used as JSON; anything else is a string. Repeatable. |
+| `--dry-run` | Every command that writes | Validates and prints the result without saving it. |
+| `--reload` | Every command that writes | Signals the running server to reload after the change. On by default; `--reload=false` turns it off. With no running server, the command prints a note and the change applies at the next start. |
+
+### Catalog flags
+
+| Command | Flag | Meaning |
+|---|---|---|
+| `action list` | `--app <id>` | Lists one app's action types with their descriptions. Without it, lists the apps that have actions, with how many each has. |
+| `action describe [type...]` | `--all` | Describes every action type. |
+| `handler describe [type...]` | `--all` | Describes every entry handler. |
+| `integration describe [type...]` | `--all` | Describes every integration type. |
+| `provider describe [type...]` | `--all` | Describes every provider type, with its suggested models. |
+
+### Secret flags
+
+A secret takes flags, not a body. Its value is never printed back.
+
+| Command | Flag | Meaning |
+|---|---|---|
+| `secret create` | `--name <name>` | The secret's name. Required. |
+| `secret create` | `--value <value>` | The secret's value. |
+| `secret create` | `--description <text>` | A description. |
+| `secret update <name>` | `--value <value>` | The new value. Required. A secret cannot be renamed, and its description cannot be changed. |
+
+```bash
+servflowai resource secret create --name discord-token --value "<value>" --description "Bot token"
+```
+
+### Settings flags
+
+| Command | Flag | Meaning |
+|---|---|---|
+| `settings view` | none | Prints the configuration path and the resolved settings, including defaults and environment overrides. |
+| `settings reset` | `--dry-run` | Prints the defaults without writing them. |
+| `settings reset` | `--full` | Also resets `sqlite.path`, `sqlite.master_key`, and `workspaces.root`, which a reset keeps otherwise. |
 
 ### The body for create and update
 
@@ -56,20 +107,26 @@ Reads and writes saved resources and prints the catalogs the server uses.
 | `name` | string | Yes | The agent's name. |
 | `config_id` | string | No | The id the agent is stored and addressed under. Derived from the name when missing. |
 | `description` | string | No | A description shown in lists. |
-| `enabled` | boolean | No | Whether the agent is served. Ignored on create and update: save stores the config, and `enable` or `disable` changes what is served. |
-| `config` | object | Yes | The agent itself: `entries`, each with its optional `steps`, and `agents`. |
+| `enabled` | boolean | No | Ignored. Saving stores the agent; `enable` and `disable` change whether it runs. |
+| `config` | object | Yes | The agent itself. See [The shape of an agent](#the-shape-of-an-agent). |
+
+`update` replaces the whole agent. An enabled agent keeps running its previous version until it is enabled again.
 
 ```bash
 servflowai resource agent create -f agent.yaml --dry-run
 ```
 
-### Integration
+#### Integration
 
-Each field of `config` is an object holding a literal, as `value`, or the name of a stored secret, as `secret`. The fields of each type are on [Available integrations](/references/integrations).
+| Key | Type | Required | Meaning |
+|---|---|---|---|
+| `name` | string | Yes | The integration's name, 1 to 100 characters. |
+| `type` | string | Yes | The integration type. |
+| `config` | object | Yes | The type's fields. Each field holds a literal, as `{"value": ...}`, or the name of a stored secret, as `{"secret": "<name>"}`. |
 
-Each integration body takes a user-facing `name`. ServFlow generates the integration's internal `integrationId` from that name when it is created and returns it in the result. Updates keep the same `integrationId` even if you rename the integration later.
+The fields of each type are on [Available integrations](/references/integrations). Servflow generates the `integrationId` from the name and returns it. Renaming an integration keeps its `integrationId`.
 
-OAuth-guided integrations, such as `notion_mcp`, have no config fields in the body. Creating one this way leaves it unusable until you complete its sign-in in the dashboard. A created integration is stored disabled; `servflowai resource integration enable <integrationId>` is what serves it.
+An integration that signs in through OAuth, such as `notion_mcp`, has no fields in the body, and cannot be enabled until its sign-in finishes in the dashboard. A created integration is stored disabled; `servflowai resource integration enable <integrationId>` enables it.
 
 ```json
 {
@@ -81,9 +138,15 @@ OAuth-guided integrations, such as `notion_mcp`, have no config fields in the bo
 }
 ```
 
-### Provider
+#### Provider
 
-`config` holds the type's fields as plain values. `api_key` is the key itself, not the name of a secret. The fields of each type are on [Available providers](/references/providers).
+| Key | Type | Required | Meaning |
+|---|---|---|---|
+| `name` | string | Yes | The provider's name. |
+| `type` | string | Yes | The provider type. It cannot be changed later. |
+| `config` | object | Yes | The type's fields, as plain values. `api_key` is the key itself, not the name of a secret. |
+
+The fields of each type are on [Available providers](/references/providers). `update` keeps every `config` field the body leaves out, so you can replace the key alone. No command prints a provider's `config` back.
 
 ```json
 {
@@ -93,7 +156,14 @@ OAuth-guided integrations, such as `notion_mcp`, have no config fields in the bo
 }
 ```
 
-### Workspace
+#### Workspace
+
+A memory: a folder that sub agents read and write.
+
+| Key | Type | Required | Meaning |
+|---|---|---|---|
+| `name` | string | Yes | The memory's name. |
+| `description` | string | No | A description. |
 
 ```json
 {
@@ -102,53 +172,126 @@ OAuth-guided integrations, such as `notion_mcp`, have no config fields in the bo
 }
 ```
 
-The server names the workspace's folder and creates it.
-
-### Secret
-
-A secret takes flags, not a body.
-
-```bash
-servflowai resource secret create --name discord-token --value "<value>" --description "Bot token"
-```
+The server names the memory's folder, creates it under `[workspaces] root`, and returns its `uid`.
 
 ## The shape of an agent
 
 The document under `config`. `servflowai resource agent schema` prints the same shape as JSON Schema, and is the authority when this page and the binary differ.
 
-## install
+| Key | Type | Required | Meaning |
+|---|---|---|---|
+| `entries` | list | Yes, at least one | The triggers that start the agent. See [Entries](#entries). |
+| `agents` | map | Yes, at least one | The sub agents, keyed by id. See [Sub agents](#sub-agents). |
 
-Installs a template into the running server.
-
-| Flag | Meaning |
-|---|---|
-| `--server <url>` | The server to install into. |
-| `--token <token>` | Bearer token for the server. |
-| `--integration key=integrationId` | The integration that meets one of the template's requirements. Repeatable. |
-| `--provider key=providerId` | The provider that meets one of the template's requirements. Repeatable. |
-| `--workspace key=uid` | The workspace that meets one of the template's requirements. Repeatable. |
-
-## MCP server tools
-
-ServFlow serves the management MCP server at `/api/mcp`. Send your auth token in the `Authorization` header, as `Bearer <token>`.
-
-The management MCP server exposes these tools:
-
-| Group | Tools |
-|---|---|
-| Configs | `list_configs`, `get_config`, `validate_config`, `create_config`, `update_config`, `delete_config`, `set_config_enabled`, `config_schema`, `config_example` |
-| Integrations | `list_integrations`, `get_integration`, `create_integration`, `update_integration`, `delete_integration`, `set_integration_enabled`, `list_integration_types`, `describe_integration_type` |
-| Providers | `list_providers`, `get_provider`, `create_provider`, `update_provider`, `delete_provider`, `list_provider_types`, `describe_provider_type` |
-| Secrets | `list_secrets`, `get_secret`, `create_secret`, `update_secret`, `delete_secret` |
-| Workspaces | `list_workspaces`, `get_workspace`, `create_workspace`, `update_workspace`, `delete_workspace` |
-| Discovery | `list_actions`, `describe_action`, `list_entry_handlers`, `describe_entry_handler`, `list_template_functions` |
-
-`list_actions` lists every built-in action type. `describe_action` describes one or more action types and returns their schema and field metadata. `config_schema` returns the stored config shape as JSON Schema, and `config_example` returns a complete example config you can adapt. `list_entry_handlers` lists every built-in entry type. `describe_entry_handler` describes one or more handler types and returns their fields, injected variables, and whether each is a listener. `list_template_functions` lists the template functions available in dynamic content and tool guards, optionally filtered by category.
-
-## version
-
-Prints the binary's version.
-
-```bash
-servflowai version
+```yaml
+name: support-desk
+config:
+  entries:
+    - type: handler
+      handlerConfig:
+        path: /ask
+      conversationRunsPerHour: 60
+      steps:
+        - id: customer
+          type: http
+          config:
+            method: GET
+            url: 'https://crm.example.com/customers?email={{ body "email" }}'
+      start: agent.answer
+    - type: trigger
+      trigger:
+        cron: "0 0 9 * * 1-5"
+      start: agent.answer
+  agents:
+    answer:
+      name: Answer
+      providerID: openai-production-3f9a1c2e
+      systemPrompt: You answer questions about the shop.
+      userPrompt: '{{ body "question" }}'
+      tools:
+        - type: action
+          name: Fetch page
+          description: Fetches a web page.
+          actionConfig:
+            type: http
+            config:
+              method:
+                type: raw
+                value: GET
+              url:
+                type: param
+                value: address
 ```
+
+### Entries
+
+Each item of `entries` is one trigger: a way the agent starts.
+
+| Key | Type | Required | Meaning |
+|---|---|---|---|
+| `type` | string | Yes | `handler` for an entry handler or a webhook, `trigger` for a run by hand, on a schedule, or from another agent. |
+| `handlerConfig.type` | string | No | The entry handler, such as `github_webhook`. Empty makes a webhook that answers HTTP requests directly. The types are on [Available entry handlers](/references/entry-handlers). |
+| `handlerConfig.path` | string | For handlers that receive HTTP | The path the entry answers on, such as `/ask`. Empty for a handler that connects out, such as `discord_gateway`. |
+| `handlerConfig.config` | map | Depends on the handler | The handler's settings. A setting accepts only the `secret` template function. |
+| `trigger.cron` | string | No | A six-field cron expression, seconds first, or a descriptor such as `@hourly`. Empty runs the agent only when it is started. |
+| `steps` | list | No | Actions that run in order every time this entry fires, before its sub agent. See [Steps](#steps). |
+| `start` | string | No | The sub agent the entry starts, as `agent.<id>`. Empty leaves the entry unwired. |
+| `conversationRunsPerHour` | integer | No | The most runs one conversation can start through this entry in any 60 minutes. `0`, the default, means no limit. It has an effect only on entries whose runs share conversations: a webhook, `streamable_http_webhook`, `telegram_webhook`, and `discord_gateway`. |
+
+The rules for several entries:
+
+- An agent has at most one `trigger` entry, at most one webhook, and at most one entry of each handler type.
+- Two entries cannot answer on the same path.
+- Each entry is named by what it is: `trigger`, the handler type, or `default` for a webhook.
+
+### Steps
+
+| Key | Type | Required | Meaning |
+|---|---|---|---|
+| `id` | string | Yes | Lowercase letters, digits, and underscores, not starting with a digit. A prompt reads the result as `{{ .<id> }}`. Step ids and sub agent ids share one namespace across the agent. |
+| `type` | string | Yes | The action type. See [Available actions](/references/actions). |
+| `config` | map | Depends on the action | The action's fields, each of the type the action expects. Every string is a template. |
+
+A step that fails stops the run before its sub agent.
+
+### Sub agents
+
+Each key of `agents` is a sub agent's id.
+
+| Key | Type | Required | Meaning |
+|---|---|---|---|
+| `name` | string | No | The name shown on the canvas and in runs. |
+| `providerID` | string | No | The `providerId` of a stored provider. On Servflow Cloud, `native` is the built-in provider, and an empty value is saved as `native`. |
+| `systemPrompt` | string | No | The system prompt. A template. |
+| `userPrompt` | string | No | The user prompt. A template. |
+| `next` | string | No | Where the sub agent's answer goes: `agent.<id>` hands it to another sub agent, and empty or `end` ends the run with it. |
+| `workspaceID` | string | No | The `uid` of the memory the built-in file tools work in. |
+| `tools` | list | No | The tools the sub agent can call. See [Tools](#tools). |
+
+### Tools
+
+| Key | Type | Required | Meaning |
+|---|---|---|---|
+| `type` | string | Yes | `action`, `agent`, `agent_task`, or `mcp`. |
+| `name` | string | For every type but `mcp` | The tool's name. The model sees it with each run of characters other than letters, digits, `_`, and `-` replaced by `_`, cut to 64 characters. Two tools of one sub agent cannot reach the model under the same name. |
+| `description` | string | No | What the model is told the tool does. |
+| `params` | list of strings | No | For an `agent` tool: parameters the model fills in, read in the called sub agent's prompts with `tool_param`. Not allowed on an `agent_task` tool. |
+| `actionConfig.type` | string | For `action` | The action type. |
+| `actionConfig.config` | map | For `action` | Each field as `{type: raw, value: <value>}`, set by you, or `{type: param, value: <parameter name>}`, filled in by the model. |
+| `agentConfig.id` | string | For `agent` | The id of another sub agent in the same agent. It answers with its own prompts. |
+| `agentTaskConfig.id` | string | For `agent_task` | The `config_id` of another agent whose entry is a trigger. The model sends one instruction, read as `{{ input "instruction" }}`, and nothing comes back. |
+| `mcpConfig.endpoint` | string | For `mcp` | The MCP server's URL. |
+| `mcpConfig.toolsList` | list of strings | For `mcp`, at least one | The server's tools the model may call, by their own names. |
+| `mcpConfig.headers` | map | No | Extra HTTP headers. |
+| `mcpConfig.token` | object | No | Where the `Authorization` token comes from: exactly one of `integrationId`, `secretId`, or `token`. |
+| `guards` | list | No | Conditions that must all be true before the tool runs. Each has a `name` and an `expression` that renders `true`, or a structured condition. See [Guard rails](/concepts/guard-rails). |
+
+### Built-in file tools
+
+Every sub agent has these tools with nothing to attach. They work in the memory its `workspaceID` names. A sub agent with no memory still has them, and they report that there is nowhere to read from.
+
+| Tool | Parameters | What it does |
+|---|---|---|
+| `read_memory` | `path` | Returns a file's contents. The path is relative to the memory's root. |
+| `write_memory` | `path`, `content` | Creates the file or replaces its contents. |
+| `list_memory` | `path`, optional | Lists one folder's files and folders. Omit `path` for the root. |

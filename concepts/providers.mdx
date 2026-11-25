@@ -1,90 +1,74 @@
 ---
 title: "Providers"
-description: "What a provider is, why sub-agents share one, where an agent's model is chosen, and the built-in model access and credit on ServFlow Cloud"
+description: "What a provider is, why sub agents share one, where an agent's model is chosen, and the built-in model and credits on Servflow Cloud"
 icon: "cloud"
 ---
 
-A provider is your account with a company that runs AI models, such as OpenAI or Anthropic, together with the model you want to use. On a self-hosted instance, every sub-agent needs a provider to run. On ServFlow Cloud, a sub-agent with no provider uses ServFlow's [built-in model access](#built-in-model-access-on-servflow-cloud) instead. This page explains how providers work. To add one, see [Manage LLM providers](/guides/manage-llm-providers).
+A provider is your account with a company that runs AI models, such as OpenAI or Anthropic, together with the model you want to use. On a self-hosted instance, every sub agent needs a provider to run. On Servflow Cloud, a sub agent with no provider uses your team's [built-in model](#built-in-model-on-servflow-cloud) instead. This page explains how providers work. To add one, see [Manage LLM providers](/guides/manage-llm-providers).
 
 <Frame>
-  <img src="/images/guides/manage-llm-providers/01-providers-page.png" alt="The Providers page listing providers with their type and model" />
+  <img src="/images/guides/manage-llm-providers/01-providers-page.png" alt="Settings open on the Your own keys tab, listing providers with their type and model" />
 </Frame>
 
 ## Your account, not ours
 
-A provider uses your own key. The model company bills you for what your agents use through it, including test runs from the editor. Those calls do not spend ServFlow credit.
+A provider uses your own key. The model company bills you for the AI your agents use through it, including test runs from the agent's page. On Servflow Cloud, a run on your own key still costs the 4-credit run fee, and no credits for the AI.
 
-ServFlow can talk to five kinds of provider: Claude, OpenAI, OpenRouter, LiteLLM, and Qwen. OpenRouter and LiteLLM are services that give access to many companies' models through one account.
+Servflow can talk to five kinds of provider: Claude, OpenAI, OpenRouter, LiteLLM, and Qwen. OpenRouter and LiteLLM are services that give access to many companies' models through one account.
 
-## Built-in model access on ServFlow Cloud
+## Built-in model on Servflow Cloud
 
-ServFlow Cloud includes model access, so a new agent runs without an API key. A sub-agent with no provider chosen calls your team's built-in model through OpenRouter, and ServFlow pays for the calls out of your team's credit: the monthly credit your plan includes, then any credit you buy. A new team's built-in model is Claude Sonnet 5.5 (`anthropic/claude-sonnet-5.5`), and you can [change it](#choose-the-built-in-model).
+Servflow Cloud includes a model, so a new agent runs without an API key. A sub agent with no provider chosen calls your team's built-in model through OpenRouter, and the run is paid from your team's credits: the AI at cost plus the 4-credit run fee. A new team's built-in model is Claude Sonnet 5.5 (`anthropic/claude-sonnet-5.5`), and you can [change it](#choose-the-built-in-model).
 
-Built-in access is not a provider. It does not appear on the **Providers** page, in provider lists, in the CLI, or in MCP. It is what a sub-agent uses when its **Provider** setting is empty. A self-hosted instance has no built-in access, so there every sub-agent must have a provider.
+The built-in model is not one of your providers. It does not appear in **Your own keys**. It is what a sub agent uses when its **Provider** setting is **No provider selected**; when you save, the agent stores it as the provider `native`. A self-hosted instance has no built-in model, so there every sub agent must have a provider.
 
 ### Choose the built-in model
 
-The built-in model belongs to your team, so every sub-agent with no provider uses the same one. Anyone on your team can change it.
+The built-in model belongs to your team, so every sub agent with no provider uses the same one. Anyone on your team can change it.
 
 To change the built-in model, follow these steps:
 
-1. Go to **Settings** > **Billing**.
-2. Under **Built-in model**, search for a model by name and choose it. The list holds every model on OpenRouter that can call tools, since agents act through their tools.
+1. In the sidebar, click **Settings**, then click the **Team** tab.
+2. Under **Model**, in **Built-in model**, search for a model by name and choose it. The list holds every model on OpenRouter that can call tools, since agents act through their tools.
 3. Click **Save**.
+
+<Frame>
+  <img src="/images/guides/create-an-agent/14-built-in-model.png" alt="Settings open on the Team tab, with the Built-in model picker under Model and its Save button" />
+</Frame>
 
 Runs that start after you save use the new model. A run already in progress finishes on the model it started with.
 
-Models cost very different amounts. Under the list, **Billing** shows the chosen model's price for a million input and output tokens. A cheaper model makes the same credit last longer, and a more expensive one spends it faster.
+Models cost very different amounts. The list shows each model's price for a million input and output tokens. A cheaper model makes the same credits last longer, and a more expensive one spends them faster.
 
-### Monthly credit by plan
+### Credits from your plan
 
-| Plan | Monthly credit |
-|---|---|
-| Free | None. [Buy credit](#bought-credit) to use built-in access, or add your own provider. |
-| Starter | $10 |
-| Pro | $30 |
+Every team starts on the Free plan with 4,000 credits, given once. They never expire. The Paid, Starter, and Pro plans add 10,000, 26,000, and 55,000 credits each time the plan renews, which is when its invoice is paid, not on the first of the month. Plan credits you have not used expire at the next renewal. For what each plan costs, see [Plans and credits](/concepts/plans-and-credits).
 
-The credit resets at the start of each calendar month, UTC, not on your billing date. What you have spent shows as a usage row in your plan's billing usage.
+### Top up
 
-### Bought credit
+Any team can buy more credits, on any plan, Free included. In the sidebar, click **Settings**, then click the **Billing and usage** tab. On the **Credits** card, click **Top up**, choose an amount from 5,000 to 500,000 credits in thousands, and pay on Stripe. A credit is $0.001, so 5,000 credits cost $5, and there is no fee. The credits are added as soon as the payment clears.
 
-Any team can buy credit, on any plan, Free included. To buy credit, go to **Settings** > **Billing** and enter an amount under **Buy model credit**, in whole dollars from $5 to $500. Checkout adds a processing fee of 5.5%, so $10 of credit costs $10.55. The credit is added to your team when the payment goes through.
+Credits you top up never expire, and they stay when you change or cancel your plan. Runs spend plan credits before topped-up ones. See [Top up credits](/guides/top-up-credits).
 
-Bought credit works as follows:
+### When the credits run out
 
-- It is used only after the month's plan credit is spent.
-- It does not expire, and it does not reset at the start of the month.
-- It stays when you upgrade, downgrade, or cancel your plan.
-
-What is left shows as a **Bought model credit** row in your billing usage.
-
-### When the credit runs out
-
-When your team has spent the month's plan credit, runs that use built-in access move on to your bought credit. When that is spent too, or you have none, runs that use built-in access fail with a prompt to buy credit. They work again as soon as you buy credit, at the start of the next month, or when you upgrade. Sub-agents with their own provider keep running.
-
-### When you change plan
-
-Plan changes apply at once:
-
-- **Upgrade.** The month's credit rises to the new plan's amount. What you already spent this month still counts.
-- **Downgrade.** The month's credit falls to the new plan's amount. If you already spent more than that, built-in access is blocked until the next month.
-- **Cancel.** The plan's monthly credit stops right away. Bought credit you have left keeps working.
+When your team has no credits left, the **Credits** card says **runs stopped**, and every agent's runs are refused, the scheduled ones included. That covers agents on your own keys too, because each run still costs the run fee. Runs start again as soon as you top up, your plan renews, or you move to a plan with credits.
 
 ### Use your own key instead
 
-To use your own key for a sub-agent, add a provider and choose it under the sub-agent's **Provider** setting. That sub-agent then calls the model through your account and spends none of your ServFlow credit. To go back to built-in access, clear the setting. See [Manage LLM providers](/guides/manage-llm-providers).
+To use your own key for a sub agent, add a provider in **Settings > Your own keys** and choose it under the sub agent's **Provider** setting. That sub agent then calls the model through your account, and each run costs only the 4-credit run fee. To go back to the built-in model, choose **No provider selected**. See [Manage LLM providers](/guides/manage-llm-providers).
 
-## One provider, many sub-agents
+## One provider, many sub agents
 
-You set a provider up once. Each sub-agent then chooses one. Most instances need only one or two providers.
+You set a provider up once. Each sub agent then chooses one. Most instances need only one or two providers.
 
 ## The model belongs to the provider
 
-A sub-agent's panel has a **Provider** setting and no model setting, because the model is part of the provider.
+A sub agent's panel has a **Provider** setting and no model setting, because the model is part of the provider.
 
-To run a quick, low-cost model for a simple stage and a stronger one for a hard stage, add two providers with the same key and different models. Then choose between them in each sub-agent:
+To run a quick, low-cost model for a simple stage and a stronger one for a hard stage, add two providers with the same key and different models. Then choose between them in each sub agent:
 
-| Sub-agent | Job | Provider |
+| Sub agent | Job | Provider |
 |---|---|---|
 | Sort the request | Decide what kind of question this is | `OpenAI small` |
 | Write the answer | Compose the reply | `OpenAI large` |
@@ -95,17 +79,17 @@ When you change a provider's key or model, every agent that uses it follows on i
 
 ## If a provider is deleted
 
-ServFlow lets you delete a provider that agents still use. Those agents then fail when they next run. Point them at another provider first.
+Servflow lets you delete a provider that agents still use. Those agents then fail when they next run. Point them at another provider first.
 
 ## Keeping the key safe
 
 The key is kept with the provider. It is hidden as you type it and is left out of lists. It is not a stored [secret](/concepts/secrets), so you will not find it on the **Secrets** page.
 
-If you run your own instance, you can have ServFlow encrypt stored keys. See the [Configuration reference](/references/configuration).
+If you run your own instance, you can have Servflow encrypt stored keys. See the [Configuration reference](/references/configuration).
 
 ## Providers in the dashboard
 
-**Providers**, in the sidebar under **Configure**, lists your providers, and **New Provider** adds one. To choose a provider for a sub-agent, open the sub-agent and pick it under **Provider**.
+On Servflow Cloud, **Settings > Your own keys** lists your providers, and **Add a provider** adds one. On a self-hosted instance, the list is **Providers**, in the sidebar under **Connect and tools**. To choose a provider for a sub agent, open the sub agent and pick it under **Provider**.
 
 ## Related
 
@@ -120,7 +104,7 @@ If you run your own instance, you can have ServFlow encrypt stored keys. See the
 </Card>
 
 <Card title="Agents" icon="robot" href="/concepts/agents">
-  Sub-agents, and what each one needs to run.
+  Sub agents, and what each one needs to run.
 </Card>
 
 <Card title="Secrets" icon="key" href="/concepts/secrets">

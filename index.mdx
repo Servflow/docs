@@ -1,10 +1,10 @@
 ---
-title: "What ServFlow does"
-description: "ServFlow runs AI agents that work inside the apps your team already uses: they notice something happen, decide what to do, and do it"
+title: "What Servflow does"
+description: "Servflow runs AI agents that work inside the apps your team already uses: they notice something happen, decide what to do, and do it"
 icon: "house"
 ---
 
-ServFlow lets you set up AI agents that do real work in the apps you already use, such as Gmail, Slack, Notion, GitHub, Telegram, and Discord. You don't need to write code. This page explains what an agent is and what you can do with one. To try one right away, see [Your first agent](/quickstart).
+Servflow lets you set up AI agents that do real work in the apps you already use, such as Gmail, Slack, Notion, GitHub, Telegram, and Discord. You don't need to write code. This page explains what an agent is and what you can do with one. To try one right away, see [Your first agent](/quickstart).
 
 ## What an agent is
 
@@ -29,25 +29,27 @@ Most of these exist as ready-made **templates**: an agent that already works, wh
 
 ## How you build one
 
-You build agents in the ServFlow dashboard, in one of three ways:
+You build agents in the Servflow dashboard, in one of three ways:
 
 - **Install a template.** Pick a ready-made agent, connect the apps it asks for, and it starts working.
-- **Describe it to AI assist.** Say in a sentence what you want, and AI assist drafts the agent for you to review.
+- **Describe it to Assist.** Say in a sentence what you want, and Assist drafts the agent for you to review.
 - **Start from scratch.** Name the agent and add its instructions and tools yourself.
 
-Whichever you choose, you end up in the same editor, where you can change anything later.
+Whichever you choose, the agent opens in the same place in the dashboard, where you can change anything later.
+
+The dashboard also has a second product, **Support agents**: a support agent answers your customers by email, on Discord or in your website's live chat, from files your team adds, checks every reply before it is sent, and hands off to a person when it should. See [Support agents](/concepts/support-agents).
 
 ## What you need
 
-- **A ServFlow account.** Sign up at [dash.servflow.io](https://dash.servflow.io).
+- **A Servflow account.** Sign up at [dash.servflow.io](https://dash.servflow.io).
 - **Your apps, connected.** You sign in to each app once, and every agent on your team can then use it.
-- **A model.** This is the AI that does the thinking. On the Starter and Pro plans, ServFlow includes model credit, so you need no AI account of your own. You can also use your own OpenAI, Anthropic, or other account.
+- **A model.** This is the AI that does the thinking. Servflow has a built-in model that runs on your team's credits, so you need no AI account of your own. Every team starts on the Free plan with 4,000 credits, given once. The Paid ($10), Starter ($25), and Pro ($50) plans add credits every month. You can also use your own OpenAI, Anthropic, or other account. See [Plans and credits](/concepts/plans-and-credits).
 
 ## Keeping control
 
 - **Agents only do what their tools allow.** An agent with no send tool can't send email. Templates are built this way: the Meeting Follow-ups agent can only read your calendar and save drafts.
 - **You turn agents on and off.** A new agent you build stays off until you enable it.
-- **You can see every run.** Each time an agent runs, ServFlow records what started it, what it read, which tools it used, and what it replied.
+- **You can see every run.** Each time an agent runs, Servflow records what started it, what it read, which tools it used, and what it replied.
 
 ## Next steps
 
@@ -56,6 +58,9 @@ Whichever you choose, you end up in the same editor, where you can change anythi
     Install a template that drafts follow-up emails after your meetings, in about ten minutes.
   </Card>
   <Card title="For developers" icon="code" href="/installation">
-    Self-host ServFlow, build agents as config files, and connect your own systems.
+    Self-host Servflow, build agents as config files, and connect your own systems.
+  </Card>
+  <Card title="Support agents" icon="headset" href="/concepts/support-agents">
+    Answer your customers by email, on Discord or in live chat on your website, with every reply checked before it is sent.
   </Card>
 </CardGroup>

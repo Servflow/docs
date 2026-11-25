@@ -1,0 +1,88 @@
+---
+title: "Files and policy labels"
+description: "How a Servflow support agent answers from your files: which files load for a customer message, what a policy label does, the 200,000-character limit, and how guardrails read your files"
+icon: "folder-open"
+---
+
+Files are what your support agents answer from, such as a returns policy or a delivery price list. Policy labels decide which files load for a customer's message. This page explains how a file reaches an answer, when to give a file a label, and what happens when too much text loads at once. It is for anyone deciding what to put in files and what to put in instructions. To add files, see [Add files for your support agents](/guides/add-files).
+
+## Why files and instructions both exist
+
+A support agent's **instructions** are a short brief: who your business is, how to sound, and when to hand off. You write them per support agent.
+
+**Files** hold the facts your business already keeps written down: policies, price lists, product guides. They belong to your team, so every support agent answers from the same files, and you change a fact in one place. You add a file as it is instead of copying its text into each support agent's instructions.
+
+Put tone and behaviour in instructions, and facts that come from a file in files. A fact in both places can drift apart.
+
+## How a file reaches an answer
+
+For each customer message, before the support agent writes its reply:
+
+1. **The labels are matched.** For each policy label on your team's files that this conversation hasn't loaded yet, a separate model call asks whether the customer's message is about that label. For an email, the subject counts too.
+2. **The matched labels stay.** A label that matches is kept on the conversation. It loads for every later message in that conversation too, so a follow-up such as "and what about the shipping cost?" still has the returns files.
+3. **The files load.** The support agent receives every file with no policy label, plus every file that has at least one loaded label. Each file loads once, however many of its labels match.
+4. **The support agent answers.** It writes the reply from its instructions, the loaded files, and what its tools return.
+5. **The guardrails check the reply** against the same loaded files. See [Guardrails and files](#guardrails-and-files).
+
+On the conversation's page in the dashboard, **Policy labels loaded** lists the labels the conversation has loaded so far. See [Read support conversations](/guides/read-support-conversations).
+
+## Files with and without a label
+
+A **file with no policy label** loads in every answer, for every customer. Use this for what most customers need, or what is short: opening hours, contact details, a summary of your policies.
+
+A **file with policy labels** loads only once a customer's message matches one of its labels. Use this for long files that answer one kind of question: a full returns policy, a warranty, a size guide.
+
+A label is a name for the kind of question the file answers, such as `returns`, `delivery` or `warranty`. Name it the way a customer's question would be described, because the match reads the label against the message. Several files can share a label, and a file can have up to 10.
+
+## When to label a file
+
+Label a file when one of these is true:
+
+- **It answers only some questions.** A warranty file is noise for a customer asking about delivery.
+- **It is long.** Every unlabelled file loads for every message, so long unlabelled files take up the limit below for every answer.
+- **Files disagree out of context.** If your trade price list and your retail price list would confuse each other, give each its own label.
+
+Leave a file unlabelled when nearly every conversation needs it, or when it is short.
+
+## The 200,000-character limit
+
+The files loaded for one message can hold up to 200,000 characters in total. The **Characters** column on the **Files** page shows each file's count, and the policy label picker shows how many characters each label loads.
+
+If the files loaded for a message go over 200,000 characters, the run fails before the support agent writes anything, and the customer gets the fallback message. The trace of that run shows how many characters loaded.
+
+To stay under the limit:
+
+- Give long files a policy label, so they load only when asked about.
+- Keep the unlabelled files short, because they load every time.
+- Split a file that covers several topics into one file per topic, each with its own label.
+- Remember that labels stay loaded for the rest of a conversation, so a long conversation that touches many topics loads more.
+
+## Guardrails and files
+
+Every guardrail checks the reply at the same time, reading the customer's latest message, the tools the support agent used, the draft reply, and the files loaded for that message. A reply may state what those files say, so a rule such as "answers only from what the business told it" passes a fact that came from a file.
+
+The check still does not read the support agent's instructions. A fact that is only in the instructions may be blocked by a strict rule, because the check can't see where it came from; a fact in a loaded file is visible to the check. This is one more reason to keep facts in files.
+
+If a guardrail blocks a reply, the support agent writes it once more with the guardrails' reasons. If the new reply is blocked too, the customer gets the fallback message and the conversation is marked **blocked**. A blocked reply does not hand the conversation off. See [Guardrails on support replies](/concepts/support-guardrails).
+
+## Next steps
+
+<CardGroup cols={2}>
+
+<Card title="Add files for your support agents" icon="file-arrow-up" href="/guides/add-files">
+  Add files and give them policy labels.
+</Card>
+
+<Card title="Guardrails on support replies" icon="shield-check" href="/concepts/support-guardrails">
+  How each reply is checked before it is sent.
+</Card>
+
+<Card title="Support agents" icon="headset" href="/concepts/support-agents">
+  The parts of a support agent, and how one reply travels.
+</Card>
+
+<Card title="Read support conversations" icon="comments" href="/guides/read-support-conversations">
+  See which labels a conversation loaded.
+</Card>
+
+</CardGroup>

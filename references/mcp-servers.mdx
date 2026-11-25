@@ -1,0 +1,199 @@
+---
+title: "MCP servers"
+description: "The two Servflow MCP servers: their addresses, how a client authenticates, and every tool with its inputs and what it returns"
+icon: "plug"
+---
+
+Servflow serves its management tools over the [Model Context Protocol](https://modelcontextprotocol.io), so an MCP client such as Claude Code can list, write, validate, and enable agents. This page lists both servers, how a client authenticates to each, and every tool with its inputs. For the steps to connect a client, see [Manage Servflow from an AI agent](/guides/manage-servflow-from-an-ai-agent).
+
+| Server | What it manages | Where it runs |
+|---|---|---|
+| Management server | Agents, providers, integrations, secrets, and memory, and the catalogs to write agents from | Servflow Cloud and self-hosted |
+| Support agents server | Support agents and the files they answer from | Servflow Cloud only |
+
+## Endpoints and authentication
+
+Both servers use the streamable HTTP transport, served stateless: each call carries everything it needs. A tool's result is JSON text. A tool that fails returns a tool error with a message the model can act on.
+
+### Servflow Cloud
+
+| Server | URL |
+|---|---|
+| Management server | `https://server.servflow.io/api/mcp` |
+| Support agents server | `https://server.servflow.io/api/support/mcp` |
+
+Send your team's API key in the `Authorization` header, as `Bearer <key>`; the key alone, with no `Bearer`, is accepted too. The key is under **Settings** > **Team** > **Your API key** in the dashboard. The URL is the same for every team: the key decides which team's agents the tools reach. A request with no key, or a key that matches no team, is answered `401`.
+
+### Self-hosted
+
+The management server is served only when the server runs with `--dashboard`, under the dashboard's path:
+
+| Server | URL |
+|---|---|
+| Management server | `http://<host>:<port>/dashboard/api/mcp`, such as `http://localhost:8080/dashboard/api/mcp` |
+
+Authentication follows `[authentication] mode` in the [configuration](/references/configuration#authentication):
+
+| Mode | What the server needs |
+|---|---|
+| `local`, `none` | Nothing. Anyone who can reach the port can use every tool. |
+| `jwt` | An `Authorization: Bearer <token>` header with a token from your identity provider, signed by a key from `jwks_url` and naming `team_id`. |
+
+A self-hosted instance has no support agents server.
+
+## Behaviour that applies to all tools
+
+- **Saving only stores.** `create_config` and `create_integration` store a disabled row. `update_config` and `update_integration` store the new version, and an enabled agent or integration keeps running its previous version.
+- **Enabling builds.** `set_config_enabled` and `set_integration_enabled` check what the row names, build it, and run it. When it cannot be built, the tool returns why and the row stays as it was. Enabling an enabled row runs its saved version.
+- **Enabling an integration does not restart agents.** An agent holding the integration, such as one with a `discord_gateway` trigger, keeps the previous instance until the agent is enabled again.
+- **Credentials are write-only.** No tool returns a secret's value or a provider's `config`.
+- **The catalogs are the server's.** On Servflow Cloud, the catalog tools include the Servflow Cloud entry handlers, actions, and integration types.
+
+## Agent tools
+
+An agent is addressed by its `config_id`. The `config` input takes the body described in [The body for create and update](/references/cli#agent), or the bare agent document described in [The shape of an agent](/references/cli#the-shape-of-an-agent). An `enabled` key in it is ignored.
+
+<Warning>
+On Servflow Cloud, `list_configs` also lists support agents, as kind `support`, and `get_config`, `update_config`, `delete_config`, and `set_config_enabled` accept them. Do not change or enable a support agent with these tools. Use the [support agents server](#support-agent-tools) for support agents.
+</Warning>
+
+| Tool | Inputs | Returns |
+|---|---|---|
+| `list_configs` | `kind`, optional: `agent` to list agents only | Each agent's `config_id`, `name`, `description`, `kind`, `enabled`, `entries` (how it is triggered), `agents` (how many sub agents), `actions` (the action types it uses), and `created_at`. |
+| `get_config` | `config_id`, required | The stored agent. |
+| `validate_config` | `config`, required | `{"valid": true, "stored_form": ...}` when the agent is valid; otherwise a tool error saying what is wrong. Writes nothing. |
+| `create_config` | `config`, required | The stored agent, disabled. `config_id` is derived from `name` when the body has none. |
+| `update_config` | `config_id`, required; `config`, required, the whole agent | The stored agent. |
+| `delete_config` | `config_id`, required | `{"deleted": "<config_id>"}`. |
+| `set_config_enabled` | `config_id`, required; `enabled`, required, `true` to run the agent or `false` to stop it | The stored agent, or a tool error saying why it cannot run. |
+| `config_schema` | none | The JSON Schema an agent body must satisfy. |
+| `config_example` | none | A small valid agent with a `github_webhook` trigger. Its provider and integration ids are placeholders. |
+
+## Provider, integration, secret, and memory tools
+
+### Providers
+
+A provider is addressed by its `providerId`. On Servflow Cloud, the built-in provider, `native`, is not stored and is not listed.
+
+| Tool | Inputs | Returns |
+|---|---|---|
+| `list_providers` | none | Every stored provider, without its `config`. |
+| `get_provider` | `providerId`, required | The provider, without its `config`. |
+| `create_provider` | `name`, required; `type`, required; `config`, required, the type's fields as plain values | The provider, with its generated `providerId`. The config is checked by building the client it describes. |
+| `update_provider` | `providerId`, required; `name`, optional; `config`, optional, the fields to replace | The provider. Fields left out of `config` keep their stored values. The type cannot be changed. |
+| `delete_provider` | `providerId`, required | `{"deleted": "<providerId>"}`. Agents that name the provider are not checked, and fail at their next model call. |
+
+A provider change needs no enable: the next run uses it.
+
+### Integrations
+
+An integration is addressed by its `integration_id`.
+
+| Tool | Inputs | Returns |
+|---|---|---|
+| `list_integrations` | none | Every stored integration, without its `config`. |
+| `get_integration` | `integration_id`, required | The integration. |
+| `create_integration` | `name`, required; `type`, required; `config`, required, each field as `{"value": ...}` or `{"secret": "<secret name>"}` | The integration, disabled, with its `integrationId` generated from `name`. |
+| `update_integration` | `integration_id`, required; `name`, required; `type`, required; `config`, required | The integration. Its id never changes. |
+| `delete_integration` | `integration_id`, required | `{"deleted": "<integration_id>"}`. |
+| `set_integration_enabled` | `integration_id`, required; `enabled`, required | The integration, or a tool error saying why it cannot be built. An integration still waiting for its OAuth sign-in cannot be enabled. |
+
+### Secrets
+
+A secret is addressed by its `name`. Read it in a template as `{{ secret "name" }}`.
+
+| Tool | Inputs | Returns |
+|---|---|---|
+| `list_secrets` | none | Each secret's name and metadata, never its value. |
+| `create_secret` | `name`, required; `value`, required; `description`, optional | The secret's name and metadata. |
+| `update_secret` | `name`, required; `value`, required | The secret's name and metadata. A secret cannot be renamed. |
+| `delete_secret` | `name`, required | `{"deleted": "<name>"}`. |
+
+### Memory
+
+A memory is a folder that sub agents read and write with their built-in file tools. The tools use the code's word, `workspace`, and address a memory by its `uid`. A sub agent uses one through its `workspaceID`.
+
+| Tool | Inputs | Returns |
+|---|---|---|
+| `list_workspaces` | none | Every memory. |
+| `get_workspace` | `uid`, required | The memory. |
+| `create_workspace` | `workspace`, required: `{"name": ..., "description": ...}`, with `name` required | The memory, with its `uid`. The server names and creates its folder. |
+| `update_workspace` | `uid`, required; `workspace`, required: the new `name` and `description` | The memory. |
+| `delete_workspace` | `uid`, required | `{"deleted": "<uid>"}`. |
+
+## Catalog tools
+
+What an agent can be built from. These tools write nothing.
+
+| Tool | Inputs | Returns |
+|---|---|---|
+| `list_actions` | `app`, optional, an app's id | Without `app`: the apps that have actions, each with its name and how many it has. With `app`: that app's action types, each with its description. |
+| `describe_action` | `types`, a list of action types; or `all`: `true` | Each action's fields, the integration groups an `integration` field accepts, and what the action returns for a later step. |
+| `list_entry_handlers` | none | Each entry handler type with its description. |
+| `describe_entry_handler` | `types`, a list of handler types; or `all`: `true` | Each handler's fields, whether each is required and what leaving it out means, the integration type an `integration` field needs, the variables it gives the prompt, and whether it is a listener, which has no path. |
+| `list_app_events` | `app`, optional, an app's id | Without `app`: the apps that have events, each with its name and how many it has. With `app`: that app's events, each with its description. An app's id is also the integration group whose integrations can watch its events. |
+| `describe_app_event` | `events`, required, a list of event names | Each event's settings, which go in an `app_event` trigger's `settings`, and the variables a run reads as `{{ .event.data.<path> }}`. |
+| `list_integration_types` | none | The integration types that can be created. |
+| `describe_integration_type` | `types`, a list of integration types; or `all`: `true` | Each type's fields and groups. |
+| `list_provider_types` | none | The provider types that can be created. |
+| `describe_provider_type` | `types`, a list of provider types; or `all`: `true` | Each type's fields, default model, suggested models, and where to get credentials. The model list is a suggestion, not a limit. |
+| `list_template_functions` | `category`, optional: `request`, `trigger`, `tool`, `source`, `output`, `transform`, or `predicate` | The template functions, with their syntax and an example of each. |
+
+On a self-hosted instance, `list_app_events` lists nothing: app events come from Servflow Cloud.
+
+## Support agent tools
+
+Servflow Cloud only, on the support agents server. A support agent is addressed by its `support_agent_id`. The `provider_id` and each `integration_id` a support agent names come from `list_providers` and `list_integrations` on the management server; `native` names the built-in provider.
+
+| Tool | Inputs | Returns |
+|---|---|---|
+| `list_support_agents` | none | `{"support_agents": [...]}`: each support agent with its channels, instructions, handoffs, guardrails, and whether it is enabled. |
+| `get_support_agent` | `support_agent_id`, required | The support agent. |
+| `create_support_agent` | `support_agent`, required | The support agent, disabled. With no guardrails, it gets `answers_from_business`. |
+| `update_support_agent` | `support_agent_id`, required; `support_agent`, required, the whole support agent | The support agent. An enabled one keeps answering with its last enabled version until it is enabled again. |
+| `set_support_agent_enabled` | `support_agent_id`, required; `enabled`, required, `true` to start answering customers or `false` to stop | The support agent, or a tool error saying why it cannot start. Enabling checks your plan, checks that no other enabled support agent answers on the same integration, and builds it. |
+
+The `support_agent` object has these keys. `id`, `created_at`, and `updated_at` are ignored.
+
+| Key | Meaning |
+|---|---|
+| `name` | The support agent's name. |
+| `fallback_message` | What the support agent says when it cannot answer. |
+| `channels` | Where it answers. Each item has `type`: `email`, `livechat`, or `discord`; `integration_id`; and, for Discord, `discord.allowed_channels`. |
+| `agent` | `provider_id` and `system_prompt`, its instructions. |
+| `tools` | The tools it can use. |
+| `handoffs` | Where it hands a conversation to a person. Each item has `name`, `description`, `integration_id`, `action`, and `config`. |
+| `guardrails` | Checks on every reply. Each item has `name` and `instructions`. |
+
+## Support file tools
+
+Servflow Cloud only, on the support agents server.
+
+| Tool | Inputs | Returns |
+|---|---|---|
+| `add_support_file` | `name`, required, ending in `.txt`, `.md`, `.csv`, or `.html`; `text`, required, the file's contents, at most 25 MB; `policy_labels`, optional, up to 10 labels of 1 to 60 characters | The file. It is saved as `uploaded` and becomes `ready` once Servflow has read it; a file Servflow cannot read is removed. Your plan has to include support files. |
+| `list_support_files` | none | `{"support_files": [...]}`: the team's files, newest first, each with its status (`uploaded`, `processing`, or `ready`) and its policy labels. |
+
+A message loads the files whose policy labels it matches. A file with no label loads for every answer.
+
+## Related
+
+<CardGroup cols={2}>
+
+<Card title="Manage Servflow from an AI agent" icon="robot" href="/guides/manage-servflow-from-an-ai-agent">
+  Connect an MCP client and create an agent with it.
+</Card>
+
+<Card title="CLI reference" icon="terminal" href="/references/cli">
+  The same operations from the command line, and the shape of an agent.
+</Card>
+
+<Card title="Available entry handlers" icon="right-to-bracket" href="/references/entry-handlers">
+  The triggers the catalog tools describe.
+</Card>
+
+<Card title="Configuration reference" icon="gear" href="/references/configuration#authentication">
+  How a self-hosted instance authenticates its management server.
+</Card>
+
+</CardGroup>

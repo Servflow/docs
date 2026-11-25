@@ -1,20 +1,20 @@
 ---
-title: "Self-host ServFlow"
-description: "Install ServFlow on your own machine with Docker, the binary, or npm, and create the first account"
+title: "Self-host Servflow"
+description: "Install Servflow on your own machine with Docker, Homebrew, the binary, or npm, and create the first account"
 icon: "server"
 ---
 
-This guide installs ServFlow on a machine you manage and gets you signed in to its dashboard. Self-host when you want your data on your own machine, or when your agents need to reach services on a private network. If you just want to use ServFlow, sign up at [dash.servflow.io](https://dash.servflow.io) instead and follow [Your first agent](/quickstart).
+This guide installs Servflow on a machine you manage and gets you signed in to its dashboard. Self-host when you want your data on your own machine, or when your agents need to reach services on a private network. If you just want to use Servflow, sign up at [dash.servflow.io](https://dash.servflow.io) instead and follow [Your first agent](/quickstart).
 
 ## Before you begin
 
-- 100 MB of free RAM. ServFlow is a single Go binary with an embedded dashboard.
+- 100 MB of free RAM. Servflow is a single Go binary with an embedded dashboard.
 - A supported platform: Linux or macOS on x86_64 or arm64, or any host that runs Docker.
 - Outbound network access to the LLM providers your agents use.
 
 ## Get a working configuration
 
-ServFlow reads a TOML configuration file. You do not need to write one. The first time you run `servflowai start` without a `--config` flag, it writes a complete default configuration to `~/.servflow/config.toml` and starts with it. The database lands in `~/.servflow/data/` and the server listens on port `8080`.
+Servflow reads a TOML configuration file, and you do not need to write one. Without a `--config` flag, `servflowai start` reads `~/.servflow/config.toml`. When that file does not exist, the server starts on the built-in defaults and writes no file. Relative paths resolve against `~/.servflow`, so the database is `~/.servflow/secrets.db` and the server listens on port `8080`. The first-run setup screen writes the file when you save it.
 
 To see the configuration an instance is using, run:
 
@@ -22,7 +22,7 @@ To see the configuration an instance is using, run:
 servflowai resource settings view
 ```
 
-The Docker image seeds its own configuration into `/data` on first boot, so the same applies there. For what each key means, see the [Configuration reference](/references/configuration).
+For what each key means, see the [Configuration reference](/references/configuration).
 
 ## Install with Docker
 
@@ -36,9 +36,31 @@ The Docker image seeds its own configuration into `/data` on first boot, so the 
      servflow/servflowai:latest
    ```
 
-   The image starts the server with the dashboard enabled. The volume holds the configuration file and the database, so keep it across upgrades.
+   The image runs `servflowai start --dashboard`. Its environment points the database, memory folders, and shell folders into `/data`: `/data/secrets.db`, `/data/workspaces`, and `/data/work`. Keep the volume across upgrades.
+
+   The image holds no configuration file. The first-run setup screen writes one to `~/.servflow/config.toml` inside the container, which survives `docker restart` but not a new container. To keep settings across upgrades, set them as environment variables with `-e`, as listed in the [Configuration reference](/references/configuration).
 
 2. Open `http://localhost:8080/dashboard/`. The first-run setup screen appears.
+
+## Install with Homebrew
+
+The Homebrew formula installs the same binary on macOS and Linux.
+
+1. Install the formula from the Servflow tap:
+
+   ```bash
+   brew install servflow/servflow/servflowai
+   ```
+
+2. Start the server with the dashboard enabled:
+
+   ```bash
+   servflowai start --dashboard
+   ```
+
+   The log prints `servflowai started`.
+
+3. Open `http://localhost:8080/dashboard/`. The first-run setup screen appears.
 
 ## Install the binary
 
@@ -88,7 +110,7 @@ The dashboard requires an account. On a fresh instance the setup and registratio
 <Steps>
 
 <Step title="Set up your instance">
-Choose a workspace directory and whether to enable tracing. Optional: paste a ServFlow authentication token to connect the instance to servflow.io for trace export and AI assist. Your answers are written to the configuration file.
+Under **Workspace directory**, choose the folder memory files are kept in, and choose whether to enable tracing. Optional: under **ServFlow authentication token**, paste your team's API key to connect the instance to servflow.io for trace export and Assist. Your answers are written to the configuration file.
 </Step>
 
 <Step title="Create your account">
@@ -100,7 +122,7 @@ Stop the running process and start it again. The settings from step 1 are read w
 </Step>
 
 <Step title="Sign in">
-Open the dashboard again and sign in with your credentials. The dashboard opens on the agents page.
+Open the dashboard again and sign in with your credentials. The dashboard opens on the agents page. [Support agents](/concepts/support-agents) are not part of a self-hosted dashboard; they are in the hosted dashboard at [dash.servflow.io](https://dash.servflow.io) only.
 </Step>
 
 </Steps>
@@ -115,10 +137,10 @@ From the terminal, list the agents in the store. On a fresh instance the list is
 servflowai resource agent list
 ```
 
-If you use Docker, run it inside the container:
+If you use Docker, run it inside the container. The container's environment points the command at the same database as the server:
 
 ```bash
-docker exec servflowai servflowai resource agent list --config /data/config.toml
+docker exec servflowai servflowai resource agent list
 ```
 
 ## Run it properly
@@ -126,7 +148,7 @@ docker exec servflowai servflowai resource agent list --config /data/config.toml
 For an instance that outlives a first try:
 
 - **Encrypt secrets at rest.** Set `master_key` under `[sqlite]`, and set it through the `SERVFLOW_SQLITE_MASTER_KEY` environment variable rather than the file. See [Secrets](/concepts/secrets).
-- **Back up the database.** The file set by `path` under `[sqlite]` holds your agents, integrations, secrets, and accounts.
+- **Back up the database.** The file set by `path` under `[sqlite]` holds your agents, integrations, providers, secrets, and accounts. Memory files are in the folder set by `root` under `[workspaces]`.
 - **Do not expose the server directly.** Put it behind a reverse proxy with TLS.
 - **Run it as a service.** Use a Docker restart policy, or a systemd unit for the binary, so it comes back after a reboot.
 - **Pin a version.** Use a tagged image or package version rather than `latest`.

@@ -1,32 +1,32 @@
 ---
 title: "Manage LLM providers"
-description: "Add the model account your agents use, point a sub-agent at it, and change or delete it safely"
+description: "Add the model account your agents use, point a sub agent at it, and change or delete it safely"
 icon: "cloud"
 ---
 
-A provider is the account your agents call an AI model through, such as your OpenAI or Anthropic account, together with the model to use. This guide adds a provider, points a sub-agent at it, and shows how to change and delete one.
+A provider is the account your agents call an AI model through, such as your OpenAI or Anthropic account, together with the model to use. This guide adds a provider, points a sub agent at it, and shows how to change and delete one.
 
-On a self-hosted instance, every sub-agent needs a provider. On ServFlow Cloud, a sub-agent with no provider uses built-in model access paid from your team's monthly or bought credit, so you add a provider only to use your own key, or to give one sub-agent a model other than your team's built-in model. See [Built-in model access on ServFlow Cloud](/concepts/providers#built-in-model-access-on-servflow-cloud).
+On a self-hosted instance, every sub agent needs a provider. On Servflow Cloud, a sub agent with no provider runs on your team's built-in model, paid from its credits, so you add a provider only to use your own key, or to give one sub agent a model other than your team's built-in model. A run on your own key still costs the 4-credit run fee. See [Built-in model on Servflow Cloud](/concepts/providers#built-in-model-on-servflow-cloud).
 
 ## Before you begin
 
-- A ServFlow account at [dash.servflow.io](https://dash.servflow.io), or a [self-hosted instance](/installation).
+- A Servflow account at [dash.servflow.io](https://dash.servflow.io), or a [self-hosted instance](/installation).
 - An API key from the company whose models you want to use. You enter the key yourself. After you save it, it is hidden.
 
 ## Add a provider
 
 <Steps>
 
-<Step title="Open the Providers page">
-In the sidebar under **Configure**, open **Providers**. The page lists the providers you already have.
+<Step title="Open your providers">
+On Servflow Cloud, in the sidebar, click **Settings**, then click the **Your own keys** tab. On a self-hosted instance, in the sidebar under **Connect and tools**, click **Providers**. The page lists the providers you already have.
 
 <Frame>
-  <img src="/images/guides/manage-llm-providers/01-providers-page.png" alt="The Providers page with the New Provider button in the top right" />
+  <img src="/images/guides/manage-llm-providers/01-providers-page.png" alt="Settings open on the Your own keys tab, with the Add a provider button" />
 </Frame>
 </Step>
 
-<Step title="Click New Provider">
-Click **New Provider** in the top right. The **New Provider** dialog opens.
+<Step title="Click Add a provider">
+Click **Add a provider**. The **New Provider** dialog opens.
 
 <Frame>
   <img src="/images/guides/manage-llm-providers/02-new-provider.png" alt="The New Provider dialog with five type cards: Claude, LiteLLM, OpenAI, OpenRouter, and Qwen" />
@@ -40,7 +40,7 @@ LiteLLM, OpenRouter, and Qwen also ask for the web address of the service. OpenR
 </Step>
 
 <Step title="Enter a name">
-Enter a **Name**, for example `OpenAI production`. This is the name you choose in a sub-agent.
+Enter a **Name**, for example `OpenAI production`. This is the name you choose in a sub agent.
 </Step>
 
 <Step title="Enter your API key">
@@ -61,19 +61,19 @@ Click **Add Provider**. The dialog closes and the provider appears in the list w
 
 </Steps>
 
-## Point a sub-agent at the provider
+## Point a sub agent at the provider
 
 <Steps>
 
-<Step title="Open a sub-agent">
-In the sidebar under **Build**, open **Agents** and open an agent. Click a sub-agent on the canvas. Its panel opens.
+<Step title="Open a sub agent">
+In the sidebar, click **Agents** and open an agent. Click a sub agent on the canvas. Its panel opens.
 </Step>
 
 <Step title="Choose the provider">
-Under **Provider**, choose the provider. The panel confirms with "Calls" and the provider's name.
+Under **Provider**, choose the provider.
 
 <Frame>
-  <img src="/images/guides/manage-llm-providers/05-subagent-provider.png" alt="A sub-agent panel with a provider chosen under Provider" />
+  <img src="/images/guides/manage-llm-providers/05-subagent-provider.png" alt="A sub agent panel with a provider chosen under Provider" />
 </Frame>
 </Step>
 
@@ -83,11 +83,11 @@ Click **Save** in the top bar.
 
 </Steps>
 
-On ServFlow Cloud, to switch a sub-agent back to built-in model access, clear its **Provider** setting and save.
+On Servflow Cloud, to switch a sub agent back to the built-in model, choose **No provider selected** under **Provider** and save. To change the built-in model itself, see **Settings > Team > Model**.
 
-## Use a different model for one sub-agent
+## Use a different model for one sub agent
 
-The model belongs to the provider, not to the sub-agent, so a sub-agent's panel has no model setting. To give one sub-agent a different model, add a second provider of the same type with the other model, and choose it in that sub-agent. The same API key works for both.
+The model belongs to the provider, not to the sub agent, so a sub agent's panel has no model setting. To give one sub agent a different model, add a second provider of the same type with the other model, and choose it in that sub agent. The same API key works for both.
 
 ## Change a provider's key or model
 
@@ -96,7 +96,7 @@ To change a provider's type, add a new provider instead. The type of an existing
 <Steps>
 
 <Step title="Open the provider">
-On the **Providers** page, click the **Edit provider** icon on the provider's row. The **Edit Provider** dialog opens.
+In your providers, click the **Edit provider** icon on the provider's row. The **Edit Provider** dialog opens.
 
 <Frame>
   <img src="/images/guides/manage-llm-providers/04-edit-provider.png" alt="The Edit Provider dialog with the type locked and the API key hidden" />
@@ -111,9 +111,9 @@ Enter a new **API Key** or choose another **Model**, then click **Save Changes**
 
 ## Delete a provider
 
-Before you delete a provider, point every sub-agent that uses it at another one. ServFlow does not stop the delete, and an agent left pointing at a deleted provider fails the next time it runs.
+Before you delete a provider, point every sub agent that uses it at another one. Servflow does not stop the delete, and an agent left pointing at a deleted provider fails the next time it runs.
 
-On the **Providers** page, click the **Delete provider** icon on the provider's row and confirm.
+In your providers, click the **Delete provider** icon on the provider's row and confirm.
 
 ## Manage providers from the CLI
 
@@ -130,7 +130,7 @@ For every command and the body each one takes, see the [CLI reference](/referenc
 <CardGroup cols={2}>
 
 <Card title="Providers" icon="cloud" href="/concepts/providers">
-  What a provider is and why sub-agents share one.
+  What a provider is and why sub agents share one.
 </Card>
 
 <Card title="Available providers" icon="cloud" href="/references/providers">
@@ -138,7 +138,7 @@ For every command and the body each one takes, see the [CLI reference](/referenc
 </Card>
 
 <Card title="Create an agent" icon="robot" href="/guides/create-an-agent">
-  Build an agent and choose a provider for each sub-agent.
+  Build an agent and choose a provider for each sub agent.
 </Card>
 
 <Card title="Secrets" icon="key" href="/concepts/secrets">

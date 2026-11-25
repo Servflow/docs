@@ -1,10 +1,10 @@
 ---
 title: "Add a tool to an agent"
-description: "Give a sub-agent something to call during a run: attach an action as a tool, choose what the model fills in, test it from the editor, and guard it"
+description: "Give a sub agent something to call during a run: attach an action as a tool, choose what the model fills in, test it from the agent's page, and guard it"
 icon: "wrench"
 ---
 
-This guide attaches a tool to a sub-agent, so the model can call it during a run. It covers choosing which inputs the model supplies, testing the tool from the editor, and adding a guard that decides when the tool may run. Use it when an agent has to look something up or act on something, and its prompt alone is not enough.
+This guide attaches a tool to a sub agent, so the model can call it during a run. It covers choosing which inputs the model supplies, testing the tool from the agent's page, and adding a guard that decides when the tool may run. Use it when an agent has to look something up or act on something, and its prompt alone is not enough.
 
 The example is a tool named `github_repo` that looks a repository up on the GitHub API. The model supplies the repository name and nothing else.
 
@@ -17,16 +17,16 @@ The example is a tool named `github_repo` that looks a repository up on the GitH
 
 <Steps>
 
-<Step title="Open the sub-agent's Tools section">
-Open the agent in the editor and click the sub-agent that needs the tool. In its panel, scroll to the **Tools** section. With nothing attached, it reads "No tools — it answers from the prompt alone."
+<Step title="Open the sub agent's Tools section">
+Open the agent and click the sub agent that needs the tool. In its panel, scroll to the **Tools** section. With nothing attached, its summary reads "none".
 
 <Frame>
-  <img src="/images/guides/add-a-tool/01-tools-section.png" alt="A sub-agent panel with an empty Tools section and the Add a tool select" />
+  <img src="/images/guides/add-a-tool/01-tools-section.png" alt="A sub agent panel with an empty Tools section and the Add a tool select" />
 </Frame>
 </Step>
 
 <Step title="Choose Run action and pick the action">
-Under **Add a tool…**, choose **Run action…**. The **Choose action** dialog opens. It lists the built-in actions and the actions of every app ServFlow connects to, grouped by app, so search for what the tool should do. Type `http request` and click **HTTP Request**.
+Under **Add a tool…**, choose **Run action…**. The **Choose action** dialog opens. It lists the built-in actions and the actions of every app Servflow connects to, grouped by app, so search for what the tool should do. Type `http request` and click **HTTP Request**.
 
 <Frame>
   <img src="/images/guides/add-a-tool/02-choose-action.png" alt="The Choose action dialog with a search box, an app filter, and a grid of action cards" />
@@ -72,15 +72,15 @@ To hand a whole field to the model instead, click **Let the model set this** und
 </Step>
 
 <Step title="Save the tool">
-Click **Save tool**. The row in the **Tools** section reads `github_repo`, and the tool appears on the canvas beside the sub-agent, marked **Action**. The gear on the row opens the dialog again, and the trash icon removes the tool.
+Click **Save tool**. The row in the **Tools** section reads `github_repo`, and the tool appears on the canvas beside the sub agent, marked **Action**. The gear on the row opens the dialog again, and the trash icon removes the tool.
 
 <Frame>
-  <img src="/images/guides/add-a-tool/05-tools-row.png" alt="The Tools section listing github_repo, and the tool shown on the canvas next to the sub-agent" />
+  <img src="/images/guides/add-a-tool/05-tools-row.png" alt="The Tools section listing github_repo, and the tool shown on the canvas next to the sub agent" />
 </Frame>
 </Step>
 
 <Step title="Tell the model about the tool">
-In the same panel, set the sub-agent's **System prompt** so the model knows to use the tool:
+In the same panel, set the sub agent's **System prompt** so the model knows to use the tool:
 
 ```
 Answer questions about GitHub repositories. Use the github_repo tool to look a repository up, and answer from what it returns.
@@ -95,7 +95,7 @@ Click **Save** in the top bar. The button reads **Saved**.
 
 <Steps>
 
-<Step title="Run the agent from the editor">
+<Step title="Run the agent from its page">
 Click **Run** in the top bar. Enter a **Request body** that needs the tool, and click **Run**:
 
 ```json
@@ -150,7 +150,7 @@ Under **Allow the call when**, enter a template that renders `true` when the cal
 {{ eq (body "plan") "pro" }}
 ```
 
-The section's summary reads "1 condition must pass", and **Guards** on the left edge shows a count of 1.
+**Guards** on the left edge shows a count of 1.
 
 <Frame>
   <img src="/images/guides/add-a-tool/08-dialog-guards.png" alt="The Guards section with a guard named pro_plan_only and its condition" />
@@ -158,7 +158,7 @@ The section's summary reads "1 condition must pass", and **Guards** on the left 
 </Step>
 
 <Step title="Save and test the refusal">
-Click **Save tool**, then **Save**. Click **Run** and send the earlier request body, which has no `plan` field. The log reads "condition evaluated to false", then "tool call denied by guard", and the model answers without the repository data.
+Click **Save tool**, then **Save**. Click **Run** and send the earlier request body, which has no `plan` field. The **Log** reads "tool call denied by guard", and the model answers without the repository data.
 
 <Frame>
   <img src="/images/guides/add-a-tool/09-run-denied.png" alt="The Run panel with log lines showing the tool call denied by the guard" />
@@ -181,12 +181,12 @@ To offer the tools of a Model Context Protocol server, choose **MCP server…**.
   <img src="/images/guides/add-a-tool/10-dialog-mcp.png" alt="The Configure MCP server dialog with the Server endpoint, Access token, and Allowed tools fields" />
 </Frame>
 
-### Call sub-agent
+### Call a sub agent
 
-To let one sub-agent call another in the same agent, choose **Call sub-agent…**. Under **Sub-agent**, choose the sub-agent to call. The **Display name** takes that sub-agent's name. The called sub-agent's reply is what comes back. For the full steps, including what the called sub-agent's prompt has to say, see [Call other agents](/guides/call-other-agents#let-a-sub-agent-ask-another-sub-agent).
+To let one sub agent call another in the same agent, choose **Call sub-agent…**. Under **Sub-agent**, choose the sub agent to call. The **Display name** takes that sub agent's name. The called sub agent's reply is what comes back. For the full steps, including what the called sub agent's prompt has to say, see [Call other agents](/guides/call-other-agents#let-a-sub-agent-ask-another-sub-agent).
 
 <Frame>
-  <img src="/images/guides/add-a-tool/11-dialog-subagent.png" alt="The Configure Call sub-agent dialog with a sub-agent chosen" />
+  <img src="/images/guides/add-a-tool/11-dialog-subagent.png" alt="The Configure Call sub-agent dialog with a sub agent chosen" />
 </Frame>
 
 ### Agent Task Tool
@@ -199,11 +199,11 @@ To hand a task to another stored agent, choose **Agent Task Tool…**. Under **A
 
 ### Built-in file tools
 
-Every sub-agent already has `read_memory`, `write_memory`, and `list_memory`, with nothing to attach. They work in the folder chosen under **Workspace** in the panel's **Memory** section. See [Built-in tools](/references/cli#built-in-file-tools). To set a workspace up, see [Set up memory and file access](/guides/set-up-memory-and-file-access).
+Every sub agent already has `read_memory`, `write_memory`, and `list_memory`, with nothing to attach. They work in the memory chosen under **Workspace** in the panel's **Memory** section. See [Built-in tools](/references/cli#built-in-file-tools). To set up a memory, see [Set up memory and file access](/guides/set-up-memory-and-file-access).
 
 ## If the tool is not called
 
-- **The model did not choose it.** Make **When to use** specific, and name the tool in the sub-agent's **System prompt**.
+- **The model did not choose it.** Make **When to use** specific, and name the tool in the sub agent's **System prompt**.
 - **A guard refused it.** The log reads "tool call denied by guard". Check the request against the guard's condition.
 - **The model sent a value the field does not accept.** A select field that the model fills must receive one of its listed values.
 - **An MCP server lists no tools.** The server is asked with the access token you entered, so it lists nothing until the token is right. Correct the token and click **Refresh**.
