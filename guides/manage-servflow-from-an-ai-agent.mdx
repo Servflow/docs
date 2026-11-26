@@ -4,7 +4,7 @@ description: "Connect Claude Code, Codex, or another MCP client to the Servflow 
 icon: "robot"
 ---
 
-This guide connects an AI coding agent, such as Claude Code or Codex, to the Servflow MCP server on Servflow Cloud. Once it is connected, you can ask the AI agent to list your team's agents, write a new one, check it, and enable it, and to manage your support agents the same way. Every tool it can call is listed on [The Servflow MCP server](/references/mcp-server).
+Connect an AI coding agent, such as Claude Code or Codex, to the Servflow MCP server, and then ask it to build and enable your team's agents and support agents for you. Every tool it can call is listed on [The Servflow MCP server](/references/mcp-server).
 
 ## Before you begin
 
@@ -25,6 +25,8 @@ claude mcp add --transport http servflow https://server.servflow.io/api/mcp \
   --header "Authorization: Bearer <key>"
 ```
 
+To confirm Claude Code reaches the server, run `claude mcp list`. It checks each server and shows `servflow` as connected.
+
 ### Another client
 
 Add a server that uses the streamable HTTP transport, with:
@@ -40,7 +42,7 @@ Ask the AI agent:
 List my Servflow agents.
 ```
 
-It calls `list_configs` and answers with each agent's name, `config_id`, and whether it is enabled. An empty list on a new team is a working connection. If the call fails with `unauthorized` or `invalid auth token`, copy the key again from **Settings** > **MCP connection**.
+It calls `list_configs` and answers with each agent's name, `config_id`, and whether it is enabled. An empty list on a new team is a working connection. If the call fails with `unauthorized` or `invalid auth token`, copy the key again from **Settings** > **MCP connection** and add the server again.
 
 ## Create an agent
 
@@ -84,9 +86,41 @@ To change an agent later, ask for the change. The AI agent calls `update_config`
 
 Ask the AI agent to list your agents again. The new agent shows `enabled: true`, and it appears on the **Agents** page of the dashboard. Send a request to the agent's path on your team's agents address to see it answer.
 
-## Manage support agents
+## Create a support agent
 
-The same server holds your support agents, their files, and the live chat. Ask the AI agent to create, change, or enable a support agent, and it uses the [support agent tools](/references/mcp-server#support-agent-tools). `list_configs` also lists support agents, as kind `support`, but its agent tools do not keep a support agent's settings in step, so ask the AI agent to change support agents only with the support agent tools.
+A support agent answers your customers on a channel such as the live chat. To create one, describe it and ask the AI agent to build it. For example:
+
+```text
+Create a Servflow support agent called "Shop help" that answers on our live
+chat with the native provider and answers questions about orders and returns.
+Enable it, then point our live chat at it for shop.example.com.
+```
+
+The AI agent works through these steps.
+
+<Steps>
+
+<Step title="Create">
+`create_support_agent` saves the support agent and returns its `id`. It is saved disabled, so it does not answer customers yet. With no guardrails in the request, it gets `answers_from_business`.
+</Step>
+
+<Step title="Enable">
+`set_support_agent_enabled` with `enabled: true` checks your plan and builds the support agent. If it cannot start, the tool says why and the support agent stays disabled.
+</Step>
+
+<Step title="Connect the live chat">
+`set_livechat` saves the live chat with `agent_id` set to the support agent and `websites` set to your site. `get_livechat` returns what is saved.
+</Step>
+
+</Steps>
+
+To change a support agent later, ask for the change. The AI agent calls `update_support_agent`, then `set_support_agent_enabled` again: an enabled support agent keeps answering with its previous version until it is enabled again.
+
+Ask the AI agent to change support agents only with these tools. `list_configs` lists support agents too, as kind `support`, but the agent tools do not keep a support agent's channels, guardrails, and handoffs in step.
+
+### Verify
+
+Ask the AI agent to list your support agents. The new support agent shows `enabled: true`, and it appears on the **Support agents** page of the dashboard.
 
 ## Related
 

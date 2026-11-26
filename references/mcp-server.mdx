@@ -4,9 +4,9 @@ description: "The Servflow MCP server: its address, how a client authenticates, 
 icon: "plug"
 ---
 
-Servflow serves its tools over the [Model Context Protocol](https://modelcontextprotocol.io), so an MCP client such as Claude Code can manage your team's agents, support agents, providers, integrations, secrets, memory, support files, and live chat. This page gives the server's address, how a client authenticates, and every tool with its inputs. For the steps to connect a client, see [Manage Servflow from an AI agent](/guides/manage-servflow-from-an-ai-agent).
+The Servflow MCP server lets an MCP client, such as Claude Code, manage your team's agents, support agents, providers, integrations, secrets, memory, support files, and live chat over the [Model Context Protocol](https://modelcontextprotocol.io). This page lists its address, how a client authenticates, every tool with its inputs and what it returns, and its errors. To connect a client, see [Manage Servflow from an AI agent](/guides/manage-servflow-from-an-ai-agent).
 
-The MCP server runs on Servflow Cloud. A self-hosted instance has none: manage it with the [`servflowai resource` CLI](/references/cli).
+The MCP server runs on Servflow Cloud only. A self-hosted instance has no MCP server; the [`servflowai resource` CLI](/references/cli) offers the same operations.
 
 ## Address and authentication
 
@@ -15,9 +15,13 @@ The MCP server runs on Servflow Cloud. A self-hosted instance has none: manage i
 | URL | `https://server.servflow.io/api/mcp` |
 | Transport | Streamable HTTP, served stateless: each call carries everything it needs. |
 
-Send your team's API key in the `Authorization` header, as `Bearer <key>`; the key alone, with no `Bearer`, is accepted too. The key is under **Settings** > **MCP connection** > **Your API key** in the dashboard. The URL is the same for every team: the key decides which team the tools reach. A request with no key, or a key that matches no team, is answered `401`.
+| Header | Value |
+|---|---|
+| `Authorization` | `Bearer <key>`, where `<key>` is your team's API key. The key alone, with no `Bearer`, is accepted too. |
 
-A tool's result is JSON text. A tool that fails returns a tool error with a message the model can act on.
+The API key is under **Settings** > **MCP connection** > **Your API key** in the dashboard. The URL is the same for every team: the key decides which team the tools reach.
+
+A tool's result is JSON text. A tool that fails returns a tool error; see [Errors](#errors).
 
 ## Behaviour that applies to all tools
 
@@ -32,7 +36,7 @@ A tool's result is JSON text. A tool that fails returns a tool error with a mess
 An agent is addressed by its `config_id`. The `config` input takes the body described in [The body for create and update](/references/cli#agent), or the bare agent document described in [The shape of an agent](/references/cli#the-shape-of-an-agent). An `enabled` key in it is ignored.
 
 <Warning>
-`list_configs` also lists support agents, as kind `support`, and `get_config`, `update_config`, `delete_config`, and `set_config_enabled` accept them. Do not change or enable a support agent with these tools. Use the [support agent tools](#support-agent-tools) for support agents.
+`list_configs` also lists support agents, as kind `support`, and `get_config`, `update_config`, `delete_config`, and `set_config_enabled` accept them. These tools do not keep a support agent's channels, guardrails, and handoffs in step with its stored agent. The [support agent tools](#support-agent-tools) do.
 </Warning>
 
 | Tool | Inputs | Returns |
@@ -171,6 +175,32 @@ The `livechat` object has these keys.
 | `logo_url` | Empty, or an `https` link to an image. |
 | `hello` | `on`; `style`: `bubble` or `open`; and `delay_seconds`: `0`, `5`, `10`, `30`, or `60`. |
 | `page_greeting` | `on`, and `note`, up to 500 characters. |
+
+## Errors
+
+| Error | Cause |
+|---|---|
+| HTTP `401`, `{"error":"unauthorized"}` | The request has no `Authorization` header, or its key is empty. |
+| HTTP `401`, `{"error":"invalid auth token"}` | The key matches no team. |
+| A tool result with `"isError": true` | The tool could not do what was asked. The text says why, in words the model can act on, such as `get agent config: agent config not found: nope`. |
+
+## Example
+
+A `tools/call` request for `list_secrets`, sent without an MCP client. The server is stateless, so the call needs no `initialize` first.
+
+```bash
+curl https://server.servflow.io/api/mcp \
+  -H "Authorization: Bearer <key>" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"list_secrets","arguments":{}}}'
+```
+
+For a team with no secrets, the server answers:
+
+```json
+{"jsonrpc":"2.0","id":1,"result":{"content":[{"type":"text","text":"[]"}]}}
+```
 
 ## Related
 
