@@ -130,7 +130,7 @@
               "references/providers",
               "references/dynamic-content",
               "references/cli",
-              "references/mcp-servers"
+              "references/mcp-server"
             ]
           }
         ]
