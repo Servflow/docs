@@ -89,11 +89,7 @@ How the dashboard and its API are gated.
 |---|---|
 | `local` | Gates the dashboard behind username and password accounts stored in the database. The first account is created on the registration screen while no account exists. After that, creating an account requires being signed in. See [Create the first account](/installation#create-the-first-account). |
 | `none` | Turns the gate off. Anyone who can reach the port can use the dashboard and its API. |
-| `jwt` | Hands identity to an external OpenID Connect provider. Every request to the dashboard API needs an `Authorization: Bearer <token>` header with a token signed by a key from `jwks_url`, whose `https://servflow.io/team_id` claim equals `team_id`. Local accounts, the first-run setup screen, and the embedded dashboard are off. The [management MCP server](/references/mcp-servers) moves behind the same check. |
-
-<Warning>
-In `local` and `none` modes, the management MCP server at `/dashboard/api/mcp` takes no authentication. Anyone who can reach the port can read and change agents and create secrets through it. Do not expose such an instance to a network you do not trust.
-</Warning>
+| `jwt` | Hands identity to an external OpenID Connect provider. Every request to the dashboard API needs an `Authorization: Bearer <token>` header with a token signed by a key from `jwks_url`, whose `https://servflow.io/team_id` claim equals `team_id`. Local accounts, the first-run setup screen, and the embedded dashboard are off. |
 
 ## `[tracing]`
 

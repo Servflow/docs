@@ -1,45 +1,27 @@
 ---
-title: "MCP servers"
-description: "The two Servflow MCP servers: their addresses, how a client authenticates, and every tool with its inputs and what it returns"
+title: "The Servflow MCP server"
+description: "The Servflow MCP server: its address, how a client authenticates, and every tool with its inputs and what it returns"
 icon: "plug"
 ---
 
-Servflow serves its management tools over the [Model Context Protocol](https://modelcontextprotocol.io), so an MCP client such as Claude Code can list, write, validate, and enable agents. This page lists both servers, how a client authenticates to each, and every tool with its inputs. For the steps to connect a client, see [Manage Servflow from an AI agent](/guides/manage-servflow-from-an-ai-agent).
+The Servflow MCP server lets an MCP client, such as Claude Code, manage your team's agents, support agents, providers, integrations, secrets, memory, support files, and live chat over the [Model Context Protocol](https://modelcontextprotocol.io). This page lists its address, how a client authenticates, every tool with its inputs and what it returns, and its errors. To connect a client, see [Manage Servflow from an AI agent](/guides/manage-servflow-from-an-ai-agent).
 
-| Server | What it manages | Where it runs |
-|---|---|---|
-| Management server | Agents, providers, integrations, secrets, and memory, and the catalogs to write agents from | Servflow Cloud and self-hosted |
-| Support agents server | Support agents and the files they answer from | Servflow Cloud only |
+The MCP server runs on Servflow Cloud only. A self-hosted instance has no MCP server; the [`servflowai resource` CLI](/references/cli) offers the same operations.
 
-## Endpoints and authentication
+## Address and authentication
 
-Both servers use the streamable HTTP transport, served stateless: each call carries everything it needs. A tool's result is JSON text. A tool that fails returns a tool error with a message the model can act on.
-
-### Servflow Cloud
-
-| Server | URL |
+| | |
 |---|---|
-| Management server | `https://server.servflow.io/api/mcp` |
-| Support agents server | `https://server.servflow.io/api/support/mcp` |
+| URL | `https://server.servflow.io/api/mcp` |
+| Transport | Streamable HTTP, served stateless: each call carries everything it needs. |
 
-Send your team's API key in the `Authorization` header, as `Bearer <key>`; the key alone, with no `Bearer`, is accepted too. The key is under **Settings** > **Team** > **Your API key** in the dashboard. The URL is the same for every team: the key decides which team's agents the tools reach. A request with no key, or a key that matches no team, is answered `401`.
-
-### Self-hosted
-
-The management server is served only when the server runs with `--dashboard`, under the dashboard's path:
-
-| Server | URL |
+| Header | Value |
 |---|---|
-| Management server | `http://<host>:<port>/dashboard/api/mcp`, such as `http://localhost:8080/dashboard/api/mcp` |
+| `Authorization` | `Bearer <key>`, where `<key>` is your team's API key. The key alone, with no `Bearer`, is accepted too. |
 
-Authentication follows `[authentication] mode` in the [configuration](/references/configuration#authentication):
+The API key is under **Settings** > **MCP connection** > **Your API key** in the dashboard. The URL is the same for every team: the key decides which team the tools reach.
 
-| Mode | What the server needs |
-|---|---|
-| `local`, `none` | Nothing. Anyone who can reach the port can use every tool. |
-| `jwt` | An `Authorization: Bearer <token>` header with a token from your identity provider, signed by a key from `jwks_url` and naming `team_id`. |
-
-A self-hosted instance has no support agents server.
+A tool's result is JSON text. A tool that fails returns a tool error; see [Errors](#errors).
 
 ## Behaviour that applies to all tools
 
@@ -47,14 +29,14 @@ A self-hosted instance has no support agents server.
 - **Enabling builds.** `set_config_enabled` and `set_integration_enabled` check what the row names, build it, and run it. When it cannot be built, the tool returns why and the row stays as it was. Enabling an enabled row runs its saved version.
 - **Enabling an integration does not restart agents.** An agent holding the integration, such as one with a `discord_gateway` trigger, keeps the previous instance until the agent is enabled again.
 - **Credentials are write-only.** No tool returns a secret's value or a provider's `config`.
-- **The catalogs are the server's.** On Servflow Cloud, the catalog tools include the Servflow Cloud entry handlers, actions, and integration types.
+- **The catalogs are Servflow Cloud's.** The catalog tools include the Servflow Cloud entry handlers, actions, and integration types.
 
 ## Agent tools
 
 An agent is addressed by its `config_id`. The `config` input takes the body described in [The body for create and update](/references/cli#agent), or the bare agent document described in [The shape of an agent](/references/cli#the-shape-of-an-agent). An `enabled` key in it is ignored.
 
 <Warning>
-On Servflow Cloud, `list_configs` also lists support agents, as kind `support`, and `get_config`, `update_config`, `delete_config`, and `set_config_enabled` accept them. Do not change or enable a support agent with these tools. Use the [support agents server](#support-agent-tools) for support agents.
+`list_configs` also lists support agents, as kind `support`, and `get_config`, `update_config`, `delete_config`, and `set_config_enabled` accept them. These tools do not keep a support agent's channels, guardrails, and handoffs in step with its stored agent. The [support agent tools](#support-agent-tools) do.
 </Warning>
 
 | Tool | Inputs | Returns |
@@ -73,7 +55,7 @@ On Servflow Cloud, `list_configs` also lists support agents, as kind `support`, 
 
 ### Providers
 
-A provider is addressed by its `providerId`. On Servflow Cloud, the built-in provider, `native`, is not stored and is not listed.
+A provider is addressed by its `providerId`. The built-in provider, `native`, is not stored and is not listed.
 
 | Tool | Inputs | Returns |
 |---|---|---|
@@ -139,11 +121,9 @@ What an agent can be built from. These tools write nothing.
 | `describe_provider_type` | `types`, a list of provider types; or `all`: `true` | Each type's fields, default model, suggested models, and where to get credentials. The model list is a suggestion, not a limit. |
 | `list_template_functions` | `category`, optional: `request`, `trigger`, `tool`, `source`, `output`, `transform`, or `predicate` | The template functions, with their syntax and an example of each. |
 
-On a self-hosted instance, `list_app_events` lists nothing: app events come from Servflow Cloud.
-
 ## Support agent tools
 
-Servflow Cloud only, on the support agents server. A support agent is addressed by its `support_agent_id`. The `provider_id` and each `integration_id` a support agent names come from `list_providers` and `list_integrations` on the management server; `native` names the built-in provider.
+A support agent is addressed by its `support_agent_id`. The `provider_id` and each `integration_id` a support agent names come from `list_providers` and `list_integrations`; `native` names the built-in provider.
 
 | Tool | Inputs | Returns |
 |---|---|---|
@@ -167,14 +147,60 @@ The `support_agent` object has these keys. `id`, `created_at`, and `updated_at` 
 
 ## Support file tools
 
-Servflow Cloud only, on the support agents server.
-
 | Tool | Inputs | Returns |
 |---|---|---|
 | `add_support_file` | `name`, required, ending in `.txt`, `.md`, `.csv`, or `.html`; `text`, required, the file's contents, at most 25 MB; `policy_labels`, optional, up to 10 labels of 1 to 60 characters | The file. It is saved as `uploaded` and becomes `ready` once Servflow has read it; a file Servflow cannot read is removed. Your plan has to include support files. |
 | `list_support_files` | none | `{"support_files": [...]}`: the team's files, newest first, each with its status (`uploaded`, `processing`, or `ready`) and its policy labels. |
 
 A message loads the files whose policy labels it matches. A file with no label loads for every answer.
+
+## Live chat tools
+
+The team's live chat: the support agent it talks to, its title, and its look.
+
+| Tool | Inputs | Returns |
+|---|---|---|
+| `get_livechat` | none | The live chat. |
+| `set_livechat` | `livechat`, required, the whole live chat | The live chat as saved. |
+
+The `livechat` object has these keys.
+
+| Key | Meaning |
+|---|---|
+| `agent_id` | A support agent with a `livechat` channel. |
+| `title` | The name on the chat, up to 40 characters. |
+| `color` | The chat's color, as `#RRGGBB`. |
+| `greeting` | The first message, up to 300 characters. |
+| `websites` | 1 to 10 hosts that load the chat, such as `lumencycles.com`. |
+| `logo_url` | Empty, or an `https` link to an image. |
+| `hello` | `on`; `style`: `bubble` or `open`; and `delay_seconds`: `0`, `5`, `10`, `30`, or `60`. |
+| `page_greeting` | `on`, and `note`, up to 500 characters. |
+
+## Errors
+
+| Error | Cause |
+|---|---|
+| HTTP `401`, `{"error":"unauthorized"}` | The request has no `Authorization` header, or its key is empty. |
+| HTTP `401`, `{"error":"invalid auth token"}` | The key matches no team. |
+| A tool result with `"isError": true` | The tool could not do what was asked. The text says why, in words the model can act on, such as `get agent config: agent config not found: nope`. |
+
+## Example
+
+A `tools/call` request for `list_secrets`, sent without an MCP client. The server is stateless, so the call needs no `initialize` first.
+
+```bash
+curl https://server.servflow.io/api/mcp \
+  -H "Authorization: Bearer <key>" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"list_secrets","arguments":{}}}'
+```
+
+For a team with no secrets, the server answers:
+
+```json
+{"jsonrpc":"2.0","id":1,"result":{"content":[{"type":"text","text":"[]"}]}}
+```
 
 ## Related
 
@@ -190,10 +216,6 @@ A message loads the files whose policy labels it matches. A file with no label l
 
 <Card title="Available entry handlers" icon="right-to-bracket" href="/references/entry-handlers">
   The triggers the catalog tools describe.
-</Card>
-
-<Card title="Configuration reference" icon="gear" href="/references/configuration#authentication">
-  How a self-hosted instance authenticates its management server.
 </Card>
 
 </CardGroup>

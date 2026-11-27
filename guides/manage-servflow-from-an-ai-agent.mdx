@@ -1,21 +1,16 @@
 ---
 title: "Manage Servflow from an AI agent"
-description: "Connect Claude Code, Codex, or another MCP client to your team's Servflow management server, so it can list, create, validate, and enable agents"
+description: "Connect Claude Code, Codex, or another MCP client to the Servflow MCP server, so it can list, create, validate, and enable your team's agents and support agents"
 icon: "robot"
 ---
 
-This guide connects an AI coding agent, such as Claude Code or Codex, to Servflow's management MCP server. Once it is connected, you can ask the AI agent to list your team's agents, write a new one, check it, and enable it. Every tool it can call is listed on [MCP servers](/references/mcp-servers).
+Connect an AI coding agent, such as Claude Code or Codex, to the Servflow MCP server, and then ask it to build and enable your team's agents and support agents for you. Every tool it can call is listed on [The Servflow MCP server](/references/mcp-server).
 
 ## Before you begin
 
-- A Servflow team. Sign up at [dash.servflow.io](https://dash.servflow.io), or [self-host Servflow](/installation).
+- A Servflow Cloud team. Sign up at [dash.servflow.io](https://dash.servflow.io). A self-hosted instance has no MCP server; manage it with the [`servflowai resource` CLI](/references/cli).
 - An MCP client that supports the streamable HTTP transport, such as Claude Code.
-- The server address and, on Servflow Cloud, your team's API key:
-
-| | Servflow Cloud | Self-hosted |
-|---|---|---|
-| Address | `https://server.servflow.io/api/mcp` | `http://<host>:<port>/dashboard/api/mcp`, from a server started with `--dashboard` |
-| Key | In the dashboard, open **Settings** > **Team** and copy **Your API key**. | None in `local` and `none` modes. In `jwt` mode, a token from your identity provider. |
+- Your team's API key. In the dashboard, open **Settings** > **MCP connection** and copy **Your API key**.
 
 The API key gives full control of your team's agents, integrations, and secrets. Keep it out of files you commit.
 
@@ -30,13 +25,13 @@ claude mcp add --transport http servflow https://server.servflow.io/api/mcp \
   --header "Authorization: Bearer <key>"
 ```
 
-For a self-hosted instance, use its address and leave out `--header` unless it runs in `jwt` mode.
+To confirm Claude Code reaches the server, run `claude mcp list`. It checks each server and shows `servflow` as connected.
 
 ### Another client
 
 Add a server that uses the streamable HTTP transport, with:
 
-- **URL**: the address from [Before you begin](#before-you-begin).
+- **URL**: `https://server.servflow.io/api/mcp`.
 - **Header**: `Authorization` set to `Bearer <key>`.
 
 ## Check the connection
@@ -47,7 +42,7 @@ Ask the AI agent:
 List my Servflow agents.
 ```
 
-It calls `list_configs` and answers with each agent's name, `config_id`, and whether it is enabled. An empty list on a new team is a working connection. If the call fails with `unauthorized` or `invalid auth token`, copy the key again from **Settings** > **Team**.
+It calls `list_configs` and answers with each agent's name, `config_id`, and whether it is enabled. An empty list on a new team is a working connection. If the call fails with `unauthorized` or `invalid auth token`, copy the key again from **Settings** > **MCP connection** and add the server again.
 
 ## Create an agent
 
@@ -68,7 +63,7 @@ The AI agent works through these steps. You can ask for each one by name.
 </Step>
 
 <Step title="Find the pieces">
-`list_entry_handlers` and `describe_entry_handler` describe the triggers, `list_actions` and `describe_action` the actions, and `list_template_functions` what a prompt can read. `list_providers` and `list_integrations` give the ids the agent can name. On Servflow Cloud, a sub agent can use the built-in provider, `native`, with no provider of your own.
+`list_entry_handlers` and `describe_entry_handler` describe the triggers, `list_actions` and `describe_action` the actions, and `list_template_functions` what a prompt can read. `list_providers` and `list_integrations` give the ids the agent can name. A sub agent can use the built-in provider, `native`, with no provider of your own.
 </Step>
 
 <Step title="Validate">
@@ -89,25 +84,50 @@ To change an agent later, ask for the change. The AI agent calls `update_config`
 
 ### Verify
 
-Ask the AI agent to list your agents again. The new agent shows `enabled: true`, and it appears on the **Agents** page of the dashboard. On Servflow Cloud, send a request to the agent's path on your team's agents address to see it answer.
+Ask the AI agent to list your agents again. The new agent shows `enabled: true`, and it appears on the **Agents** page of the dashboard. Send a request to the agent's path on your team's agents address to see it answer.
 
-## Connect the support agents server
+## Create a support agent
 
-Optional, Servflow Cloud only. To let the AI agent manage support agents and their files, add the second server with the same key:
+A support agent answers your customers on a channel such as the live chat. To create one, describe it and ask the AI agent to build it. For example:
 
-```bash
-claude mcp add --transport http servflow-support https://server.servflow.io/api/support/mcp \
-  --header "Authorization: Bearer <key>"
+```text
+Create a Servflow support agent called "Shop help" that answers on our live
+chat with the native provider and answers questions about orders and returns.
+Enable it, then point our live chat at it for shop.example.com.
 ```
 
-Its tools are listed under [Support agent tools](/references/mcp-servers#support-agent-tools). Ask the AI agent to change or enable support agents only through this server. The management server also lists support agents, but its agent tools do not keep a support agent's settings in step.
+The AI agent works through these steps.
+
+<Steps>
+
+<Step title="Create">
+`create_support_agent` saves the support agent and returns its `id`. It is saved disabled, so it does not answer customers yet. With no guardrails in the request, it gets `answers_from_business`.
+</Step>
+
+<Step title="Enable">
+`set_support_agent_enabled` with `enabled: true` checks your plan and builds the support agent. If it cannot start, the tool says why and the support agent stays disabled.
+</Step>
+
+<Step title="Connect the live chat">
+`set_livechat` saves the live chat with `agent_id` set to the support agent and `websites` set to your site. `get_livechat` returns what is saved.
+</Step>
+
+</Steps>
+
+To change a support agent later, ask for the change. The AI agent calls `update_support_agent`, then `set_support_agent_enabled` again: an enabled support agent keeps answering with its previous version until it is enabled again.
+
+Ask the AI agent to change support agents only with these tools. `list_configs` lists support agents too, as kind `support`, but the agent tools do not keep a support agent's channels, guardrails, and handoffs in step.
+
+### Verify
+
+Ask the AI agent to list your support agents. The new support agent shows `enabled: true`, and it appears on the **Support agents** page of the dashboard.
 
 ## Related
 
 <CardGroup cols={2}>
 
-<Card title="MCP servers" icon="server" href="/references/mcp-servers">
-  Every tool of both servers, with its inputs and what it returns.
+<Card title="The Servflow MCP server" icon="server" href="/references/mcp-server">
+  Every tool, with its inputs and what it returns.
 </Card>
 
 <Card title="CLI reference" icon="terminal" href="/references/cli">
